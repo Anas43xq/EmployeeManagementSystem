@@ -159,7 +159,7 @@ function generateEmailTemplate(subject: string, body: string, type: string): str
           </div>
         </div>
         <div class="footer">
-          <p style="margin: 0;">This is an automated notification from StaffHub — Al-Mustaqbal University</p>
+          <p style="margin: 0;">This is an automated notification from StaffHub — Al-Mustaqbal Group</p>
           <p style="margin: 10px 0 0 0;">Please do not reply to this email</p>
         </div>
       </div>

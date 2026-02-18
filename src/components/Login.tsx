@@ -245,7 +245,7 @@ export default function Login() {
             <div className="bg-blue-900 p-3 rounded-xl mb-3">
               <Briefcase className="w-10 h-10 text-white" />
             </div>
-            <span className="text-xs font-medium text-blue-600 tracking-widest uppercase">{t('auth.tagline', 'Al-Mustaqbal University')}</span>
+            <span className="text-xs font-medium text-blue-600 tracking-widest uppercase">{t('auth.tagline', 'Al-Mustaqbal Group')}</span>
           </div>
           <button
             onClick={toggleLanguage}

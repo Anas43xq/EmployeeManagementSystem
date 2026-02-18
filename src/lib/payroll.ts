@@ -275,7 +275,7 @@ export function generatePayslipPDF(
 
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('StaffHub — Al-Mustaqbal University', 20, 20);
+  doc.text('StaffHub — Al-Mustaqbal Group', 20, 20);
   doc.setFontSize(16);
   doc.text('PAYSLIP', 20, 30);
 

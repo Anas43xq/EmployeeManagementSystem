@@ -1,4 +1,4 @@
-# StaffHub — Al-Mustaqbal University
+# StaffHub — Al-Mustaqbal Group
 
 A production-ready HR & Staff Management platform with role-based access control, modern UI/UX, and bilingual support (EN/AR).
 
