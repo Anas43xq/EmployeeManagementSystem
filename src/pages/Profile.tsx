@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { Mail, Phone, Calendar, MapPin, Briefcase, User, Building2, Shield } from 'lucide-react';
+import { Mail, Phone, Calendar, MapPin, Briefcase, User, Building2, Shield, Edit } from 'lucide-react';
 import { format } from 'date-fns';
-import { PageSpinner, PageHeader, Card } from '../components/ui';
+import { PageSpinner, PageHeader, Card, Button } from '../components/ui';
 import PasskeyManagement from '../components/PasskeyManagement';
 import type { Employee } from '../lib/types';
 
@@ -97,8 +98,9 @@ export default function Profile() {
       <PageHeader title={t('nav.myProfile')} subtitle={t('profile.viewYourDetails')} />
 
       <Card>
-        <div className="flex items-center space-x-6">
-          <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
             {employee?.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -129,7 +131,15 @@ export default function Profile() {
                 </span>
               )}
             </div>
+            </div>
           </div>
+          {employee && (
+            <Link to={`/employees/${employee.id}/edit`}>
+              <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>
+                {t('common.edit')}
+              </Button>
+            </Link>
+          )}
         </div>
       </Card>
 
