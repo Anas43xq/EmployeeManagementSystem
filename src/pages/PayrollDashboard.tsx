@@ -370,6 +370,7 @@ export default function PayrollDashboard() {
                           type="checkbox"
                           checked={selectedPayrolls.includes(payroll.id)}
                           onChange={() => togglePayrollSelection(payroll.id)}
+                          disabled={payroll.status !== 'draft'}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
