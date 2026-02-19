@@ -159,7 +159,12 @@ export default function PayrollDashboard() {
 
   const selectAllDraftPayrolls = () => {
     const draftPayrolls = payrolls.filter(p => p.status === 'draft').map(p => p.id);
-    setSelectedPayrolls(draftPayrolls);
+    // Toggle: if all drafts are already selected, deselect all; otherwise select all
+    if (selectedPayrolls.length === draftPayrolls.length && draftPayrolls.length > 0) {
+      setSelectedPayrolls([]);
+    } else {
+      setSelectedPayrolls(draftPayrolls);
+    }
   };
 
   const stats = {
@@ -291,9 +296,6 @@ export default function PayrollDashboard() {
 
             {selectedPayrolls.length > 0 && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">
-                  {t('payroll.selectedCount', '{count} selected', { count: selectedPayrolls.length })}
-                </span>
                 <Button
                   variant="primary"
                   onClick={handleApproveSelected}

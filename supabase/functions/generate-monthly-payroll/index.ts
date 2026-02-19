@@ -208,8 +208,10 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({
-          success: true,
-          message: `Processed ${results.length} employees`,
+          success: results.length > 0,
+          message: results.length > 0
+            ? `Processed ${results.length} employees`
+            : `All ${employees.length} employees already have payroll records for this period`,
           results,
           errors: errors.length > 0 ? errors : null
         }),
