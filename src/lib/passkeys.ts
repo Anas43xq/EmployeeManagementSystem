@@ -72,6 +72,13 @@ export async function registerPasskey(deviceName: string): Promise<PasskeyRegist
     });
 
     if (!optionsResponse.ok) {
+      // Handle edge function not deployed or 404 error
+      if (optionsResponse.status === 404) {
+        return { 
+          success: false, 
+          error: 'Passkey registration service is not available. Please contact your administrator.' 
+        };
+      }
       const errorData = await optionsResponse.json().catch(() => ({}));
       throw new Error(errorData.error || `HTTP ${optionsResponse.status}`);
     }
@@ -131,7 +138,21 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     });
 
     if (error) {
+      // Handle edge function not deployed or 404 error
+      if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
+        return { 
+          success: false, 
+          error: 'Passkey authentication service is not available. Please use email and password to sign in.' 
+        };
+      }
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      return { 
+        success: false, 
+        error: 'No passkey registered for this email. Please sign in with email and password first.' 
+      };
     }
 
     const { options, challenge, userId } = data;
@@ -207,7 +228,21 @@ export async function verifyPasskeyAttendance(
     });
 
     if (error) {
+      // Handle edge function not deployed or 404 error
+      if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
+        return { 
+          success: false, 
+          error: 'Passkey attendance service is not available. Please contact your administrator.' 
+        };
+      }
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      return { 
+        success: false, 
+        error: 'No passkey registered. Please set up a passkey in your profile settings first.' 
+      };
     }
 
     const { options, challenge } = data;

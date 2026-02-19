@@ -21,6 +21,7 @@ export interface Employee {
   qualifications: any[];
   emergency_contact_name: string;
   emergency_contact_phone: string;
+  photo_url?: string | null;
   departments?: {
     name: string;
   };

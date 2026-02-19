@@ -1,7 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { logActivity } from '../lib/activityLog';
+
+const isRefreshTokenError = (error: AuthError | Error): boolean => {
+  const message = error.message?.toLowerCase() || '';
+  return message.includes('refresh token') || 
+         message.includes('invalid token') ||
+         message.includes('token not found') ||
+         message.includes('session expired');
+};
 
 type UserRole = 'admin' | 'hr' | 'staff';
 
@@ -27,24 +35,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       (async () => {
+        if (error && isRefreshTokenError(error)) {
+          console.warn('Session expired or invalid, signing out...');
+          await supabase.auth.signOut();
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         if (session?.user) {
           await loadUserData(session.user);
         }
         setLoading(false);
       })();
+    }).catch((error) => {
+      console.error('Error getting session:', error);
+      if (isRefreshTokenError(error)) {
+        supabase.auth.signOut();
+      }
+      setUser(null);
+      setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
         if (session?.user) {
           await loadUserData(session.user);
-        } else {
-          setUser(null);
-          setRefreshAttempted(false);
         }
-      })();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setRefreshAttempted(false);
+      } else if (session?.user) {
+        await loadUserData(session.user);
+      } else {
+        setUser(null);
+        setRefreshAttempted(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -100,7 +127,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!refreshAttempted) {
             setRefreshAttempted(true);
             console.log('Refreshing session to update JWT...');
-            await supabase.auth.refreshSession();
+            try {
+              const { error: refreshError } = await supabase.auth.refreshSession();
+              if (refreshError && isRefreshTokenError(refreshError)) {
+                console.warn('Session refresh failed, signing out...');
+                await supabase.auth.signOut();
+                setUser(null);
+                return;
+              }
+            } catch (refreshErr) {
+              console.error('Session refresh error:', refreshErr);
+              if (refreshErr instanceof Error && isRefreshTokenError(refreshErr)) {
+                await supabase.auth.signOut();
+                setUser(null);
+                return;
+              }
+            }
           }
         } else {
           console.warn('No user data found');
