@@ -1109,7 +1109,8 @@ BEGIN
     ('Betty', 'Young', 'b.young@staffhub.com', '555-0141', '1992-08-26', 'female', '124 Robotics Way', 'Boston', 'MA', '02121', dept_eng, 'Senior Analyst', 'full-time', 'active', '2020-08-15', 69000, '[{"degree": "PhD Robotics", "institution": "CMU"}]', 'Frank Young', '555-0142'),
     ('Brian', 'Scott', 'b.scott@staffhub.com', '555-0151', '1986-05-27', 'male', '679 Facilities Dr', 'Boston', 'MA', '02126', dept_admin, 'Facilities Manager', 'full-time', 'active', '2015-03-15', 60000, '[{"degree": "BS Facilities Management", "institution": "UMass"}]', 'Carol Scott', '555-0152'),
     ('Carol', 'Green', 'c.green@staffhub.com', '555-0153', '1993-01-08', 'female', '780 Finance Office St', 'Boston', 'MA', '02127', dept_admin, 'Financial Analyst', 'full-time', 'active', '2020-06-01', 58000, '[{"degree": "MS Finance", "institution": "Boston College"}]', 'Eric Green', '555-0154'),
-    ('Ryan', 'Nelson', 'r.nelson@staffhub.com', '555-0159', '1987-04-04', 'male', '113 Student Services Rd', 'Boston', 'MA', '02130', dept_admin, 'Student Services Advisor', 'full-time', 'active', '2017-09-01', 56000, '[{"degree": "MS Counseling", "institution": "Lesley"}]', 'Jessica Nelson', '555-0160');
+    ('Ryan', 'Nelson', 'r.nelson@staffhub.com', '555-0159', '1987-04-04', 'male', '113 Student Services Rd', 'Boston', 'MA', '02130', dept_admin, 'Student Services Advisor', 'full-time', 'inactive', '2017-09-01', 56000, '[{"degree": "MS Counseling", "institution": "Lesley"}]', 'Jessica Nelson', '555-0160'),
+    ('Sandra', 'Wright', 's.wright@staffhub.com', '555-0161', '1990-07-19', 'female', '225 Research Park', 'Boston', 'MA', '02131', dept_tech, 'Research Associate', 'contract', 'on-leave', '2019-11-01', 55000, '[{"degree": "MS Biochemistry", "institution": "Tufts"}]', 'Kevin Wright', '555-0162');
 
   -- Update department heads
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'e.wilson@staffhub.com') WHERE id = dept_tech;
@@ -1119,26 +1120,115 @@ BEGIN
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'anas.essam.work@gmail.com') WHERE id = dept_admin;
 END $$;
 
--- Leave Balances for 2026
+-- Leave Balances for 2026 (with partial usage to reflect approved leaves)
 INSERT INTO public.leave_balances (employee_id, year, annual_total, annual_used, sick_total, sick_used, casual_total, casual_used)
-SELECT id, 2026, 20, 0, 10, 0, 10, 0 FROM public.employees;
+SELECT id, 2026,
+  20,
+  CASE WHEN email = 'e.wilson@staffhub.com' THEN 0 WHEN email = 'j.martinez@staffhub.com' THEN 5 WHEN email = 'r.garcia@staffhub.com' THEN 3 ELSE 0 END,
+  10,
+  CASE WHEN email = 'e.wilson@staffhub.com' THEN 2 WHEN email = 'l.rodriguez@staffhub.com' THEN 3 ELSE 0 END,
+  10,
+  CASE WHEN email = 'd.brown@staffhub.com' THEN 1 WHEN email = 'm.anderson@staffhub.com' THEN 2 ELSE 0 END
+FROM public.employees;
 
--- Sample Leave Requests
+-- ============================================================================
+-- LEAVE REQUESTS - All statuses and types
+-- ============================================================================
+-- Pending leaves
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
-SELECT id, 'annual', '2026-02-20', '2026-02-24', 5, 'Family vacation', 'pending' FROM public.employees WHERE email = 'tvissam96@gmail.com';
+SELECT id, 'annual', '2026-02-22', '2026-02-26', 5, 'Family vacation - need time off to travel', 'pending' FROM public.employees WHERE email = 'tvissam96@gmail.com';
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
-SELECT id, 'sick', '2026-02-10', '2026-02-11', 2, 'Medical appointment', 'approved' FROM public.employees WHERE email = 'e.wilson@staffhub.com';
+SELECT id, 'sabbatical', '2026-03-01', '2026-03-14', 14, 'Research sabbatical for academic paper', 'pending' FROM public.employees WHERE email = 'j.lee@staffhub.com';
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
-SELECT id, 'casual', '2026-02-15', '2026-02-15', 1, 'Personal work', 'approved' FROM public.employees WHERE email = 'd.brown@staffhub.com';
-INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
-SELECT id, 'sick', '2026-01-25', '2026-01-26', 2, 'Flu', 'rejected' FROM public.employees WHERE email = 'l.rodriguez@staffhub.com';
+SELECT id, 'casual', '2026-02-25', '2026-02-25', 1, 'Personal errand', 'pending' FROM public.employees WHERE email = 'c.harris@staffhub.com';
 
--- Attendance Records (past 7 days)
+-- Approved leaves
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status, approved_by)
+SELECT e.id, 'sick', '2026-02-10', '2026-02-11', 2, 'Medical appointment and recovery', 'approved',
+  (SELECT u.id FROM public.users u WHERE u.role = 'hr' LIMIT 1)
+FROM public.employees e WHERE e.email = 'e.wilson@staffhub.com';
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status, approved_by)
+SELECT e.id, 'casual', '2026-02-15', '2026-02-15', 1, 'Personal work - bank appointment', 'approved',
+  (SELECT u.id FROM public.users u WHERE u.role = 'hr' LIMIT 1)
+FROM public.employees e WHERE e.email = 'd.brown@staffhub.com';
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status, approved_by)
+SELECT e.id, 'annual', '2026-02-03', '2026-02-07', 5, 'Winter holiday trip', 'approved',
+  (SELECT u.id FROM public.users u WHERE u.role = 'admin' LIMIT 1)
+FROM public.employees e WHERE e.email = 'j.martinez@staffhub.com';
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status, approved_by)
+SELECT e.id, 'annual', '2026-01-20', '2026-01-22', 3, 'Family event', 'approved',
+  (SELECT u.id FROM public.users u WHERE u.role = 'admin' LIMIT 1)
+FROM public.employees e WHERE e.email = 'r.garcia@staffhub.com';
+
+-- Rejected leaves
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
+SELECT id, 'sick', '2026-01-25', '2026-01-26', 2, 'Cold and flu symptoms', 'rejected' FROM public.employees WHERE email = 'l.rodriguez@staffhub.com';
+INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
+SELECT id, 'annual', '2026-02-14', '2026-02-14', 1, 'Valentine day off', 'rejected' FROM public.employees WHERE email = 'w.taylor@staffhub.com';
+
+-- ============================================================================
+-- ATTENDANCE - Mixed statuses including today, late, absent, half-day, passkey
+-- ============================================================================
+
+-- Past 7 days attendance for most employees (present/manual)
 INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
 SELECT e.id, d::date, '09:00', '17:00', 'present', 'manual'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE - 1, '1 day') d
-WHERE e.status = 'active' AND e.email NOT IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
+WHERE e.status = 'active' AND e.email NOT IN (
+  'anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com',
+  'l.rodriguez@staffhub.com', 'w.taylor@staffhub.com', 'k.walker@staffhub.com'
+)
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Auth user attendance (past 5 days - present)
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, d::date, '08:45', '17:15', 'present', 'manual'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 5, CURRENT_DATE - 1, '1 day') d
+WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Today's attendance for some employees (so dashboard shows > 0)
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, CURRENT_DATE, '08:55', '17:00', 'present', 'manual'
+FROM public.employees e
+WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com',
+  'e.wilson@staffhub.com', 'j.lee@staffhub.com', 'r.garcia@staffhub.com',
+  'p.thomas@staffhub.com', 'c.harris@staffhub.com', 'j.martinez@staffhub.com',
+  'd.brown@staffhub.com', 'j.lewis@staffhub.com', 'b.young@staffhub.com')
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Late arrivals (multiple days)
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, d::date, '10:15', '17:30', 'late', 'manual'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE - 1, '1 day') d
+WHERE e.email = 'l.rodriguez@staffhub.com'
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Late + passkey method
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, d::date, '09:45', '17:00', 'late', 'passkey'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 4, CURRENT_DATE - 2, '1 day') d
+WHERE e.email = 'w.taylor@staffhub.com'
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Absent records
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, (CURRENT_DATE - 3)::date, NULL, NULL, 'absent', 'manual'
+FROM public.employees e WHERE e.email = 'k.walker@staffhub.com'
+ON CONFLICT (employee_id, date) DO NOTHING;
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, (CURRENT_DATE - 5)::date, NULL, NULL, 'absent', 'manual'
+FROM public.employees e WHERE e.email = 'w.taylor@staffhub.com'
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Half-day records
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
+SELECT e.id, (CURRENT_DATE - 2)::date, '09:00', '13:00', 'half-day', 'manual'
+FROM public.employees e WHERE e.email = 'k.walker@staffhub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- ============================================================================
@@ -1216,18 +1306,48 @@ EXCEPTION WHEN OTHERS THEN
   RAISE WARNING 'auth.identities insert failed (SQLSTATE=%, MSG=%). Run seed-auth.ps1 after reset.', SQLSTATE, SQLERRM;
 END $$;
 
--- January 2026 Payroll (Paid)
+-- ============================================================================
+-- PAYROLL - January 2026 (Paid) + February 2026 (Draft + Approved mix)
+-- ============================================================================
+
+-- January 2026 Payroll (ALL PAID - historical)
 INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at)
 SELECT e.id, 1, 2026, e.salary,
   CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
   ROUND(e.salary * 0.08, 2),
   e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
   e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END - ROUND(e.salary * 0.08, 2),
-  'paid', 'January 2026 payroll - processed', '2026-01-31'::TIMESTAMPTZ
+  'paid', 'January 2026 payroll - processed and paid', '2026-01-31'::TIMESTAMPTZ
 FROM public.employees e WHERE e.status = 'active'
 ON CONFLICT (employee_id, period_month, period_year) DO NOTHING;
 
--- Bonuses for January 2026
+-- February 2026 Payroll - DRAFT (most employees) for testing approve workflow
+INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at)
+SELECT e.id, 2, 2026, e.salary,
+  CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
+  ROUND(e.salary * 0.08, 2),
+  e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
+  e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END - ROUND(e.salary * 0.08, 2),
+  'draft', 'February 2026 payroll - pending approval', now()
+FROM public.employees e
+WHERE e.status = 'active'
+  AND e.email NOT IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com', 'j.lee@staffhub.com', 'p.thomas@staffhub.com', 'j.martinez@staffhub.com')
+ON CONFLICT (employee_id, period_month, period_year) DO NOTHING;
+
+-- February 2026 Payroll - APPROVED (5 department heads) for testing pay workflow
+INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at, approved_by, approved_at)
+SELECT e.id, 2, 2026, e.salary,
+  CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
+  ROUND(e.salary * 0.08, 2),
+  e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END,
+  e.salary + CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1500 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000 WHEN e.position LIKE 'Senior%' THEN 750 ELSE 500 END - ROUND(e.salary * 0.08, 2),
+  'approved', 'February 2026 payroll - approved, ready for payment', now(),
+  (SELECT u.id FROM public.users u WHERE u.role = 'admin' LIMIT 1), now()
+FROM public.employees e
+WHERE e.email IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com', 'j.lee@staffhub.com', 'p.thomas@staffhub.com', 'j.martinez@staffhub.com')
+ON CONFLICT (employee_id, period_month, period_year) DO NOTHING;
+
+-- Bonuses for January 2026 (housing allowance)
 INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
 SELECT e.id, p.id, 'allowance',
   CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1000 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 700 WHEN e.position LIKE 'Senior%' THEN 500 ELSE 300 END,
@@ -1236,7 +1356,32 @@ FROM public.employees e
 JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
 WHERE e.status = 'active';
 
--- Deductions for January 2026
+-- Performance bonuses for January (Directors & leads)
+INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'performance',
+  CASE WHEN e.position LIKE 'Director%' THEN 500 ELSE 300 END,
+  'Q4 2025 performance bonus', 1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.position IN ('Director', 'Team Lead', 'System Administrator');
+
+-- Bonuses for February 2026 (housing allowance for all February payrolls)
+INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'allowance',
+  CASE WHEN e.position IN ('Director', 'System Administrator') THEN 1000 WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 700 WHEN e.position LIKE 'Senior%' THEN 500 ELSE 300 END,
+  'Monthly housing allowance', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+-- Overtime bonus for Feb (a few employees)
+INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'overtime', 450, 'Overtime hours - system migration project', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.email IN ('c.harris@staffhub.com', 'j.lewis@staffhub.com', 'tvissam96@gmail.com');
+
+-- Deductions for January 2026 (tax + insurance)
 INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
 SELECT e.id, p.id, 'tax', ROUND(e.salary * 0.05, 2), 'Income tax - 5%', 1, 2026
 FROM public.employees e
@@ -1249,70 +1394,249 @@ FROM public.employees e
 JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
 WHERE e.status = 'active';
 
--- Sample Tasks (assigned by admin after users table is populated)
+-- Deductions for February 2026 (tax + insurance + penalties for some)
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'tax', ROUND(e.salary * 0.05, 2), 'Income tax - 5%', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'insurance', ROUND(e.salary * 0.02, 2), 'Health insurance premium', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+-- Penalty deductions for late employees (February)
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'penalty', 200, 'Late attendance penalty - 5 occurrences', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.email = 'l.rodriguez@staffhub.com';
+
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT e.id, p.id, 'penalty', 150, 'Late attendance penalty - 3 occurrences', 2, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 2 AND p.period_year = 2026
+WHERE e.email = 'w.taylor@staffhub.com';
+
+-- ============================================================================
+-- TASKS - All statuses, all priorities
+-- ============================================================================
 DO $$
 DECLARE
   v_admin_id UUID;
+  v_hr_id UUID;
 BEGIN
   SELECT u.id INTO v_admin_id FROM public.users u WHERE u.role = 'admin' LIMIT 1;
+  SELECT u.id INTO v_hr_id FROM public.users u WHERE u.role = 'hr' LIMIT 1;
   
   IF v_admin_id IS NOT NULL THEN
+    -- Pending tasks (different priorities)
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
     SELECT e.id, 'Complete Q1 Performance Review', 'Submit self-assessment form and schedule meeting with supervisor.', 'high', 'pending', '2026-02-28', 20, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'tvissam96@gmail.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Update Department Documentation', 'Review and update all department procedures.', 'normal', 'in_progress', '2026-03-15', 15, 5, v_admin_id
+    SELECT e.id, 'System Security Audit', 'Conduct comprehensive security audit of all internal systems.', 'urgent', 'pending', '2026-02-25', 30, 20, v_admin_id
+    FROM public.employees e WHERE e.email = 'c.harris@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Organize Team Building Event', 'Plan and arrange the quarterly team building activity.', 'low', 'pending', '2026-03-20', 5, 2, v_admin_id
+    FROM public.employees e WHERE e.email = 'n.hall@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Review Vendor Contracts', 'Review all vendor contracts expiring in Q1 and prepare renewal recommendations.', 'normal', 'pending', '2026-03-01', 15, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'r.garcia@staffhub.com';
+
+    -- In-progress tasks
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Update Department Documentation', 'Review and update all department procedures and SOPs.', 'normal', 'in_progress', '2026-03-15', 15, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'e.wilson@staffhub.com';
 
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Develop New Onboarding Module', 'Create training module for new employee onboarding process.', 'high', 'in_progress', '2026-03-10', 25, 15, v_admin_id
+    FROM public.employees e WHERE e.email = 'r.jackson@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Database Migration Planning', 'Plan and document the database migration to new infrastructure.', 'urgent', 'in_progress', '2026-02-28', 30, 20, v_admin_id
+    FROM public.employees e WHERE e.email = 'tvissam96@gmail.com';
+
+    -- Completed tasks
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
     SELECT e.id, 'Submit Monthly Report', 'Compile and submit the monthly department activity report.', 'normal', 'completed', '2026-02-10', '2026-02-09 14:30:00+00', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'd.brown@staffhub.com';
 
-    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'System Security Audit', 'Conduct comprehensive security audit of all internal systems.', 'urgent', 'pending', '2026-02-20', 30, 20, v_admin_id
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Annual Budget Proposal', 'Prepare department annual budget proposal for FY2026.', 'high', 'completed', '2026-02-05', '2026-02-04 16:00:00+00', 25, 15, v_admin_id
+    FROM public.employees e WHERE e.email = 'j.lee@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'IT Inventory Audit', 'Complete inventory of all IT assets and update tracking system.', 'normal', 'completed', '2026-02-12', '2026-02-11 11:00:00+00', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'c.harris@staffhub.com';
 
-    -- Sample Warnings
-    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status, acknowledged_at)
-    SELECT e.id, v_admin_id, 'Excessive Tardiness', 'Employee has been late 5 times in the past month.', 'minor', 'acknowledged', '2026-02-12 10:00:00+00'
-    FROM public.employees e WHERE e.email = 'l.rodriguez@staffhub.com';
+    -- Overdue tasks (deadline in the past, not completed)
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Submit Research Proposal', 'Draft and submit research grant proposal for spring semester.', 'high', 'overdue', '2026-02-10', 20, 15, v_admin_id
+    FROM public.employees e WHERE e.email = 'k.walker@staffhub.com';
 
-    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
-    SELECT e.id, v_admin_id, 'Missed Project Deadline', 'Failed to deliver the assigned project by deadline.', 'moderate', 'active'
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Complete Safety Training', 'Finish the mandatory online safety training module.', 'normal', 'overdue', '2026-02-15', 10, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'w.taylor@staffhub.com';
 
-    -- Sample Announcements
-    INSERT INTO public.announcements (title, content, priority, created_by, is_active) VALUES
-      ('Welcome to StaffHub', 'StaffHub has been updated with new features including announcements and improved leave management.', 'high', v_admin_id, true),
-      ('Office Closure Notice', 'The office will be closed on February 15th for maintenance.', 'urgent', v_admin_id, true),
-      ('New Health Benefits', 'We are pleased to announce improved health benefits starting March 2026.', 'normal', v_admin_id, true);
+    -- Cancelled task
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+    SELECT e.id, 'Legacy System Documentation', 'Document the legacy payroll system before decommission. (Cancelled - system already decommissioned)', 'low', 'cancelled', '2026-02-20', 10, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'b.scott@staffhub.com';
 
-    -- Activity log
-    INSERT INTO public.activity_logs (user_id, action, entity_type, details)
-    VALUES (v_admin_id, 'System initialized with seed data', 'system', '{"version": "3.0", "date": "2026-02-19"}'::jsonb);
+    -- ============================================================================
+    -- WARNINGS - All severities, all statuses
+    -- ============================================================================
+    
+    -- Minor / Acknowledged
+    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status, acknowledged_at)
+    SELECT e.id, v_admin_id, 'Excessive Tardiness', 'Employee has been late 5 times in the past month. Verbal warning issued.', 'minor', 'acknowledged', '2026-02-12 10:00:00+00'
+    FROM public.employees e WHERE e.email = 'l.rodriguez@staffhub.com';
+
+    -- Moderate / Active
+    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+    SELECT e.id, v_admin_id, 'Missed Project Deadline', 'Failed to deliver the assigned project by the agreed-upon deadline without prior notice.', 'moderate', 'active'
+    FROM public.employees e WHERE e.email = 'w.taylor@staffhub.com';
+
+    -- Major / Resolved
+    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status, resolution_notes, resolved_at)
+    SELECT e.id, v_admin_id, 'Unauthorized System Access', 'Attempted to access restricted admin panel without authorization. Employee counseled and access privileges reviewed.',
+      'major', 'resolved', 'Employee attended security training. Access protocols reviewed and updated. No further incidents.', '2026-02-15 14:00:00+00'
+    FROM public.employees e WHERE e.email = 'k.walker@staffhub.com';
+
+    -- Critical / Appealed
+    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+    SELECT e.id, v_admin_id, 'Policy Violation - Data Handling', 'Sent sensitive employee data via unencrypted email. Employee has filed an appeal claiming it was accidental.',
+      'critical', 'appealed'
+    FROM public.employees e WHERE e.email = 'n.hall@staffhub.com';
+
+    -- Another minor / Active (for more variety)
+    INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+    SELECT e.id, v_admin_id, 'Dress Code Violation', 'Repeated failure to follow office dress code policy.', 'minor', 'active'
+    FROM public.employees e WHERE e.email = 'b.young@staffhub.com';
+
+    -- ============================================================================
+    -- ANNOUNCEMENTS - All priorities, active/inactive/expired
+    -- ============================================================================
+    INSERT INTO public.announcements (title, content, priority, created_by, is_active, expires_at) VALUES
+      ('Welcome to StaffHub 3.0', 'StaffHub has been updated with new features including payroll management, task tracking, employee complaints, and performance dashboards. Explore all the new capabilities!', 'high', v_admin_id, true, NULL),
+      ('Office Closure Notice', 'The office will be closed on February 28th for annual maintenance. Please plan your work accordingly and ensure all pending tasks are completed before the closure.', 'urgent', v_admin_id, true, '2026-02-28 23:59:59+00'),
+      ('New Health Benefits Package', 'We are pleased to announce improved health benefits starting March 2026. This includes dental coverage and extended mental health support. Details will be shared via email.', 'normal', v_admin_id, true, '2026-03-31 23:59:59+00'),
+      ('Quarterly Town Hall Meeting', 'Join us for the Q1 town hall meeting on March 5th at 2:00 PM in the main conference hall. Topics include company performance, upcoming projects, and open Q&A.', 'low', v_admin_id, true, '2026-03-05 23:59:59+00'),
+      ('Holiday Schedule Updated', 'The company holiday schedule for 2026 has been finalized. Please check the HR portal for the complete list of holidays and plan your leaves accordingly.', 'normal', v_admin_id, true, NULL),
+      ('Old Parking Policy', 'Previous parking allocation policy - superseded by new policy.', 'low', v_admin_id, false, NULL),
+      ('Expired: January Newsletter', 'Monthly newsletter for January 2026 with company updates and achievements.', 'normal', v_admin_id, true, '2026-01-31 23:59:59+00');
+
+    -- ============================================================================
+    -- ACTIVITY LOGS - Diverse entity types
+    -- ============================================================================
+    INSERT INTO public.activity_logs (user_id, action, entity_type, details) VALUES
+      (v_admin_id, 'System initialized with comprehensive seed data', 'system', '{"version": "3.0", "date": "2026-02-19"}'::jsonb),
+      (v_admin_id, 'Generated January 2026 payroll for all employees', 'payroll', '{"month": 1, "year": 2026, "count": 21}'::jsonb),
+      (v_admin_id, 'Approved and paid January 2026 payroll', 'payroll', '{"month": 1, "year": 2026, "status": "paid"}'::jsonb),
+      (v_admin_id, 'Generated February 2026 payroll draft', 'payroll', '{"month": 2, "year": 2026, "count": 21}'::jsonb),
+      (v_admin_id, 'Issued warning to Karen Walker - Major severity', 'warning', '{"employee": "Karen Walker", "severity": "major"}'::jsonb);
+
+    IF v_hr_id IS NOT NULL THEN
+      INSERT INTO public.activity_logs (user_id, action, entity_type, details) VALUES
+        (v_hr_id, 'Approved leave request for Emily Wilson - Sick leave', 'leave', '{"employee": "Emily Wilson", "type": "sick", "days": 2}'::jsonb),
+        (v_hr_id, 'Approved leave request for David Brown - Casual leave', 'leave', '{"employee": "David Brown", "type": "casual", "days": 1}'::jsonb),
+        (v_hr_id, 'Rejected leave request for Linda Rodriguez - Sick leave', 'leave', '{"employee": "Linda Rodriguez", "type": "sick"}'::jsonb),
+        (v_hr_id, 'Reviewed complaint - Office Temperature Issues', 'complaint', '{"status": "under_review", "category": "workplace"}'::jsonb);
+    END IF;
   END IF;
 END $$;
 
--- Sample Complaints (using HR user)
+-- ============================================================================
+-- COMPLAINTS - All categories, statuses, priorities
+-- ============================================================================
 DO $$
 DECLARE
   v_hr_id UUID;
+  v_admin_id UUID;
 BEGIN
   SELECT u.id INTO v_hr_id FROM public.users u WHERE u.role = 'hr' LIMIT 1;
+  SELECT u.id INTO v_admin_id FROM public.users u WHERE u.role = 'admin' LIMIT 1;
   
   IF v_hr_id IS NOT NULL THEN
+    -- Workplace / Under Review / Normal
     INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to)
-    SELECT e.id, 'Office Temperature Issues', 'The AC in our office area is not working properly.', 'workplace', 'under_review', 'normal', v_hr_id
+    SELECT e.id, 'Office Temperature Issues', 'The AC in our office area has not been working properly for the past 2 weeks. Temperature frequently exceeds comfortable levels.', 'workplace', 'under_review', 'normal', v_hr_id
     FROM public.employees e WHERE e.email = 'd.brown@staffhub.com';
 
+    -- Policy / Pending / Low
     INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority)
-    SELECT e.id, 'Parking Space Allocation', 'Request for review of parking allocation policy.', 'policy', 'pending', 'low'
+    SELECT e.id, 'Parking Space Allocation', 'Request for review of parking allocation policy. Current system unfairly prioritizes seniority over need.', 'policy', 'pending', 'low'
     FROM public.employees e WHERE e.email = 'm.anderson@staffhub.com';
 
+    -- Safety / Pending / Urgent
     INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority)
-    SELECT e.id, 'Safety Concern - Emergency Exit', 'The emergency exit on 3rd floor is often blocked.', 'safety', 'pending', 'urgent'
+    SELECT e.id, 'Safety Concern - Emergency Exit', 'The emergency exit on 3rd floor is often blocked by storage boxes. This is a serious fire hazard.', 'safety', 'pending', 'urgent'
     FROM public.employees e WHERE e.email = 'b.scott@staffhub.com';
+
+    -- General / Resolved / Normal (with resolution)
+    INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to, resolved_by, resolved_at, resolution_notes)
+    SELECT e.id, 'Printer Not Working', 'The shared printer on floor 2 has been out of order for a week.', 'general', 'resolved', 'normal', v_hr_id, v_admin_id, '2026-02-15 11:00:00+00',
+      'New printer installed. Old unit sent for repair. Backup printer placed on floor 2.'
+    FROM public.employees e WHERE e.email = 'c.green@staffhub.com';
+
+    -- Harassment / Pending / High
+    INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to)
+    SELECT e.id, 'Inappropriate Comments by Colleague', 'A colleague has been making repeated inappropriate comments during meetings. This has been ongoing for 3 weeks.', 'harassment', 'pending', 'high', v_hr_id
+    FROM public.employees e WHERE e.email = 'b.young@staffhub.com';
+
+    -- Other / Dismissed / Low
+    INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, resolved_by, resolved_at, resolution_notes)
+    SELECT e.id, 'Cafeteria Food Quality', 'The quality of food in the cafeteria has declined significantly.', 'other', 'dismissed', 'low', v_hr_id, '2026-02-10 09:00:00+00',
+      'Cafeteria is managed by external vendor. Feedback passed to vendor management. Not within HR purview.'
+    FROM public.employees e WHERE e.email = 'r.nelson@staffhub.com';
+
+    -- Staff user complaint (so staff can see their own)
+    INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority)
+    SELECT e.id, 'Software License Request', 'Need access to data analysis software for project work. Current free tools are insufficient.', 'policy', 'pending', 'normal'
+    FROM public.employees e WHERE e.email = 'tvissam96@gmail.com';
+  END IF;
+END $$;
+
+-- ============================================================================
+-- NOTIFICATIONS - Sample for each type for all 3 auth users
+-- ============================================================================
+DO $$
+DECLARE
+  v_admin_uid UUID;
+  v_hr_uid UUID;
+  v_staff_uid UUID;
+BEGIN
+  SELECT u.id INTO v_admin_uid FROM public.users u WHERE u.role = 'admin' LIMIT 1;
+  SELECT u.id INTO v_hr_uid FROM public.users u WHERE u.role = 'hr' LIMIT 1;
+  SELECT u.id INTO v_staff_uid FROM public.users u WHERE u.role = 'staff' LIMIT 1;
+
+  IF v_admin_uid IS NOT NULL THEN
+    INSERT INTO public.notifications (user_id, title, message, type, is_read, created_at) VALUES
+      -- Admin notifications
+      (v_admin_uid, 'New Leave Request', 'Michael Davis has submitted a leave request for Feb 22-26.', 'leave', false, now() - interval '1 hour'),
+      (v_admin_uid, 'Payroll Generated', 'February 2026 payroll draft has been generated for 21 employees.', 'system', false, now() - interval '2 hours'),
+      (v_admin_uid, 'New Complaint Filed', 'A new safety complaint has been filed regarding emergency exits.', 'complaint', false, now() - interval '4 hours'),
+      (v_admin_uid, 'Task Overdue', 'Karen Walker has an overdue task: Submit Research Proposal.', 'task', true, now() - interval '1 day'),
+      (v_admin_uid, 'Performance Alert', 'Weekly performance scores calculated. 2 employees below threshold.', 'performance', true, now() - interval '2 days'),
+      (v_admin_uid, 'Warning Issued', 'Warning issued to Nancy Hall for policy violation - data handling.', 'warning', true, now() - interval '3 days'),
+      -- HR notifications
+      (v_hr_uid, 'Leave Approved', 'Emily Wilson sick leave (Feb 10-11) has been processed.', 'leave', true, now() - interval '5 hours'),
+      (v_hr_uid, 'New Complaint', 'Betty Young has filed a harassment complaint requiring immediate attention.', 'complaint', false, now() - interval '3 hours'),
+      (v_hr_uid, 'Attendance Alert', 'Linda Rodriguez has been late 5 times this month.', 'attendance', false, now() - interval '6 hours'),
+      (v_hr_uid, 'Payroll Ready for Review', 'February 2026 payroll records are ready for approval.', 'system', false, now() - interval '1 day'),
+      (v_hr_uid, 'New Leave Request', 'Sabbatical leave request from James Lee requires review.', 'leave', false, now() - interval '4 hours'),
+      -- Staff notifications
+      (v_staff_uid, 'Task Assigned', 'You have been assigned a new task: Complete Q1 Performance Review.', 'task', false, now() - interval '2 hours'),
+      (v_staff_uid, 'Task Assigned', 'New task: Database Migration Planning - urgent priority.', 'task', false, now() - interval '1 day'),
+      (v_staff_uid, 'Leave Status', 'Your annual leave request (Feb 22-26) is pending approval.', 'leave', true, now() - interval '3 hours'),
+      (v_staff_uid, 'Performance Update', 'Your weekly performance score has been calculated: 55 points.', 'performance', false, now() - interval '1 day'),
+      (v_staff_uid, 'System Update', 'StaffHub has been updated to version 3.0 with new features.', 'system', true, now() - interval '5 days');
   END IF;
 END $$;
 
