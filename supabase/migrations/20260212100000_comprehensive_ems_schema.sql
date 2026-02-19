@@ -61,6 +61,9 @@ CREATE TABLE public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('admin', 'hr', 'staff')),
   employee_id UUID NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  banned_at TIMESTAMPTZ DEFAULT NULL,
+  ban_reason TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

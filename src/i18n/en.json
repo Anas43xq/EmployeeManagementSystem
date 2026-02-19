@@ -54,6 +54,8 @@
     "signOut": "Sign Out",
     "signedInSuccess": "Successfully signed in!",
     "invalidCredentials": "Invalid email or password",
+    "accountBanned": "Your account has been banned. Please contact the administrator for assistance.",
+    "emailNotConfirmed": "Please confirm your email address before signing in.",
     "resetPassword": "Reset Password",
     "resetPasswordDesc": "Enter your email address and we'll send you a link to reset your password",
     "sendResetLink": "Send Reset Link",

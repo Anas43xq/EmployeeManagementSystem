@@ -57,9 +57,19 @@ export default function Login() {
       await signIn(email, password);
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
-    } catch (err) {
-      setError(t('auth.invalidCredentials'));
-      showNotification('error', t('auth.invalidCredentials'));
+    } catch (err: any) {
+      // Check if user is banned
+      const errorMessage = err?.message?.toLowerCase() || '';
+      if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
+        setError(t('auth.accountBanned'));
+        showNotification('error', t('auth.accountBanned'));
+      } else if (errorMessage.includes('email not confirmed')) {
+        setError(t('auth.emailNotConfirmed'));
+        showNotification('error', t('auth.emailNotConfirmed'));
+      } else {
+        setError(t('auth.invalidCredentials'));
+        showNotification('error', t('auth.invalidCredentials'));
+      }
     } finally {
       setLoading(false);
     }
@@ -103,12 +113,24 @@ export default function Login() {
         showNotification('success', t('auth.passkeyLoginSuccess', 'Signed in with passkey successfully!'));
         navigate('/dashboard', { replace: true });
       } else {
-        setError(result.error || t('auth.passkeyLoginFailed', 'Passkey authentication failed'));
+        // Check if user is banned
+        const errorMessage = result.error?.toLowerCase() || '';
+        if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
+          setError(t('auth.accountBanned'));
+          showNotification('error', t('auth.accountBanned'));
+        } else {
+          setError(result.error || t('auth.passkeyLoginFailed', 'Passkey authentication failed'));
+        }
       }
     } catch (err: any) {
-      const errorMessage = err.message || t('auth.passkeyLoginFailed', 'Passkey authentication failed');
-      setError(errorMessage);
-      showNotification('error', errorMessage);
+      const errorMessage = err.message?.toLowerCase() || '';
+      if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
+        setError(t('auth.accountBanned'));
+        showNotification('error', t('auth.accountBanned'));
+      } else {
+        setError(err.message || t('auth.passkeyLoginFailed', 'Passkey authentication failed'));
+        showNotification('error', err.message || t('auth.passkeyLoginFailed'));
+      }
     } finally {
       setPasskeyLoading(false);
     }
