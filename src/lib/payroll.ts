@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { supabase } from './supabase';
+import { supabase, db } from './supabase';
 import { getValidAccessToken, getFreshAccessToken } from './sessionManager';
 
 export interface PayrollData {
@@ -200,7 +200,7 @@ export async function getPayrollRecords(
     if (employeeId) filters.employee_id = employeeId;
     if (status) filters.status = status;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('payrolls')
       .select(`
         *,
@@ -229,7 +229,7 @@ export async function getPayrollRecords(
 
 export async function getBonuses(employeeId: string, month: number, year: number) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('bonuses')
       .select('*')
       .match({ employee_id: employeeId, period_month: month, period_year: year })
@@ -248,7 +248,7 @@ export async function getBonuses(employeeId: string, month: number, year: number
 
 export async function getDeductions(employeeId: string, month: number, year: number) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('deductions')
       .select('*')
       .match({ employee_id: employeeId, period_month: month, period_year: year })
@@ -274,8 +274,8 @@ export async function addBonus(
   year: number
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('bonuses' as any)
+    const { error } = await db
+      .from('bonuses')
       .insert({
         employee_id: employeeId,
         type,
@@ -283,7 +283,7 @@ export async function addBonus(
         description,
         period_month: month,
         period_year: year
-      } as any);
+      });
 
     if (error) {
       throw error;
@@ -305,8 +305,8 @@ export async function addDeduction(
   year: number
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('deductions' as any)
+    const { error } = await db
+      .from('deductions')
       .insert({
         employee_id: employeeId,
         type,
@@ -314,7 +314,7 @@ export async function addDeduction(
         description,
         period_month: month,
         period_year: year
-      } as any);
+      });
 
     if (error) {
       throw error;

@@ -13,8 +13,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    // Disable lock to prevent AbortError issues
-    lock: (() => {}) as any,
+    // Custom lock that bypasses Web Locks API but still executes the callback
+    lock: (async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => {
+      return fn();
+    }) as any,
     // Use localStorage for storage
     storage: localStorage,
     storageKey: 'ems-auth-token',
