@@ -5,7 +5,7 @@ interface ModalProps {
   show: boolean;
   onClose: () => void;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 const sizeMap = {
@@ -13,6 +13,7 @@ const sizeMap = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-3xl',
 };
 
 function Modal({ show, onClose, children, size = 'md' }: ModalProps) {
@@ -24,7 +25,7 @@ function Modal({ show, onClose, children, size = 'md' }: ModalProps) {
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${sizeMap[size]}`}
+        className={`bg-white rounded-lg shadow-xl w-full ${sizeMap[size]} max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -40,7 +41,7 @@ interface HeaderProps {
 
 function Header({ children, onClose }: HeaderProps) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-gray-200">
+    <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
       <h2 className="text-xl font-bold text-gray-900">{children}</h2>
       <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
         <X className="w-6 h-6" />
@@ -56,7 +57,7 @@ interface BodyProps {
 
 function Body({ children, className = '' }: BodyProps) {
   return (
-    <div className={`p-6 space-y-4 ${className}`}>
+    <div className={`p-6 space-y-4 overflow-y-auto ${className}`}>
       {children}
     </div>
   );

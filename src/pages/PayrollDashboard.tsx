@@ -46,8 +46,6 @@ export default function PayrollDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
-  const [generateMonth, setGenerateMonth] = useState(new Date().getMonth() + 1);
-  const [generateYear, setGenerateYear] = useState(new Date().getFullYear());
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [employees, setEmployees] = useState<EmployeeWithNumber[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
@@ -141,7 +139,7 @@ export default function PayrollDashboard() {
   };
 
   const handleGeneratePayroll = async () => {
-    if (generateMonth < 1 || generateMonth > 12 || generateYear < 2020) {
+    if (selectedMonth < 1 || selectedMonth > 12 || selectedYear < 2020) {
       showNotification('error', t('payroll.invalidPeriod', 'Please select a valid month and year'));
       return;
     }
@@ -149,17 +147,15 @@ export default function PayrollDashboard() {
     setGenerating(true);
     try {
       const result = await generateMonthlyPayroll(
-        generateMonth,
-        generateYear,
+        selectedMonth,
+        selectedYear,
         selectedEmployees.length > 0 ? selectedEmployees : undefined
       );
 
       if (result.success) {
         showNotification('success', result.message || t('payroll.generatedSuccessfully', 'Payroll generated successfully'));
         setIsGenerateModalOpen(false);
-        if (generateMonth === selectedMonth && generateYear === selectedYear) {
-          loadPayrollRecords();
-        }
+        loadPayrollRecords();
       } else {
         throw new Error(result.message);
       }
@@ -474,35 +470,15 @@ export default function PayrollDashboard() {
         <Modal.Body>
           <div className="space-y-6">
             <div>
-              <p className="text-gray-600 mb-4">
+              <div className="flex items-center space-x-2 mb-4 p-3 bg-blue-50 rounded-lg">
+                <Calculator className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-blue-900">
+                  {t('payroll.generatingFor', 'Generating for')}: {getMonthName(selectedMonth)} {selectedYear}
+                </span>
+              </div>
+              <p className="text-gray-600">
                 {t('payroll.generateDescription', 'Generate payroll for all active employees. This will calculate salaries including bonuses, deductions, attendance, and leaves.')}
               </p>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label={t('payroll.month', 'Month')} required>
-                  <select
-                    value={generateMonth}
-                    onChange={(e) => setGenerateMonth(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                      <option key={month} value={month}>{getMonthName(month)}</option>
-                    ))}
-                  </select>
-                </FormField>
-
-                <FormField label={t('payroll.year', 'Year')} required>
-                  <select
-                    value={generateYear}
-                    onChange={(e) => setGenerateYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i + 1).map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </FormField>
-              </div>
             </div>
 
             {/* Employee Selection */}
@@ -592,6 +568,7 @@ export default function PayrollDashboard() {
       {/* Payslip View Modal */}
       <Modal
         show={isPayslipModalOpen}
+        size="2xl"
         onClose={() => {
           setIsPayslipModalOpen(false);
           setViewingPayroll(null);
