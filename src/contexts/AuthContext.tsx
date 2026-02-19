@@ -3,12 +3,14 @@ import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { logActivity } from '../lib/activityLog';
 
-const isRefreshTokenError = (error: AuthError | Error): boolean => {
+const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
+  if (!error) return false;
   const message = error.message?.toLowerCase() || '';
   return message.includes('refresh token') || 
          message.includes('invalid token') ||
          message.includes('token not found') ||
-         message.includes('session expired');
+         message.includes('session expired') ||
+         message.includes('not found');
 };
 
 type UserRole = 'admin' | 'hr' | 'staff';
@@ -35,20 +37,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      (async () => {
-        if (error && isRefreshTokenError(error)) {
-          console.warn('Session expired or invalid, signing out...');
-          await supabase.auth.signOut();
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        if (session?.user) {
-          await loadUserData(session.user);
-        }
+    // Get session directly - faster startup
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error && isRefreshTokenError(error)) {
+        console.warn('Session expired or invalid, signing out...');
+        await supabase.auth.signOut();
+        setUser(null);
         setLoading(false);
-      })();
+        return;
+      }
+      
+      if (session?.user) {
+        await loadUserData(session.user);
+      }
+      setLoading(false);
     }).catch((error) => {
       console.error('Error getting session:', error);
       if (isRefreshTokenError(error)) {

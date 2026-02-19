@@ -53,6 +53,17 @@ export async function generateMonthlyPayroll(
   employeeIds?: string[]
 ): Promise<PayrollCalculationResult> {
   try {
+    // Ensure we have a valid session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error('No valid session:', sessionError?.message);
+      return {
+        success: false,
+        message: 'Please log in again to generate payroll'
+      };
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
         action: 'generate-payroll',
