@@ -98,10 +98,18 @@ export default function Profile() {
 
       <Card>
         <div className="flex items-center space-x-6">
-          <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-3xl font-bold text-blue-900">
-              {employee ? `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}` : user?.email?.charAt(0).toUpperCase()}
-            </span>
+          <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+            {employee?.photo_url ? (
+              <img
+                src={employee.photo_url}
+                alt={`${employee.first_name} ${employee.last_name}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-3xl font-bold text-blue-900">
+                {employee ? `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}` : user?.email?.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">

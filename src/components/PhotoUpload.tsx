@@ -47,12 +47,12 @@ export default function PhotoUpload({
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${employeeId || 'new'}-${Date.now()}.${fileExt}`;
-      const filePath = `employee-photos/${fileName}`;
+      const filePath = fileName;
 
       if (currentPhotoUrl) {
         const oldPath = currentPhotoUrl.split('/').pop();
         if (oldPath) {
-          await supabase.storage.from('employee-photos').remove([`employee-photos/${oldPath}`]);
+          await supabase.storage.from('employee-photos').remove([oldPath]);
         }
       }
 
