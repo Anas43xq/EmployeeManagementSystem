@@ -52,6 +52,9 @@ serve(async (req) => {
       authHeader = `Bearer ${authHeader}`;
     }
 
+    // Extract the raw JWT token from the Authorization header
+    const token = authHeader.replace('Bearer ', '');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -62,7 +65,10 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // IMPORTANT: Pass token explicitly to getUser() because Edge Functions
+    // have no persistent storage, so getUser() without a token would try
+    // getSession() → find no stored session → return null → 401
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     
     console.log('Auth result:', { 
       hasUser: !!user, 
