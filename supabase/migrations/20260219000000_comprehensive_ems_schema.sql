@@ -1144,12 +1144,12 @@ ON CONFLICT (employee_id, date) DO NOTHING;
 -- Delete existing demo auth users
 DELETE FROM auth.users WHERE email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com');
 
--- Create auth users for demo accounts
+-- Create auth users for demo accounts (pre-computed bcrypt hashes for compatibility)
 INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
 VALUES 
-  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'anas.essam.work@gmail.com', extensions.crypt('admin123', extensions.gen_salt('bf')), now(), '{"provider": "email", "providers": ["email"], "role": "admin"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'essamanas86@gmail.com', extensions.crypt('Hr123', extensions.gen_salt('bf')), now(), '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
-  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'tvissam96@gmail.com', extensions.crypt('emp123', extensions.gen_salt('bf')), now(), '{"provider": "email", "providers": ["email"], "role": "staff"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', '');
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'anas.essam.work@gmail.com', '$2a$10$3wyQrxricyx5vNgoffmjLOvjP9Q1F1uS6WfRNuM9gBBG5Mbu/.ktW', now(), '{"provider": "email", "providers": ["email"], "role": "admin"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'essamanas86@gmail.com', '$2a$10$nhMhJ6LrN8HOtFQfyXKj.uXijDuLKP1aFZ59Kgif8poJw1oA7BXEa', now(), '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'tvissam96@gmail.com', '$2a$10$HOtHFhJoaLYr.tVzlZRa1eHxFEW9Jop45kz65yrF.jqf/Qb4BJtWm', now(), '{"provider": "email", "providers": ["email"], "role": "staff"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', '');
 
 -- January 2026 Payroll (Paid)
 INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at)
