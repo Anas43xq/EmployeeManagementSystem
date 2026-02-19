@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { notifyLeaveApproval, notifyLeaveRejection, notifyLeavePending } from '../../lib/notifications';
 import { createNotification, notifyHRAndAdmins } from '../../lib/dbNotifications';
 import { logActivity } from '../../lib/activityLog';
 import type { Leave, LeaveFormData, LeaveBalance } from './types';
@@ -245,27 +244,6 @@ export function useLeaves() {
         'leave'
       );
 
-      const { data: hrAdminUsers } = await db
-        .from('users')
-        .select('email')
-        .in('role', ['admin', 'hr']) as { data: { email: string }[] | null };
-
-      if (hrAdminUsers && hrAdminUsers.length > 0 && employeeData) {
-        const employeeName = `${employeeData.first_name} ${employeeData.last_name}`;
-        const startDateFormatted = new Date(formData.start_date).toLocaleDateString();
-        const endDateFormatted = new Date(formData.end_date).toLocaleDateString();
-
-        for (const adminUser of hrAdminUsers) {
-          await notifyLeavePending(
-            adminUser.email,
-            employeeName,
-            formData.leave_type,
-            startDateFormatted,
-            endDateFormatted
-          );
-        }
-      }
-
       setFormData({
         leave_type: 'annual',
         start_date: '',
@@ -310,9 +288,9 @@ export function useLeaves() {
 
       const { data: employeeUser } = await db
         .from('users')
-        .select('id, email')
+        .select('id')
         .eq('employee_id', leave.employee_id)
-        .single() as { data: { id: string; email: string } | null };
+        .single() as { data: { id: string } | null };
 
       if (employeeUser) {
         await createNotification(
@@ -320,13 +298,6 @@ export function useLeaves() {
           'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
           'leave'
-        );
-
-        await notifyLeaveApproval(
-          employeeUser.email,
-          leave.leave_type,
-          new Date(leave.start_date).toLocaleDateString(),
-          new Date(leave.end_date).toLocaleDateString()
         );
       } else {
         console.warn('No user linked to employee for leave approval notification, employee_id:', leave.employee_id);
@@ -365,9 +336,9 @@ export function useLeaves() {
 
       const { data: employeeUser } = await db
         .from('users')
-        .select('id, email')
+        .select('id')
         .eq('employee_id', leave.employee_id)
-        .single() as { data: { id: string; email: string } | null };
+        .single() as { data: { id: string } | null };
 
       if (employeeUser) {
         await createNotification(
@@ -375,13 +346,6 @@ export function useLeaves() {
           'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
           'leave'
-        );
-
-        await notifyLeaveRejection(
-          employeeUser.email,
-          leave.leave_type,
-          new Date(leave.start_date).toLocaleDateString(),
-          new Date(leave.end_date).toLocaleDateString()
         );
       } else {
         console.warn('No user linked to employee for leave rejection notification, employee_id:', leave.employee_id);

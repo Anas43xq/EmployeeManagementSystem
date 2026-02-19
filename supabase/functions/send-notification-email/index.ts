@@ -18,7 +18,7 @@ interface EmailNotificationRequest {
   to: string;
   subject: string;
   body: string;
-  type: 'leave_approved' | 'leave_rejected' | 'leave_pending' | 'general';
+  type: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -131,11 +131,14 @@ function generateEmailTemplate(subject: string, body: string, type: string): str
     .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
     .badge-success { background: #d1fae5; color: #065f46; }
     .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
     .badge-info { background: #dbeafe; color: #1e40af; }
   `;
 
-  const badgeClass = type.includes('approved') ? 'badge-success' :
-                     type.includes('pending') ? 'badge-warning' : 'badge-info';
+  const badgeClass = type.includes('approved') || type === 'performance' ? 'badge-success' :
+                     type.includes('pending') || type === 'task' ? 'badge-warning' :
+                     type === 'warning' || type.includes('rejected') || type === 'complaint' ? 'badge-danger' :
+                     'badge-info';
 
   return `
     <!DOCTYPE html>

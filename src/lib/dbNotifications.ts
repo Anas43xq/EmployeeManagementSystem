@@ -1,7 +1,8 @@
 import { supabase, db } from './supabase';
 import type { Database } from './database.types';
+import { sendEmailNotification } from './notifications';
 
-export type NotificationType = 'leave' | 'attendance' | 'system';
+export type NotificationType = 'leave' | 'attendance' | 'system' | 'warning' | 'task' | 'complaint' | 'performance';
 
 type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
@@ -14,6 +15,46 @@ export interface DbNotification {
   type: NotificationType;
   is_read: boolean;
   created_at: string;
+}
+
+/**
+ * Looks up the user's email and sends an email notification.
+ * Runs as fire-and-forget so it doesn't block the caller.
+ */
+async function sendNotificationEmail(
+  userId: string,
+  title: string,
+  message: string,
+  type: NotificationType
+): Promise<void> {
+  try {
+    // Look up email: users -> employees -> email
+    const { data: userData } = await db
+      .from('users')
+      .select('employee_id')
+      .eq('id', userId)
+      .single();
+
+    if (!userData?.employee_id) return;
+
+    const { data: employee } = await db
+      .from('employees')
+      .select('email')
+      .eq('id', userData.employee_id)
+      .single();
+
+    if (!employee?.email) return;
+
+    await sendEmailNotification({
+      to: employee.email,
+      subject: title,
+      body: message,
+      type,
+    });
+  } catch (err) {
+    // Don't let email failures affect the main notification flow
+    console.error('Error sending notification email:', err);
+  }
 }
 
 export async function createNotification(
@@ -35,6 +76,9 @@ export async function createNotification(
     if (error) {
       console.error('Failed to create notification:', error);
     }
+
+    // Also send email notification (fire-and-forget)
+    sendNotificationEmail(userId, title, message, type);
   } catch (err) {
     console.error('Error creating notification:', err);
   }
@@ -61,6 +105,11 @@ export async function createNotifications(
 
     if (error) {
       console.error('Failed to create notifications:', error);
+    }
+
+    // Also send email for each notification (fire-and-forget)
+    for (const n of notifications) {
+      sendNotificationEmail(n.userId, n.title, n.message, n.type);
     }
   } catch (err) {
     console.error('Error creating notifications:', err);

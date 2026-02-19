@@ -1,4 +1,7 @@
-export type NotificationEmailType = 'leave_approved' | 'leave_rejected' | 'leave_pending' | 'general';
+export type NotificationEmailType =
+  | 'leave_approved' | 'leave_rejected' | 'leave_pending'
+  | 'leave' | 'attendance' | 'system' | 'warning' | 'task' | 'complaint' | 'performance'
+  | 'general';
 
 interface EmailNotificationData {
   to: string;
