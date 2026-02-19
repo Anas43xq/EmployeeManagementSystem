@@ -91,16 +91,6 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t('employees.terminationDate')}</label>
-          <input
-            type="date"
-            name="termination_date"
-            value={formData.termination_date}
-            onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('employees.salary')}</label>
           <input
             type="number"

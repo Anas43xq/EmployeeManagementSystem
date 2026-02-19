@@ -21,6 +21,9 @@ import {
   User,
   Calculator,
   Receipt,
+  ListTodo,
+  AlertTriangle,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function Layout() {
@@ -38,6 +41,9 @@ export default function Layout() {
     { name: t('nav.departments'), href: '/departments', icon: Building2, roles: ['admin', 'hr'] },
     { name: t('nav.leaveManagement'), href: '/leaves', icon: Calendar, roles: ['admin', 'hr', 'staff'] },
     { name: t('nav.attendance'), href: '/attendance', icon: Clock, roles: ['admin', 'hr', 'staff'] },
+    { name: t('nav.tasks'), href: '/tasks', icon: ListTodo, roles: ['admin', 'hr', 'staff'] },
+    { name: t('nav.warnings'), href: '/warnings', icon: AlertTriangle, roles: ['admin', 'hr', 'staff'] },
+    { name: t('nav.complaints'), href: '/complaints', icon: MessageSquare, roles: ['admin', 'hr', 'staff'] },
     { name: t('nav.payroll', 'Payroll'), href: '/payroll', icon: Calculator, roles: ['admin', 'hr'] },
     { name: t('nav.myPayslips', 'My Payslips'), href: '/payslips', icon: Receipt, roles: ['staff'] },
     { name: t('nav.announcements'), href: '/announcements', icon: Megaphone, roles: ['admin', 'hr'] },

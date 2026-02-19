@@ -8,6 +8,8 @@ import DepartmentChart from './DepartmentChart';
 import LeaveChart from './LeaveChart';
 import RecentActivities from './RecentActivities';
 import QuickActions from './QuickActions';
+import EmployeeOfWeekWidget from './EmployeeOfWeekWidget';
+import PerformanceChartWidget from './PerformanceChartWidget';
 
 export default function Dashboard() {
   const { stats, recentActivities, departmentData, leaveStatusData, loading, user } = useDashboard();
@@ -26,6 +28,18 @@ export default function Dashboard() {
 
       {isWidgetVisible('announcements', userRole) && (
         <AnnouncementsWidget />
+      )}
+
+      {/* Employee of the Week and Performance Chart */}
+      {(isWidgetVisible('employeeOfWeek', userRole) || isWidgetVisible('performanceChart', userRole)) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {isWidgetVisible('employeeOfWeek', userRole) && (
+            <EmployeeOfWeekWidget />
+          )}
+          {isWidgetVisible('performanceChart', userRole) && (
+            <PerformanceChartWidget />
+          )}
+        </div>
       )}
 
       {(isWidgetVisible('departmentChart', userRole) || isWidgetVisible('leaveChart', userRole)) && (

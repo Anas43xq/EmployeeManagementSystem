@@ -20,7 +20,6 @@ export interface EmployeeFormData {
   employment_type: string;
   status: string;
   hire_date: string;
-  termination_date: string;
   salary: string;
   emergency_contact_name: string;
   emergency_contact_phone: string;

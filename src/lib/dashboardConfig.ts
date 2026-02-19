@@ -24,6 +24,8 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
   { id: 'todayAttendance', label: "Today's Attendance", visibleFor: ['admin', 'hr', 'staff'] },
   { id: 'approvedLeaves', label: 'Approved Leaves', visibleFor: ['admin', 'hr'] },
   { id: 'rejectedLeaves', label: 'Rejected Leaves', visibleFor: ['admin', 'hr'] },
+  { id: 'employeeOfWeek', label: 'Employee of the Week', visibleFor: ['admin', 'hr', 'staff'] },
+  { id: 'performanceChart', label: 'Performance Chart', visibleFor: ['admin', 'hr'] },
   { id: 'departmentChart', label: 'Employees by Department', visibleFor: ['admin', 'hr'], isChart: true },
   { id: 'leaveChart', label: 'Leave Status Distribution', visibleFor: ['admin', 'hr', 'staff'], isChart: true },
   { id: 'recentActivities', label: 'Recent Activities', visibleFor: ['admin'] },

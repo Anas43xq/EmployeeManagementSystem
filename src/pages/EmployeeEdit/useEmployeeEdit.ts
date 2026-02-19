@@ -34,7 +34,6 @@ export function useEmployeeEdit() {
     employment_type: 'full-time',
     status: 'active',
     hire_date: '',
-    termination_date: '',
     salary: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
@@ -98,7 +97,6 @@ export function useEmployeeEdit() {
         employment_type: data.employment_type || 'full-time',
         status: data.status || 'active',
         hire_date: data.hire_date || '',
-        termination_date: data.termination_date || '',
         salary: data.salary?.toString() || '',
         emergency_contact_name: data.emergency_contact_name || '',
         emergency_contact_phone: data.emergency_contact_phone || '',
@@ -135,7 +133,6 @@ export function useEmployeeEdit() {
       const submitData = {
         ...formData,
         salary: formData.salary ? parseFloat(formData.salary) : null,
-        termination_date: formData.termination_date || null,
         date_of_birth: formData.date_of_birth || null,
         updated_at: new Date().toISOString(),
       };
