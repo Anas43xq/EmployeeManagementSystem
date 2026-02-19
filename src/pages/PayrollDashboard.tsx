@@ -14,9 +14,7 @@ import {
   type BonusData,
   type DeductionData
 } from '../lib/payroll';
-import { fetchActiveEmployees } from '../lib/queries';
-import type { EmployeeWithNumber } from '../lib/types';
-import { Card, Button, StatusBadge, Modal, FormField, PageHeader, EmptyState } from '../components/ui';
+import { Card, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../components/ui';
 import {
   Calculator,
   DollarSign,
@@ -46,9 +44,6 @@ export default function PayrollDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  const [employees, setEmployees] = useState<EmployeeWithNumber[]>([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   const [selectedPayrolls, setSelectedPayrolls] = useState<string[]>([]);
 
@@ -63,12 +58,6 @@ export default function PayrollDashboard() {
     loadPayrollRecords();
   }, [selectedMonth, selectedYear, statusFilter]);
 
-  useEffect(() => {
-    if (isGenerateModalOpen) {
-      loadEmployees();
-    }
-  }, [isGenerateModalOpen]);
-
   const loadPayrollRecords = async () => {
     setLoading(true);
     try {
@@ -78,18 +67,6 @@ export default function PayrollDashboard() {
       showNotification('error', t('payroll.failedToLoad', 'Failed to load payroll records'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadEmployees = async () => {
-    setLoadingEmployees(true);
-    try {
-      const data = await fetchActiveEmployees(true) as EmployeeWithNumber[];
-      setEmployees(data);
-    } catch (error) {
-      console.error('Failed to load employees:', error);
-    } finally {
-      setLoadingEmployees(false);
     }
   };
 
@@ -122,22 +99,6 @@ export default function PayrollDashboard() {
     }
   };
 
-  const toggleEmployeeSelection = (employeeId: string) => {
-    setSelectedEmployees(prev =>
-      prev.includes(employeeId)
-        ? prev.filter(id => id !== employeeId)
-        : [...prev, employeeId]
-    );
-  };
-
-  const selectAllEmployees = () => {
-    if (selectedEmployees.length === employees.length) {
-      setSelectedEmployees([]);
-    } else {
-      setSelectedEmployees(employees.map(e => e.id));
-    }
-  };
-
   const handleGeneratePayroll = async () => {
     if (selectedMonth < 1 || selectedMonth > 12 || selectedYear < 2020) {
       showNotification('error', t('payroll.invalidPeriod', 'Please select a valid month and year'));
@@ -148,8 +109,7 @@ export default function PayrollDashboard() {
     try {
       const result = await generateMonthlyPayroll(
         selectedMonth,
-        selectedYear,
-        selectedEmployees.length > 0 ? selectedEmployees : undefined
+        selectedYear
       );
 
       if (result.success) {
@@ -479,66 +439,6 @@ export default function PayrollDashboard() {
               <p className="text-gray-600">
                 {t('payroll.generateDescription', 'Generate payroll for all active employees. This will calculate salaries including bonuses, deductions, attendance, and leaves.')}
               </p>
-            </div>
-
-            {/* Employee Selection */}
-            <div>
-              <FormField label={t('payroll.selectEmployees', 'Select Employees (Optional)')}>
-                <div className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
-                  {loadingEmployees ? (
-                    <div className="p-4 text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-sm text-gray-500 mt-2">{t('common.loading', 'Loading...')}</p>
-                    </div>
-                  ) : employees.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      {t('payroll.noEmployeesFound', 'No active employees found')}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="p-2 border-b border-gray-200 bg-gray-50">
-                        <label className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedEmployees.length === employees.length && employees.length > 0}
-                            onChange={selectAllEmployees}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">
-                            {selectedEmployees.length === employees.length 
-                              ? t('payroll.deselectAll', 'Deselect All')
-                              : t('payroll.selectAll', 'Select All')} ({employees.length})
-                          </span>
-                        </label>
-                      </div>
-                      {employees.map((employee) => (
-                        <label
-                          key={employee.id}
-                          className="flex items-center space-x-3 p-2 hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedEmployees.includes(employee.id)}
-                            onChange={() => toggleEmployeeSelection(employee.id)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">
-                              {employee.first_name} {employee.last_name}
-                            </p>
-                            <p className="text-xs text-gray-500">{employee.employee_number}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {selectedEmployees.length > 0 
-                    ? t('payroll.selectedEmployeesCount', '{count} employees selected', { count: selectedEmployees.length })
-                    : t('payroll.allEmployeesHint', 'Leave empty to generate for all active employees')}
-                </p>
-              </FormField>
             </div>
 
             <div className="flex space-x-3">
