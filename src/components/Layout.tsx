@@ -70,7 +70,9 @@ export default function Layout() {
                 <Briefcase className="w-6 h-6 text-blue-900" />
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg tracking-tight">{t('auth.ems')}</h1>
+                <h1 className="text-white font-bold text-lg tracking-tight">
+                  {t('auth.ems')} <span className="text-blue-300 font-normal">Group</span>
+                </h1>
                 <p className="text-blue-300 text-[10px] tracking-wide uppercase">
                   {user?.role === 'admin' && t('auth.adminPortal')}
                   {user?.role === 'hr' && t('auth.hrPortal')}

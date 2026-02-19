@@ -38,13 +38,13 @@
     "back": "Back"
   },
   "auth": {
-    "ems": "StaffHub",
+    "ems": "Al-Mustaqbal",
     "adminPortal": "Admin Portal",
     "hrPortal": "HR Portal",
     "employeePortal": "Staff Portal",
     "staffPortal": "Staff Portal",
-    "employeeManagementSystem": "StaffHub",
-    "tagline": "Al-Mustaqbal Group",
+    "employeeManagementSystem": "Al-Mustaqbal Group",
+    "tagline": "Employee Management System",
     "signInToContinue": "Sign in to your workspace",
     "emailAddress": "Email Address",
     "password": "Password",

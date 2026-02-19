@@ -38,13 +38,13 @@
     "back": "رجوع"
   },
   "auth": {
-    "ems": "StaffHub",
+    "ems": "المستقبل",
     "adminPortal": "بوابة الإدارة",
     "hrPortal": "بوابة الموارد البشرية",
     "employeePortal": "بوابة الموظفين",
     "staffPortal": "بوابة الموظفين",
-    "employeeManagementSystem": "StaffHub",
-    "tagline": "مجموعة المستقبل",
+    "employeeManagementSystem": "مجموعة المستقبل",
+    "tagline": "نظام إدارة الموظفين",
     "signInToContinue": "سجّل دخولك إلى مساحة العمل",
     "emailAddress": "عنوان البريد الإلكتروني",
     "password": "كلمة المرور",
