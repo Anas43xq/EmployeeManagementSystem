@@ -69,7 +69,7 @@ export function useUserManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data || []) as User[]);
     } catch (error) {
       console.error('Error loading users:', error);
       showNotification('error', t('userManagement.failedToLoad'));
@@ -108,8 +108,8 @@ export function useUserManagement() {
       );
 
       const withoutAccess = (allEmployees || []).filter(
-        (emp: EmployeeWithoutAccess) => !employeesWithAccess.has(emp.id)
-      );
+        (emp) => !employeesWithAccess.has(emp.id)
+      ) as EmployeeWithoutAccess[];
       
       setEmployeesWithoutAccess(withoutAccess);
     } catch (error) {

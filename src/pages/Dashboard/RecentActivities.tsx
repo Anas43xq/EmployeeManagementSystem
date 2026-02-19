@@ -22,7 +22,7 @@ export default function RecentActivities({ activities }: RecentActivitiesProps) 
               <div className="flex-1">
                 <p className="text-sm text-gray-900">{activity.action}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {new Date(activity.created_at).toLocaleString()}
+                  {activity.created_at ? new Date(activity.created_at).toLocaleString() : ''}
                 </p>
               </div>
             </div>

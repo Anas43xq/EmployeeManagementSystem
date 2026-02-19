@@ -52,7 +52,7 @@ export default function EmployeeView() {
         return;
       }
 
-      setEmployee(data);
+      setEmployee(data as Employee);
     } catch (error) {
       console.error('Error loading employee:', error);
       showNotification('error', t('employees.failedToLoadDetails'));
@@ -304,10 +304,13 @@ export default function EmployeeView() {
       </div>
 
       <Modal
-        isOpen={terminateModal}
+        show={terminateModal}
         onClose={() => setTerminateModal(false)}
-        title={t('employees.terminateEmployeeTitle')}
       >
+        <Modal.Header onClose={() => setTerminateModal(false)}>
+          {t('employees.terminateEmployeeTitle')}
+        </Modal.Header>
+        <Modal.Body>
         <div className="space-y-4">
           <p className="text-gray-700">
             {t('employees.terminateEmployeeConfirm').replace('this employee', `${employee.first_name} ${employee.last_name}`)}
@@ -343,6 +346,7 @@ export default function EmployeeView() {
             </Button>
           </div>
         </div>
+        </Modal.Body>
       </Modal>
     </div>
   );

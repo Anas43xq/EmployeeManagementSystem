@@ -7,7 +7,7 @@ export interface Leave {
   days_count: number;
   reason: string;
   status: string;
-  created_at: string;
+  created_at: string | null;
   employees?: {
     first_name: string;
     last_name: string;
@@ -27,10 +27,10 @@ export interface LeaveBalance {
   id: string;
   employee_id: string;
   year: number;
-  annual_total: number;
-  annual_used: number;
-  sick_total: number;
-  sick_used: number;
-  casual_total: number;
-  casual_used: number;
+  annual_total: number | null;
+  annual_used: number | null;
+  sick_total: number | null;
+  sick_used: number | null;
+  casual_total: number | null;
+  casual_used: number | null;
 }

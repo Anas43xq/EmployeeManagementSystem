@@ -198,7 +198,7 @@ export default function PasskeyManagement() {
                       <div>
                         <h4 className="font-medium text-gray-900">{passkey.device_name}</h4>
                         <p className="text-sm text-gray-600">
-                          {t('passkeys.registeredOn', 'Registered on')} {new Date(passkey.created_at).toLocaleDateString()}
+                          {t('passkeys.registeredOn', 'Registered on')} {passkey.created_at ? new Date(passkey.created_at).toLocaleDateString() : ''}
                         </p>
                         {passkey.last_used_at && (
                           <p className="text-xs text-gray-500">

@@ -7,7 +7,7 @@ export interface AttendanceRecord {
   check_in: string | null;
   check_out: string | null;
   status: string;
-  notes: string;
+  notes: string | null;
   employees?: {
     first_name: string;
     last_name: string;

@@ -16,8 +16,8 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
           <div>
             <p className="text-sm text-gray-500">{t('leaves.annualLeave')}</p>
             <p className="text-2xl font-bold text-blue-900">
-              {leaveBalance.annual_total - leaveBalance.annual_used}
-              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.annual_total}</span>
+              {(leaveBalance.annual_total || 0) - (leaveBalance.annual_used || 0)}
+              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.annual_total || 0}</span>
             </p>
           </div>
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -27,7 +27,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
         <div className="mt-2 bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-600 h-2 rounded-full" 
-            style={{ width: `${((leaveBalance.annual_total - leaveBalance.annual_used) / leaveBalance.annual_total) * 100}%` }}
+            style={{ width: `${(((leaveBalance.annual_total || 0) - (leaveBalance.annual_used || 0)) / (leaveBalance.annual_total || 1)) * 100}%` }}
           />
         </div>
       </div>
@@ -37,8 +37,8 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
           <div>
             <p className="text-sm text-gray-500">{t('leaves.sickLeave')}</p>
             <p className="text-2xl font-bold text-red-600">
-              {leaveBalance.sick_total - leaveBalance.sick_used}
-              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.sick_total}</span>
+              {(leaveBalance.sick_total || 0) - (leaveBalance.sick_used || 0)}
+              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.sick_total || 0}</span>
             </p>
           </div>
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -48,7 +48,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
         <div className="mt-2 bg-gray-200 rounded-full h-2">
           <div 
             className="bg-red-500 h-2 rounded-full" 
-            style={{ width: `${((leaveBalance.sick_total - leaveBalance.sick_used) / leaveBalance.sick_total) * 100}%` }}
+            style={{ width: `${(((leaveBalance.sick_total || 0) - (leaveBalance.sick_used || 0)) / (leaveBalance.sick_total || 1)) * 100}%` }}
           />
         </div>
       </div>
@@ -58,8 +58,8 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
           <div>
             <p className="text-sm text-gray-500">{t('leaves.casualLeave')}</p>
             <p className="text-2xl font-bold text-green-600">
-              {leaveBalance.casual_total - leaveBalance.casual_used}
-              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.casual_total}</span>
+              {(leaveBalance.casual_total || 0) - (leaveBalance.casual_used || 0)}
+              <span className="text-sm font-normal text-gray-500"> / {leaveBalance.casual_total || 0}</span>
             </p>
           </div>
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -69,7 +69,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
         <div className="mt-2 bg-gray-200 rounded-full h-2">
           <div 
             className="bg-green-500 h-2 rounded-full" 
-            style={{ width: `${((leaveBalance.casual_total - leaveBalance.casual_used) / leaveBalance.casual_total) * 100}%` }}
+            style={{ width: `${(((leaveBalance.casual_total || 0) - (leaveBalance.casual_used || 0)) / (leaveBalance.casual_total || 1)) * 100}%` }}
           />
         </div>
       </div>

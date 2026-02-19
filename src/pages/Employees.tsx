@@ -39,7 +39,7 @@ export default function Employees() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEmployees(data || []);
+      setEmployees((data || []) as EmployeeListItem[]);
     } catch (error) {
       console.error('Error loading employees:', error);
       showNotification('error', 'Failed to load employees');

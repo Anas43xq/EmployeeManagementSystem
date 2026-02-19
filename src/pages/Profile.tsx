@@ -37,7 +37,7 @@ export default function Profile() {
           .maybeSingle();
 
         if (!error && data) {
-          setEmployee(data);
+          setEmployee(data as Employee);
           setLoading(false);
           return;
         }
@@ -65,7 +65,7 @@ export default function Profile() {
         .maybeSingle();
 
       if (error) throw error;
-      setEmployee(data);
+      setEmployee(data as Employee);
     } catch (error) {
       console.error('Error loading profile:', error);
       showNotification('error', t('employees.failedToLoadDetails'));

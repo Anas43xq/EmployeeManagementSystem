@@ -161,7 +161,7 @@ export async function getPayrollRecords(
   year?: number,
   employeeId?: string,
   status?: string
-) {
+): Promise<PayrollData[]> {
   try {
     let query = supabase
       .from('payrolls')
@@ -189,7 +189,7 @@ export async function getPayrollRecords(
       throw error;
     }
 
-    return data || [];
+    return (data || []) as PayrollData[];
   } catch (error) {
     console.error('Error fetching payroll records:', error);
     return [];

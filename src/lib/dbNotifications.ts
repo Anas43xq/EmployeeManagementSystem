@@ -114,7 +114,7 @@ export async function fetchUnreadNotifications(
       return [];
     }
 
-    return data || [];
+    return (data || []) as DbNotification[];
   } catch (err) {
     console.error('Error fetching notifications:', err);
     return [];
@@ -138,7 +138,7 @@ export async function fetchNotifications(
       return [];
     }
 
-    return data || [];
+    return (data || []) as DbNotification[];
   } catch (err) {
     console.error('Error fetching notifications:', err);
     return [];

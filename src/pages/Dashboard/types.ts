@@ -11,7 +11,7 @@ export interface Stats {
 export interface RecentActivity {
   id: string;
   action: string;
-  created_at: string;
+  created_at: string | null;
   entity_type: string;
 }
 

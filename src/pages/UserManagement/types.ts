@@ -34,7 +34,7 @@ export interface EmployeeWithoutAccess {
   status: string;
   departments?: {
     name: string;
-  };
+  } | null;
 }
 
 export function getUserEmail(user: User): string {

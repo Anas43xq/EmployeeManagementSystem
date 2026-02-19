@@ -101,11 +101,11 @@ export function useLeaves() {
     if (!leaveBalance) return 0;
     switch (leaveType) {
       case 'annual':
-        return leaveBalance.annual_total - leaveBalance.annual_used;
+        return (leaveBalance.annual_total || 0) - (leaveBalance.annual_used || 0);
       case 'sick':
-        return leaveBalance.sick_total - leaveBalance.sick_used;
+        return (leaveBalance.sick_total || 0) - (leaveBalance.sick_used || 0);
       case 'casual':
-        return leaveBalance.casual_total - leaveBalance.casual_used;
+        return (leaveBalance.casual_total || 0) - (leaveBalance.casual_used || 0);
       default:
         return 999;
     }
@@ -176,7 +176,8 @@ export function useLeaves() {
         .single();
 
       if (currentBalance) {
-        const currentValue = (currentBalance as Record<string, number>)[fieldToUpdate] || 0;
+        const balanceRecord = currentBalance as unknown as Record<string, number>;
+        const currentValue = balanceRecord[fieldToUpdate] || 0;
         const newValue = action === 'add' ? currentValue + days : Math.max(0, currentValue - days);
 
         await (supabase

@@ -25,8 +25,8 @@ export interface Passkey {
   id: string;
   credential_id: string;
   device_name: string;
-  created_at: string;
-  last_used_at?: string;
+  created_at: string | null;
+  last_used_at?: string | null;
 }
 
 export function isWebAuthnSupported(): boolean {
@@ -296,7 +296,7 @@ export async function getUserPasskeys(): Promise<Passkey[]> {
       throw error;
     }
 
-    return data || [];
+    return (data || []) as Passkey[];
   } catch (error) {
     console.error('Error fetching user passkeys:', error);
     return [];
