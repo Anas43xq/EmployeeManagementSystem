@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import {
   getWarnings,
   createWarning,
@@ -50,7 +50,7 @@ export function useWarnings() {
     if (isStaff) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select('id, first_name, last_name, employee_number')
         .eq('status', 'active')
@@ -92,7 +92,7 @@ export function useWarnings() {
       await createWarning(formData, user.id);
       
       // Send notification to employee
-      const { data: targetUser } = await supabase
+      const { data: targetUser } = await db
         .from('users')
         .select('id')
         .eq('employee_id', formData.employee_id)
@@ -185,3 +185,5 @@ export function useWarnings() {
     handleDelete,
   };
 }
+
+

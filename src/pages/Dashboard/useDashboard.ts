@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../lib/dashboardConfig';
 import type { Stats, RecentActivity, DepartmentData, LeaveStatusData } from './types';
@@ -30,10 +30,10 @@ export function useDashboard() {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      let pendingLeavesQuery = supabase.from('leaves').select('id', { count: 'exact' }).eq('status', 'pending');
-      let approvedLeavesQuery = supabase.from('leaves').select('id', { count: 'exact' }).eq('status', 'approved');
-      let rejectedLeavesQuery = supabase.from('leaves').select('id', { count: 'exact' }).eq('status', 'rejected');
-      let attendanceQuery = supabase.from('attendance').select('id', { count: 'exact' }).eq('date', today).eq('status', 'present');
+      let pendingLeavesQuery = db.from('leaves').select('id', { count: 'exact' }).eq('status', 'pending');
+      let approvedLeavesQuery = db.from('leaves').select('id', { count: 'exact' }).eq('status', 'approved');
+      let rejectedLeavesQuery = db.from('leaves').select('id', { count: 'exact' }).eq('status', 'rejected');
+      let attendanceQuery = db.from('attendance').select('id', { count: 'exact' }).eq('date', today).eq('status', 'present');
 
       if (role === 'staff' && employeeId) {
         pendingLeavesQuery = pendingLeavesQuery.eq('employee_id', employeeId);
@@ -53,15 +53,15 @@ export function useDashboard() {
         departmentEmployeesRes,
         departmentNamesRes
       ] = await Promise.all([
-        supabase.from('employees').select('id, status', { count: 'exact' }),
-        supabase.from('departments').select('id', { count: 'exact' }),
+        db.from('employees').select('id, status', { count: 'exact' }),
+        db.from('departments').select('id', { count: 'exact' }),
         pendingLeavesQuery,
         approvedLeavesQuery,
         rejectedLeavesQuery,
-        supabase.from('activity_logs').select('id, action, created_at, entity_type').order('created_at', { ascending: false }).limit(5),
+        db.from('activity_logs').select('id, action, created_at, entity_type').order('created_at', { ascending: false }).limit(5),
         attendanceQuery,
-        supabase.from('employees').select('department_id').eq('status', 'active'),
-        supabase.from('departments').select('id, name'),
+        db.from('employees').select('department_id').eq('status', 'active'),
+        db.from('departments').select('id, name'),
       ]);
 
       const activeEmployees = employeesRes.data?.filter((e: any) => e.status === 'active').length || 0;
@@ -118,3 +118,4 @@ export function useDashboard() {
 
   return { stats, recentActivities, departmentData, leaveStatusData, loading, user };
 }
+

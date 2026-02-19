@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../lib/activityLog';
@@ -49,7 +49,7 @@ export function useUserManagement() {
 
   const loadUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('users')
         .select(`
           *,
@@ -80,7 +80,7 @@ export function useUserManagement() {
 
   const loadEmployeesWithoutAccess = async () => {
     try {
-      const { data: allEmployees, error: empError } = await supabase
+      const { data: allEmployees, error: empError } = await db
         .from('employees')
         .select(`
           id,
@@ -99,7 +99,7 @@ export function useUserManagement() {
 
       if (empError) throw empError;
 
-      const { data: usersData } = await supabase
+      const { data: usersData } = await db
         .from('users')
         .select('employee_id');
       
@@ -108,7 +108,7 @@ export function useUserManagement() {
       );
 
       const withoutAccess = (allEmployees || []).filter(
-        (emp) => !employeesWithAccess.has(emp.id)
+        (emp: any) => !employeesWithAccess.has(emp.id)
       ) as EmployeeWithoutAccess[];
       
       setEmployeesWithoutAccess(withoutAccess);
@@ -141,7 +141,7 @@ export function useUserManagement() {
 
     setSubmitting(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await db.auth.signUp({
         email: selectedEmployee.email,
         password: grantAccessForm.password,
         options: {
@@ -156,8 +156,7 @@ export function useUserManagement() {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (authData.user) {
-        await (supabase
-          .from('users') as any)
+        await (db.from('users') as any)
           .update({ role: grantAccessForm.role })
           .eq('id', authData.user.id);
       }
@@ -190,8 +189,7 @@ export function useUserManagement() {
 
     setSubmitting(true);
     try {
-      const { error } = await (supabase
-        .from('users') as any)
+      const { error } = await (db.from('users') as any)
         .update({
           role: editForm.role,
           updated_at: new Date().toISOString(),
@@ -231,7 +229,7 @@ export function useUserManagement() {
 
     setSubmitting(true);
     try {
-      const { error: dbError } = await supabase
+      const { error: dbError } = await db
         .from('users')
         .delete()
         .eq('id', selectedUser.id);
@@ -266,7 +264,7 @@ export function useUserManagement() {
     try {
       const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const userEmail = getUserEmail(selectedUser);
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+      const { error } = await db.auth.resetPasswordForEmail(userEmail, {
         redirectTo: `${appUrl}/reset-password`,
       });
 
@@ -517,3 +515,4 @@ export function useUserManagement() {
     stats,
   };
 }
+

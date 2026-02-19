@@ -1,5 +1,5 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-import { supabase } from './supabase';
+import { supabase, db } from './supabase';
 
 export interface PasskeyRegistrationResult {
   success: boolean;
@@ -287,7 +287,7 @@ export async function verifyPasskeyAttendance(
 
 export async function getUserPasskeys(): Promise<Passkey[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('passkeys')
       .select('*')
       .order('created_at', { ascending: false });
@@ -305,7 +305,7 @@ export async function getUserPasskeys(): Promise<Passkey[]> {
 
 export async function deletePasskey(passkeyId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await db
       .from('passkeys')
       .delete()
       .eq('id', passkeyId);

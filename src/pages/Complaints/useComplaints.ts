@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import {
   getComplaints,
   createComplaint,
@@ -116,7 +116,7 @@ export function useComplaints() {
       });
 
       // Notify the employee
-      const { data: employeeUser } = await supabase
+      const { data: employeeUser } = await db
         .from('users')
         .select('id')
         .eq('employee_id', selectedComplaint.employee_id)
@@ -175,3 +175,4 @@ export function useComplaints() {
     handleDelete,
   };
 }
+

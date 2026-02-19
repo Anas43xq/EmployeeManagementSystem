@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, db } from '../lib/supabase';
 import { logActivity } from '../lib/activityLog';
 import { 
   validateAndRecoverSession, 
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const role = (authUser.app_metadata?.role || authUser.user_metadata?.role) as UserRole | undefined;
       
       // Fetch employee_id from database
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('users')
         .select('role, employee_id')
         .eq('id', authUser.id)
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData: AuthUser = {
         id: authUser.id,
         email: authUser.email || '',
-        role: (data?.role as UserRole) || role || 'staff',
+        role: data?.role || role || 'staff',
         employeeId: data?.employee_id || null,
       };
       

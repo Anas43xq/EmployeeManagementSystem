@@ -1,9 +1,9 @@
-import { supabase } from './supabase';
+import { db } from './supabase';
 import type { EmployeeBasic, EmployeeWithNumber } from './types';
 
 export async function fetchActiveEmployees(includeNumber?: boolean): Promise<EmployeeBasic[] | EmployeeWithNumber[]> {
   if (includeNumber) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('employees')
       .select('id, first_name, last_name, employee_number')
       .eq('status', 'active')
@@ -15,7 +15,7 @@ export async function fetchActiveEmployees(includeNumber?: boolean): Promise<Emp
     }
     return (data || []) as EmployeeWithNumber[];
   } else {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('employees')
       .select('id, first_name, last_name')
       .eq('status', 'active')

@@ -14,7 +14,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     // Disable lock to prevent AbortError issues
-    lock: 'no-op',
+    lock: (() => {}) as any,
     // Use localStorage for storage
     storage: localStorage,
     storageKey: 'ems-auth-token',
@@ -22,3 +22,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
   },
 });
+
+// Typed helper for queries - bypasses strict type inference issues
+export const db = supabase as any;

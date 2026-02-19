@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../lib/activityLog';
 import { AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react';
@@ -36,7 +36,7 @@ export function useAnnouncements() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await (supabase
+      const { data, error } = await (db
         .from('announcements')
         .select('*')
         .order('created_at', { ascending: false }) as any) as { data: Announcement[] | null; error: any };
@@ -104,7 +104,7 @@ export function useAnnouncements() {
       };
 
       if (editingAnnouncement) {
-        const { error } = await (supabase
+        const { error } = await (db
           .from('announcements') as any)
           .update(announcementData)
           .eq('id', editingAnnouncement.id);
@@ -117,7 +117,7 @@ export function useAnnouncements() {
           });
         }
       } else {
-        const { data, error } = await (supabase
+        const { data, error } = await (db
           .from('announcements') as any)
           .insert(announcementData)
           .select()
@@ -146,7 +146,7 @@ export function useAnnouncements() {
     if (!confirm(t('announcements.confirmDelete'))) return;
 
     try {
-      const { error } = await (supabase
+      const { error } = await (db
         .from('announcements')
         .delete()
         .eq('id', id) as any);
@@ -166,7 +166,7 @@ export function useAnnouncements() {
 
   const toggleActive = async (announcement: Announcement) => {
     try {
-      const { error } = await (supabase
+      const { error } = await (db
         .from('announcements') as any)
         .update({ is_active: !announcement.is_active })
         .eq('id', announcement.id);

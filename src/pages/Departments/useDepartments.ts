@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../lib/activityLog';
@@ -31,7 +31,7 @@ export function useDepartments() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await (supabase
+      const { data, error } = await (db
         .from('departments') as any)
         .select(`
           *,
@@ -51,7 +51,7 @@ export function useDepartments() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await (supabase
+      const { data, error } = await (db
         .from('employees') as any)
         .select('id, first_name, last_name')
         .eq('status', 'active')
@@ -98,7 +98,7 @@ export function useDepartments() {
       };
 
       if (editingDept) {
-        const { error } = await (supabase
+        const { error } = await (db
           .from('departments') as any)
           .update(payload)
           .eq('id', editingDept.id);
@@ -113,7 +113,7 @@ export function useDepartments() {
           });
         }
       } else {
-        const { data, error } = await (supabase
+        const { data, error } = await (db
           .from('departments') as any)
           .insert(payload)
           .select()
@@ -150,7 +150,7 @@ export function useDepartments() {
     if (!confirm(`Are you sure you want to delete "${dept.name}"?`)) return;
 
     try {
-      const { error } = await (supabase
+      const { error } = await (db
         .from('departments') as any)
         .delete()
         .eq('id', dept.id);

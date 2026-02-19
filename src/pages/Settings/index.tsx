@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import type { Database } from '../../lib/database.types';
 import ProfileInfoCard from './ProfileInfoCard';
 import ChangePasswordCard from './ChangePasswordCard';
@@ -31,7 +31,7 @@ export default function Settings() {
     if (!user?.id) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
@@ -64,8 +64,7 @@ export default function Settings() {
 
     setSavingPrefs(true);
     try {
-      const { error } = await (supabase
-        .from('user_preferences') as any)
+      const { error } = await (db.from('user_preferences') as any)
         .upsert({
           user_id: user.id,
           email_leave_approvals: notificationPrefs.leave_approvals,
@@ -104,7 +103,7 @@ export default function Settings() {
       const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const redirectUrl = `${appUrl}/settings`;
 
-      const { error } = await supabase.auth.updateUser(
+      const { error } = await db.auth.updateUser(
         { email: newEmail },
         {
           emailRedirectTo: redirectUrl
@@ -113,7 +112,7 @@ export default function Settings() {
       
       if (error) throw error;
 
-      await supabase.auth.signOut();
+      await db.auth.signOut();
       navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
     } catch (error: any) {
       console.error('Error updating email:', error);
@@ -167,3 +166,4 @@ export default function Settings() {
     </div>
   );
 }
+

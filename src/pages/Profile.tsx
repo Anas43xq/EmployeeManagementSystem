@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { Mail, Phone, Calendar, MapPin, Briefcase, User, Building2, Shield, Edit } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function Profile() {
   const loadEmployeeProfile = async () => {
     try {
       if (user?.employeeId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
           .from('employees')
           .select(`
             *,
@@ -44,7 +44,7 @@ export default function Profile() {
         }
       }
 
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await db
         .from('users')
         .select('employee_id')
         .eq('id', user!.id)
@@ -56,7 +56,7 @@ export default function Profile() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select(`
           *,
@@ -251,3 +251,4 @@ export default function Profile() {
     </div>
   );
 }
+

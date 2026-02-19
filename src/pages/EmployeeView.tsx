@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/supabase';
 import { useNotification } from '../contexts/NotificationContext';
 import { ArrowLeft, Edit, Mail, Phone, Calendar, MapPin, Briefcase, User, FileText, UserX } from 'lucide-react';
 import { format } from 'date-fns';
@@ -35,7 +35,7 @@ export default function EmployeeView() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select(`
           *,
@@ -67,7 +67,7 @@ export default function EmployeeView() {
 
     setTerminating(true);
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('employees')
         .update({
           termination_date: new Date().toISOString().split('T')[0],
@@ -351,3 +351,4 @@ export default function EmployeeView() {
     </div>
   );
 }
+

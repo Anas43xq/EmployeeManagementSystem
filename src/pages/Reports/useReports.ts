@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { format } from 'date-fns';
 import type { Department, ReportEmployee, Leave, Attendance, DepartmentReport, PayrollReport, ReportType } from './types';
@@ -21,7 +21,7 @@ export function useReports() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('departments')
         .select('id, name')
         .order('name');
@@ -44,7 +44,7 @@ export function useReports() {
   };
 
   const generateEmployeeReport = async () => {
-    let query = supabase
+    let query = db
       .from('employees')
       .select(`
         id,
@@ -85,7 +85,7 @@ export function useReports() {
   };
 
   const generateLeaveReport = async () => {
-    let query = supabase
+    let query = db
       .from('leaves')
       .select(`
         id,
@@ -130,7 +130,7 @@ export function useReports() {
   };
 
   const generateAttendanceReport = async () => {
-    let query = supabase
+    let query = db
       .from('attendance')
       .select(`
         id,
@@ -173,7 +173,7 @@ export function useReports() {
   };
 
   const generateDepartmentReport = async () => {
-    let query = supabase
+    let query = db
       .from('departments')
       .select(`
         id,
@@ -202,7 +202,7 @@ export function useReports() {
   };
 
   const generatePayrollReport = async () => {
-    let query = supabase
+    let query = db
       .from('payrolls')
       .select(`
         id,
@@ -342,3 +342,4 @@ export function useReports() {
     generateCustomReport,
   };
 }
+

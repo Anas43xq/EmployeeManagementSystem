@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { notifyLeaveApproval, notifyLeaveRejection, notifyLeavePending } from '../../lib/notifications';
@@ -50,7 +50,7 @@ export function useLeaves() {
 
     const currentYear = new Date().getFullYear();
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('leave_balances')
         .select('*')
         .eq('employee_id', user.employeeId)
@@ -65,8 +65,7 @@ export function useLeaves() {
       if (data) {
         setLeaveBalance(data);
       } else {
-        const { data: newBalance, error: insertError } = await (supabase
-          .from('leave_balances') as any)
+        const { data: newBalance, error: insertError } = await (db.from('leave_balances') as any)
           .insert({
             employee_id: user.employeeId,
             year: currentYear,
@@ -105,7 +104,7 @@ export function useLeaves() {
 
   const loadLeaves = async () => {
     try {
-      let query = supabase
+      let query = db
         .from('leaves')
         .select(`
           *,
@@ -160,7 +159,7 @@ export function useLeaves() {
     }
 
     try {
-      const { data: currentBalance } = await supabase
+      const { data: currentBalance } = await db
         .from('leave_balances')
         .select(fieldToUpdate)
         .eq('employee_id', employeeId)
@@ -172,8 +171,7 @@ export function useLeaves() {
         const currentValue = balanceRecord[fieldToUpdate] || 0;
         const newValue = action === 'add' ? currentValue + days : Math.max(0, currentValue - days);
 
-        await (supabase
-          .from('leave_balances') as any)
+        await (db.from('leave_balances') as any)
           .update({ [fieldToUpdate]: newValue })
           .eq('employee_id', employeeId)
           .eq('year', currentYear);
@@ -210,14 +208,13 @@ export function useLeaves() {
 
     setSubmitting(true);
     try {
-      const { data: employeeData } = await supabase
+      const { data: employeeData } = await db
         .from('employees')
         .select('first_name, last_name')
         .eq('id', user.employeeId)
         .single() as { data: { first_name: string; last_name: string } | null };
 
-      const { error } = await (supabase
-        .from('leaves') as any)
+      const { error } = await (db.from('leaves') as any)
         .insert({
           employee_id: user.employeeId,
           leave_type: formData.leave_type,
@@ -248,7 +245,7 @@ export function useLeaves() {
         'leave'
       );
 
-      const { data: hrAdminUsers } = await supabase
+      const { data: hrAdminUsers } = await db
         .from('users')
         .select('email')
         .in('role', ['admin', 'hr']) as { data: { email: string }[] | null };
@@ -290,8 +287,7 @@ export function useLeaves() {
       const leave = leaves.find(l => l.id === leaveId);
       if (!leave) return;
 
-      const { error } = await (supabase
-        .from('leaves') as any)
+      const { error } = await (db.from('leaves') as any)
         .update({
           status: 'approved',
           approved_by: user?.id,
@@ -312,7 +308,7 @@ export function useLeaves() {
         });
       }
 
-      const { data: employeeUser } = await supabase
+      const { data: employeeUser } = await db
         .from('users')
         .select('id, email')
         .eq('employee_id', leave.employee_id)
@@ -348,8 +344,7 @@ export function useLeaves() {
       const leave = leaves.find(l => l.id === leaveId);
       if (!leave) return;
 
-      const { error } = await (supabase
-        .from('leaves') as any)
+      const { error } = await (db.from('leaves') as any)
         .update({
           status: 'rejected',
           approved_by: user?.id,
@@ -368,7 +363,7 @@ export function useLeaves() {
         });
       }
 
-      const { data: employeeUser } = await supabase
+      const { data: employeeUser } = await db
         .from('users')
         .select('id, email')
         .eq('employee_id', leave.employee_id)
@@ -424,3 +419,4 @@ export function useLeaves() {
     getAvailableBalance,
   };
 }
+

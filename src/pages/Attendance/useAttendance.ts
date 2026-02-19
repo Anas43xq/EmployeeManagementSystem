@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../lib/activityLog';
@@ -60,7 +60,7 @@ export function useAttendance() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select('id, first_name, last_name, employee_number')
         .eq('status', 'active')
@@ -75,7 +75,7 @@ export function useAttendance() {
 
   const loadAttendance = async () => {
     try {
-      let query = supabase
+      let query = db
         .from('attendance')
         .select(`
           *,
@@ -112,7 +112,7 @@ export function useAttendance() {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('attendance')
         .select('id, check_in')
         .eq('employee_id', user.employeeId)
@@ -124,7 +124,7 @@ export function useAttendance() {
         return;
       }
 
-      const { error } = await supabase.from('attendance').insert({
+      const { error } = await db.from('attendance').insert({
         employee_id: user.employeeId,
         date: today,
         check_in: time,
@@ -158,8 +158,7 @@ export function useAttendance() {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      const { error } = await (supabase
-        .from('attendance') as any)
+      const { error } = await (db.from('attendance') as any)
         .update({ check_out: time })
         .eq('id', recordId)
         .eq('employee_id', user.employeeId);
@@ -205,7 +204,7 @@ export function useAttendance() {
         return;
       }
 
-      const { data: existingRecord } = await supabase
+      const { data: existingRecord } = await db
         .from('attendance')
         .select('id')
         .eq('employee_id', formData.employee_id)
@@ -218,7 +217,7 @@ export function useAttendance() {
         return;
       }
 
-      const { error } = await (supabase.from('attendance') as any).insert({
+      const { error } = await (db.from('attendance') as any).insert({
         employee_id: formData.employee_id,
         date: formData.date,
         check_in: formData.check_in || null,
@@ -269,3 +268,4 @@ export function useAttendance() {
     handleAddAttendance,
   };
 }
+

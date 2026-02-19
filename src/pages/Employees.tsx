@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/supabase';
 import { useNotification } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function Employees() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select(`
           *,
@@ -49,7 +49,7 @@ export default function Employees() {
   };
 
   const openDeleteModal = async (employee: EmployeeListItem) => {
-    const { data } = await supabase
+    const { data } = await db
       .from('users')
       .select('id')
       .eq('employee_id', employee.id)
@@ -67,7 +67,7 @@ export default function Employees() {
 
     setDeleting(true);
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('employees')
         .delete()
         .eq('id', deleteModal.employee.id);
@@ -291,3 +291,4 @@ export default function Employees() {
     </div>
   );
 }
+

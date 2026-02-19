@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../lib/activityLog';
@@ -51,7 +51,7 @@ export function useEmployeeEdit() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('departments')
         .select('id, name')
         .order('name');
@@ -66,7 +66,7 @@ export function useEmployeeEdit() {
 
   const loadEmployee = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('employees')
         .select('*')
         .eq('id', id!)
@@ -143,8 +143,7 @@ export function useEmployeeEdit() {
       const isNewEmployee = !id || id === 'new';
 
       if (isNewEmployee) {
-        const { data, error: insertError } = await (supabase
-          .from('employees') as any)
+        const { data, error: insertError } = await (db.from('employees') as any)
           .insert([submitData])
           .select('id')
           .single();
@@ -154,8 +153,7 @@ export function useEmployeeEdit() {
 
         showNotification('success', t('employees.employeeCreated'));
       } else {
-        const { error: updateError } = await (supabase
-          .from('employees') as any)
+        const { error: updateError } = await (db.from('employees') as any)
           .update(submitData)
           .eq('id', id!);
 
@@ -191,3 +189,4 @@ export function useEmployeeEdit() {
     handleSubmit,
   };
 }
+

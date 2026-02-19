@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, db } from './supabase';
 import type { Database } from './database.types';
 
 export type NotificationType = 'leave' | 'attendance' | 'system';
@@ -73,7 +73,7 @@ export async function notifyHRAndAdmins(
   type: NotificationType
 ): Promise<void> {
   try {
-    const { data: users, error: fetchError } = await supabase
+    const { data: users, error: fetchError } = await db
       .from('users')
       .select('id')
       .in('role', ['admin', 'hr']);
@@ -102,7 +102,7 @@ export async function fetchUnreadNotifications(
   userId: string
 ): Promise<DbNotification[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
@@ -126,7 +126,7 @@ export async function fetchNotifications(
   limit: number = 50
 ): Promise<DbNotification[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
@@ -148,8 +148,8 @@ export async function fetchNotifications(
 export async function markNotificationRead(notificationId: string): Promise<void> {
   try {
     const update: NotificationUpdate = { is_read: true };
-    const { error } = await (supabase
-      .from('notifications') as any)
+    const { error } = await db
+      .from('notifications')
       .update(update)
       .eq('id', notificationId);
 
@@ -164,8 +164,8 @@ export async function markNotificationRead(notificationId: string): Promise<void
 export async function markAllNotificationsRead(userId: string): Promise<void> {
   try {
     const update: NotificationUpdate = { is_read: true };
-    const { error } = await (supabase
-      .from('notifications') as any)
+    const { error } = await db
+      .from('notifications')
       .update(update)
       .eq('user_id', userId)
       .eq('is_read', false);
@@ -180,7 +180,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 
 export async function deleteNotification(notificationId: string): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await db
       .from('notifications')
       .delete()
       .eq('id', notificationId);
