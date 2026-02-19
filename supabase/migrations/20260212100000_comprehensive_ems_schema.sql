@@ -2136,6 +2136,141 @@ SELECT
 FROM public.employees e
 WHERE e.email = 'e.adams@staffhub.com' LIMIT 1;
 
+-- =============================================
+-- SEED EMPLOYEE PERFORMANCE DATA
+-- =============================================
+
+-- Calculate current week boundaries (week starting Monday)
+DO $$
+DECLARE
+  v_week_start DATE;
+  v_week_end DATE;
+  v_last_week_start DATE;
+  v_last_week_end DATE;
+BEGIN
+  -- Current week (week of Feb 16, 2026 - assuming today is Feb 19)
+  v_week_start := date_trunc('week', CURRENT_DATE)::DATE;
+  v_week_end := v_week_start + INTERVAL '6 days';
+  
+  -- Last week
+  v_last_week_start := v_week_start - INTERVAL '7 days';
+  v_last_week_end := v_last_week_start + INTERVAL '6 days';
+
+  -- Insert performance records for current week (all active employees)
+  INSERT INTO public.employee_performance (
+    employee_id, period_start, period_end,
+    attendance_score, task_score, warning_deduction, total_score,
+    tasks_completed, tasks_overdue, attendance_days, absent_days, late_days
+  )
+  SELECT 
+    e.id,
+    v_week_start,
+    v_week_end,
+    CASE 
+      WHEN e.email IN ('anas.essam.work@gmail.com', 'e.wilson@staffhub.com', 'j.lee@staffhub.com') THEN 50 -- 5 days present
+      WHEN e.email IN ('essamanas86@gmail.com', 'r.garcia@staffhub.com', 'p.thomas@staffhub.com') THEN 45 -- 4 days + 1 late
+      WHEN e.email IN ('tvissam96@gmail.com', 'd.brown@staffhub.com') THEN 40 -- 4 days present
+      ELSE 35 + (RANDOM() * 15)::INTEGER -- Random between 35-50 for others
+    END,
+    CASE 
+      WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 30 -- High task completion
+      WHEN e.email IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com') THEN 25
+      WHEN e.email IN ('essamanas86@gmail.com', 'p.thomas@staffhub.com') THEN 20
+      ELSE 10 + (RANDOM() * 20)::INTEGER -- Random between 10-30 for others
+    END,
+    CASE 
+      WHEN e.email = 'l.rodriguez@staffhub.com' THEN 10 -- Has a warning
+      WHEN e.email = 'w.taylor@staffhub.com' THEN 20 -- Has a warning
+      WHEN e.email = 'n.hall@staffhub.com' THEN 30 -- Has a major warning
+      ELSE 0
+    END,
+    -- Total score calculated
+    CASE 
+      WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 80
+      WHEN e.email IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com') THEN 70
+      WHEN e.email IN ('essamanas86@gmail.com', 'p.thomas@staffhub.com') THEN 65
+      WHEN e.email = 'l.rodriguez@staffhub.com' THEN 40
+      WHEN e.email = 'w.taylor@staffhub.com' THEN 35
+      WHEN e.email = 'n.hall@staffhub.com' THEN 25
+      ELSE 40 + (RANDOM() * 30)::INTEGER
+    END,
+    CASE 
+      WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 3
+      WHEN e.email IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com') THEN 2
+      ELSE 1
+    END, -- tasks_completed
+    CASE 
+      WHEN e.email IN ('j.martinez@staffhub.com', 'w.taylor@staffhub.com') THEN 1
+      ELSE 0
+    END, -- tasks_overdue
+    CASE 
+      WHEN e.email IN ('anas.essam.work@gmail.com', 'e.wilson@staffhub.com', 'j.lee@staffhub.com') THEN 5
+      ELSE 4
+    END, -- attendance_days
+    0, -- absent_days
+    CASE 
+      WHEN e.email IN ('essamanas86@gmail.com', 'r.garcia@staffhub.com', 'l.rodriguez@staffhub.com') THEN 1
+      ELSE 0
+    END -- late_days
+  FROM public.employees e
+  WHERE e.status = 'active'
+  ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
+
+  -- Insert performance records for last week
+  INSERT INTO public.employee_performance (
+    employee_id, period_start, period_end,
+    attendance_score, task_score, warning_deduction, total_score,
+    tasks_completed, tasks_overdue, attendance_days, absent_days, late_days
+  )
+  SELECT 
+    e.id,
+    v_last_week_start,
+    v_last_week_end,
+    40 + (RANDOM() * 10)::INTEGER, -- attendance_score
+    15 + (RANDOM() * 15)::INTEGER, -- task_score
+    0, -- warning_deduction
+    55 + (RANDOM() * 20)::INTEGER, -- total_score
+    1 + (RANDOM() * 2)::INTEGER, -- tasks_completed
+    0, -- tasks_overdue
+    4, -- attendance_days
+    0, -- absent_days
+    (RANDOM() * 2)::INTEGER -- late_days (0-1)
+  FROM public.employees e
+  WHERE e.status = 'active'
+  ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
+
+END $$;
+
+-- =============================================
+-- SEED EMPLOYEE OF THE WEEK
+-- =============================================
+
+-- Insert Employee of the Week for current week (based on highest performance score)
+INSERT INTO public.employee_of_week (employee_id, week_start, week_end, score, reason, is_auto_selected)
+SELECT 
+  e.id,
+  date_trunc('week', CURRENT_DATE)::DATE,
+  date_trunc('week', CURRENT_DATE)::DATE + INTERVAL '6 days',
+  80,
+  'Outstanding performance with perfect attendance and excellent task completion. Highest performance score (80 points) for the week.',
+  true
+FROM public.employees e
+WHERE e.email = 'anas.essam.work@gmail.com'
+ON CONFLICT (week_start) DO NOTHING;
+
+-- Insert Employee of the Week for last week
+INSERT INTO public.employee_of_week (employee_id, week_start, week_end, score, reason, is_auto_selected)
+SELECT 
+  e.id,
+  date_trunc('week', CURRENT_DATE)::DATE - INTERVAL '7 days',
+  date_trunc('week', CURRENT_DATE)::DATE - INTERVAL '1 day',
+  75,
+  'Excellent engineering leadership and team coordination. Highest performance score (75 points) for the week.',
+  true
+FROM public.employees e
+WHERE e.email = 'j.lee@staffhub.com'
+ON CONFLICT (week_start) DO NOTHING;
+
 -- Add activity log for system init
 INSERT INTO public.activity_logs (user_id, action, entity_type, details)
 SELECT id, 'System initialized with seed data', 'system', '{"version": "2.0", "date": "2026-02-14"}'::jsonb

@@ -364,22 +364,40 @@ export async function getLatestPerformance(limit: number = 10) {
 }
 
 export async function getTopPerformers(weekStart?: string) {
-  const start = weekStart || getWeekStart(new Date());
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-
-  const { data, error } = await db
+  // If weekStart provided, use it; otherwise get most recent records
+  let query = db
     .from('employee_performance')
     .select(`
       *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
-    `)
-    .eq('period_start', start)
+    `);
+
+  if (weekStart) {
+    query = query.eq('period_start', weekStart);
+  } else {
+    // Get the most recent period's data by ordering by period_start desc
+    // First, get the latest period_start date
+    const { data: latestPeriod } = await db
+      .from('employee_performance')
+      .select('period_start')
+      .order('period_start', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (latestPeriod?.period_start) {
+      query = query.eq('period_start', latestPeriod.period_start);
+    }
+  }
+
+  const { data, error } = await query
     .order('total_score', { ascending: false })
     .limit(10);
 
-  if (error) throw error;
-  return data as EmployeePerformance[];
+  if (error) {
+    console.error('Error fetching top performers:', error);
+    return [];
+  }
+  return (data || []) as EmployeePerformance[];
 }
 
 // =============================================
@@ -401,7 +419,10 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching employee of week:', error);
+    return null;
+  }
   return data?.[0] as EmployeeOfWeek | null;
 }
 
