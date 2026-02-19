@@ -193,7 +193,14 @@ export async function getPayrollRecords(
   status?: string
 ): Promise<PayrollData[]> {
   try {
-    let query = supabase
+    // Build query with all filters applied unconditionally using match
+    const filters: Record<string, unknown> = {};
+    if (month) filters.period_month = month;
+    if (year) filters.period_year = year;
+    if (employeeId) filters.employee_id = employeeId;
+    if (status) filters.status = status;
+
+    const { data, error } = await supabase
       .from('payrolls')
       .select(`
         *,
@@ -205,21 +212,15 @@ export async function getPayrollRecords(
           email
         )
       `)
+      .match(filters)
       .order('period_year', { ascending: false })
       .order('period_month', { ascending: false });
-
-    if (month) query = query.eq('period_month', month);
-    if (year) query = query.eq('period_year', year);
-    if (employeeId) query = query.eq('employee_id', employeeId);
-    if (status) query = query.eq('status', status);
-
-    const { data, error } = await query;
 
     if (error) {
       throw error;
     }
 
-    return (data || []) as PayrollData[];
+    return (data || []) as unknown as PayrollData[];
   } catch (error) {
     console.error('Error fetching payroll records:', error);
     return [];
@@ -231,9 +232,7 @@ export async function getBonuses(employeeId: string, month: number, year: number
     const { data, error } = await supabase
       .from('bonuses')
       .select('*')
-      .eq('employee_id', employeeId)
-      .eq('period_month', month)
-      .eq('period_year', year)
+      .match({ employee_id: employeeId, period_month: month, period_year: year })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -252,9 +251,7 @@ export async function getDeductions(employeeId: string, month: number, year: num
     const { data, error } = await supabase
       .from('deductions')
       .select('*')
-      .eq('employee_id', employeeId)
-      .eq('period_month', month)
-      .eq('period_year', year)
+      .match({ employee_id: employeeId, period_month: month, period_year: year })
       .order('created_at', { ascending: false });
 
     if (error) {

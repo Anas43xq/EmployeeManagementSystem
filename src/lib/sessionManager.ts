@@ -85,6 +85,7 @@ export async function clearAuthState(): Promise<void> {
     const key = localStorage.key(i);
     if (key && (
       key.startsWith('sb-') || 
+      key.startsWith('ems-') ||
       key.includes('supabase') ||
       key.includes('auth-token')
     )) {
@@ -121,9 +122,24 @@ export async function clearAuthState(): Promise<void> {
  */
 export async function validateAndRecoverSession(): Promise<boolean> {
   try {
+    // Small delay to prevent race conditions with Supabase initialization
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
+      // Ignore AbortError as it's usually a race condition, not a real error
+      if (error.message?.includes('AbortError') || error.name === 'AbortError') {
+        console.warn('[SessionManager] Ignoring AbortError, retrying...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const retry = await supabase.auth.getSession();
+        if (retry.data.session) {
+          recordAuthSuccess();
+          return true;
+        }
+        return false;
+      }
+      
       console.error('[SessionManager] Session validation error:', error.message);
       
       if (recordAuthFailure()) {

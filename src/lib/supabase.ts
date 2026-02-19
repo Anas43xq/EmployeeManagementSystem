@@ -13,5 +13,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    // Disable lock to prevent AbortError issues
+    lock: 'no-op',
+    // Use localStorage for storage
+    storage: localStorage,
+    storageKey: 'ems-auth-token',
+    // Increase flow state expiry to prevent race conditions
+    flowType: 'pkce',
   },
 });

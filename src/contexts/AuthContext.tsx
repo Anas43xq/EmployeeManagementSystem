@@ -13,6 +13,13 @@ import { clearAllCache } from '../lib/apiCache';
 const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
   if (!error) return false;
   const message = error.message?.toLowerCase() || '';
+  const name = error.name?.toLowerCase() || '';
+  
+  // Ignore AbortError - it's usually a race condition, not a real error
+  if (name === 'aborterror' || message.includes('aborterror') || message.includes('signal is aborted')) {
+    return false;
+  }
+  
   return message.includes('refresh token') || 
          message.includes('invalid token') ||
          message.includes('token not found') ||
@@ -220,8 +227,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetSessionHealth();
       await clearAuthState();
       
+      // Wait for storage changes to settle
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // Try to get fresh session
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      // Ignore AbortError as it's usually a race condition
+      if (error && (error.message?.includes('AbortError') || error.name === 'AbortError')) {
+        console.warn('[Auth] Ignoring AbortError during reset');
+        setUser(null);
+        return;
+      }
       
       if (session?.user) {
         const userData = await loadUserData(session.user);
@@ -231,6 +248,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('[Auth] Reset error:', error);
+      // Ignore AbortError
+      if (error instanceof Error && (error.message?.includes('AbortError') || error.name === 'AbortError')) {
+        console.warn('[Auth] Ignoring AbortError during reset');
+      }
       setUser(null);
     } finally {
       setLoading(false);
