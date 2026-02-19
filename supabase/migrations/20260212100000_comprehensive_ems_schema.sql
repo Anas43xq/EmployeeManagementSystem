@@ -1320,9 +1320,9 @@ INSERT INTO auth.users (
 -- Links users to employees. Employee MUST exist first.
 
 -- Set roles in app_metadata for demo users
-UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}' WHERE email = 'admin@staffhub.com';
-UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "hr"}' WHERE email = 'hr@staffhub.com';
-UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "staff"}' WHERE email = 'employee@staffhub.com';
+UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}' WHERE email = 'anas.essam.work@gmail.com';
+UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "hr"}' WHERE email = 'essamanas86@gmail.com';
+UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "staff"}' WHERE email = 'tvissam96@gmail.com';
 
 -- Link auth users to employees in the users table (no email column - comes from employee)
 INSERT INTO public.users (id, role, employee_id)

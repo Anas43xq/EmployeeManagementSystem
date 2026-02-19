@@ -24,20 +24,12 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
+    const authHeader = req.headers.get('Authorization');
+    
+    if (!authHeader) {
+      console.error('No Authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'No authorization header' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -45,15 +37,47 @@ serve(async (req) => {
       );
     }
 
-    const { data: userData } = await supabaseClient
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Auth error:', authError?.message || 'No user found');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Use service role for admin operations to bypass RLS
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
 
+    if (userError) {
+      console.error('Error fetching user role:', userError.message);
+    }
+
     if (!userData || !['admin', 'hr'].includes(userData.role)) {
       return new Response(
-        JSON.stringify({ error: 'Insufficient permissions' }),
+        JSON.stringify({ error: 'Insufficient permissions', role: userData?.role || 'unknown' }),
         {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -80,7 +104,7 @@ serve(async (req) => {
         );
       }
 
-      let employeeQuery = supabaseClient
+      let employeeQuery = supabaseAdmin
         .from('employees')
         .select('id, first_name, last_name, salary, status')
         .eq('status', 'active');
@@ -93,7 +117,7 @@ serve(async (req) => {
 
       if (empError || !employees?.length) {
         return new Response(
-          JSON.stringify({ error: 'No active employees found' }),
+          JSON.stringify({ error: 'No active employees found', details: empError?.message }),
           {
             status: 404,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -106,7 +130,7 @@ serve(async (req) => {
 
       for (const employee of employees) {
         try {
-          const { data: existingPayroll } = await supabaseClient
+          const { data: existingPayroll } = await supabaseAdmin
             .from('payrolls')
             .select('id')
             .eq('employee_id', employee.id)
@@ -119,9 +143,9 @@ serve(async (req) => {
             continue;
           }
 
-          const calculation = await calculateEmployeePayroll(supabaseClient, employee, month, year);
+          const calculation = await calculateEmployeePayroll(supabaseAdmin, employee, month, year);
 
-          const { data: payrollRecord, error: payrollError } = await supabaseClient
+          const { data: payrollRecord, error: payrollError } = await supabaseAdmin
             .from('payrolls')
             .insert({
               employee_id: employee.id,
@@ -185,7 +209,7 @@ serve(async (req) => {
         );
       }
 
-      const { data: employee, error: empError } = await supabaseClient
+      const { data: employee, error: empError } = await supabaseAdmin
         .from('employees')
         .select('*')
         .eq('id', employeeId)
@@ -201,7 +225,7 @@ serve(async (req) => {
         );
       }
 
-      const calculation = await calculateEmployeePayroll(supabaseClient, employee, month, year);
+      const calculation = await calculateEmployeePayroll(supabaseAdmin, employee, month, year);
 
       return new Response(
         JSON.stringify({
@@ -229,7 +253,7 @@ serve(async (req) => {
         );
       }
 
-      const { data: approvedPayrolls, error: approveError } = await supabaseClient
+      const { data: approvedPayrolls, error: approveError } = await supabaseAdmin
         .from('payrolls')
         .update({
           status: 'approved',

@@ -63,7 +63,15 @@ export async function generateMonthlyPayroll(
     });
 
     if (error) {
-      throw new Error(error.message);
+      // Try to extract error details from response
+      const errorMessage = error.message || 'Failed to generate payroll';
+      console.error('Payroll error:', error);
+      throw new Error(errorMessage);
+    }
+
+    // Check if data contains an error (non-2xx responses may return error in data)
+    if (data?.error) {
+      throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
     }
 
     return data;
