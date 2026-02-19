@@ -12,6 +12,7 @@ export interface ReportEmployee {
   employment_type: string;
   status: string;
   hire_date: string;
+  salary: number;
   departments: { name: string } | null;
 }
 

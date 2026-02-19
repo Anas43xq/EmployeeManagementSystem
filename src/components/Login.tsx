@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
@@ -8,7 +8,7 @@ import {
   authenticateWithPasskey,
   isWebAuthnSupported
 } from '../lib/passkeys';
-import { Briefcase, ArrowLeft, Globe, Fingerprint } from 'lucide-react';
+import { Briefcase, ArrowLeft, Globe, Fingerprint, CheckCircle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,7 +27,10 @@ export default function Login() {
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, i18n } = useTranslation();
+
+  const successMessage = (location.state as any)?.successMessage as string | undefined;
   const isRTL = i18n.language === 'ar';
 
   const toggleLanguage = () => {
@@ -263,6 +266,13 @@ export default function Login() {
         <p className="text-center text-gray-600 mb-8">
           {t('auth.signInToContinue')}
         </p>
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center space-x-2">
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{successMessage}</span>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">

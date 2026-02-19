@@ -460,7 +460,10 @@
     "languageDesc": "اختر لغتك المفضلة",
     "selectLanguage": "اختر اللغة",
     "english": "English",
-    "arabic": "العربية (Arabic)"
+    "arabic": "العربية (Arabic)",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح!",
+    "allFieldsRequired": "جميع الحقول مطلوبة",
+    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة"
   },
   "resetPassword": {
     "title": "إعادة تعيين كلمة المرور",
@@ -485,7 +488,7 @@
     "passwordComplexity": "يجب أن تحتوي كلمة المرور على أحرف كبيرة وصغيرة وأرقام",
     "confirmRequired": "يرجى تأكيد كلمة المرور",
     "passwordsMismatch": "كلمات المرور غير متطابقة",
-    "passwordChanged": "تم تغيير كلمة المرور بنجاح! جارٍ إعادة التوجيه لتسجيل الدخول...",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح!",
     "invalidLink": "رابط إعادة تعيين غير صالح أو منتهي الصلاحية. يرجى طلب إعادة تعيين كلمة مرور جديدة.",
     "sessionExpired": "انتهت صلاحية الجلسة. يرجى طلب رابط جديد لإعادة تعيين كلمة المرور.",
     "failedToChange": "فشل في تغيير كلمة المرور. يرجى المحاولة مرة أخرى."

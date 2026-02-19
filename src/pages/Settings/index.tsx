@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -16,6 +17,7 @@ export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { showNotification } = useNotification();
+  const navigate = useNavigate();
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState(user?.email || '');
   const [updatingEmail, setUpdatingEmail] = useState(false);
@@ -111,8 +113,8 @@ export default function Settings() {
       
       if (error) throw error;
 
-      showNotification('success', t('settings.emailChangeRequest'));
-      setIsEditingEmail(false);
+      await supabase.auth.signOut();
+      navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
     } catch (error: any) {
       console.error('Error updating email:', error);
       if (error?.message?.includes('same')) {

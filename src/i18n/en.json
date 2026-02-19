@@ -460,7 +460,10 @@
     "languageDesc": "Choose your preferred language",
     "selectLanguage": "Select Language",
     "english": "English",
-    "arabic": "Arabic (العربية)"
+    "arabic": "Arabic (العربية)",
+    "passwordChanged": "Password changed successfully!",
+    "allFieldsRequired": "All fields are required",
+    "currentPasswordIncorrect": "Current password is incorrect"
   },
   "resetPassword": {
     "title": "Reset Password",
@@ -485,7 +488,7 @@
     "passwordComplexity": "Password must contain uppercase, lowercase, and numbers",
     "confirmRequired": "Please confirm your password",
     "passwordsMismatch": "Passwords do not match",
-    "passwordChanged": "Password changed successfully! Redirecting to login...",
+    "passwordChanged": "Password changed successfully!",
     "invalidLink": "Invalid or expired reset link. Please request a new password reset.",
     "sessionExpired": "Session expired. Please request a new password reset link.",
     "failedToChange": "Failed to change password. Please try again."

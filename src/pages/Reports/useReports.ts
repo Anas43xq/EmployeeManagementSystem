@@ -56,6 +56,7 @@ export function useReports() {
         employment_type,
         status,
         hire_date,
+        salary,
         departments!department_id (name)
       `)
       .order('last_name');
@@ -79,6 +80,7 @@ export function useReports() {
       'Employment Type': emp.employment_type,
       'Status': emp.status,
       'Hire Date': format(new Date(emp.hire_date), 'yyyy-MM-dd'),
+      'Salary': emp.salary?.toFixed(2) || '0.00',
     }));
   };
 

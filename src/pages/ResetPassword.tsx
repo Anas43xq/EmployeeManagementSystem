@@ -155,13 +155,8 @@ export default function ResetPassword() {
         throw error;
       }
 
-      showNotification('success', t('resetPassword.passwordChanged'));
-
       await supabase.auth.signOut();
-
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      navigate('/login', { state: { successMessage: t('resetPassword.passwordChanged') } });
     } catch (error: any) {
       console.error('Error changing password:', error);
 

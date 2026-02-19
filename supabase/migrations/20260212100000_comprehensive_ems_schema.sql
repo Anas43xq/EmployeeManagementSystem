@@ -982,6 +982,115 @@ BEGIN
 END $$;
 
 -- =============================================
+-- SEED PAYROLL DATA (January 2026 - Paid)
+-- =============================================
+
+-- Insert payroll records for all active employees for January 2026
+INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at)
+SELECT 
+  e.id,
+  1, -- January
+  2026,
+  e.salary,
+  CASE 
+    WHEN e.position IN ('Director', 'System Administrator') THEN 1500
+    WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000
+    WHEN e.position LIKE 'Senior%' THEN 750
+    ELSE 500
+  END AS total_bonuses,
+  ROUND(e.salary * 0.08, 2) AS total_deductions, -- ~8% standard deductions (tax + insurance)
+  e.salary + CASE 
+    WHEN e.position IN ('Director', 'System Administrator') THEN 1500
+    WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000
+    WHEN e.position LIKE 'Senior%' THEN 750
+    ELSE 500
+  END AS gross_salary,
+  e.salary + CASE 
+    WHEN e.position IN ('Director', 'System Administrator') THEN 1500
+    WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 1000
+    WHEN e.position LIKE 'Senior%' THEN 750
+    ELSE 500
+  END - ROUND(e.salary * 0.08, 2) AS net_salary,
+  'paid',
+  'January 2026 payroll - processed',
+  '2026-01-31'::TIMESTAMPTZ
+FROM public.employees e
+WHERE e.status = 'active'
+ON CONFLICT (employee_id, period_month, period_year) DO NOTHING;
+
+-- Insert bonuses for January 2026
+INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT 
+  e.id,
+  p.id,
+  'allowance',
+  CASE 
+    WHEN e.position IN ('Director', 'System Administrator') THEN 1000
+    WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 700
+    WHEN e.position LIKE 'Senior%' THEN 500
+    ELSE 300
+  END,
+  'Monthly housing allowance',
+  1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+INSERT INTO public.bonuses (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT 
+  e.id,
+  p.id,
+  'allowance',
+  CASE 
+    WHEN e.position IN ('Director', 'System Administrator') THEN 500
+    WHEN e.position IN ('Team Lead', 'HR Manager', 'IT Manager') THEN 300
+    WHEN e.position LIKE 'Senior%' THEN 250
+    ELSE 200
+  END,
+  'Monthly transport allowance',
+  1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+-- Insert deductions for January 2026
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT 
+  e.id,
+  p.id,
+  'tax',
+  ROUND(e.salary * 0.05, 2),
+  'Income tax - 5%',
+  1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT 
+  e.id,
+  p.id,
+  'insurance',
+  ROUND(e.salary * 0.02, 2),
+  'Health insurance premium',
+  1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+INSERT INTO public.deductions (employee_id, payroll_id, type, amount, description, period_month, period_year)
+SELECT 
+  e.id,
+  p.id,
+  'retirement',
+  ROUND(e.salary * 0.01, 2),
+  'Retirement fund contribution',
+  1, 2026
+FROM public.employees e
+JOIN public.payrolls p ON p.employee_id = e.id AND p.period_month = 1 AND p.period_year = 2026
+WHERE e.status = 'active';
+
+-- =============================================
 -- PAYROLL UTILITY FUNCTIONS
 -- =============================================
 
