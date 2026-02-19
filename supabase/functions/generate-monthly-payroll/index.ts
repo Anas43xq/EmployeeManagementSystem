@@ -24,17 +24,32 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
+    // Get auth header (case-insensitive)
+    let authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    
+    // Also check for apikey header as fallback
+    const apiKey = req.headers.get('apikey');
+    
+    console.log('Headers received:', {
+      hasAuth: !!authHeader,
+      hasApiKey: !!apiKey,
+      authPrefix: authHeader?.substring(0, 20)
+    });
     
     if (!authHeader) {
       console.error('No Authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
+        JSON.stringify({ error: 'No authorization header', hint: 'Please ensure you are logged in' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
+    }
+
+    // Ensure Bearer prefix
+    if (!authHeader.startsWith('Bearer ')) {
+      authHeader = `Bearer ${authHeader}`;
     }
 
     const supabaseClient = createClient(
@@ -48,10 +63,17 @@ serve(async (req) => {
     );
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    console.log('Auth result:', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      error: authError?.message 
+    });
+    
     if (authError || !user) {
       console.error('Auth error:', authError?.message || 'No user found');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
+        JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid or expired token' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

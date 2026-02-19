@@ -64,12 +64,17 @@ export async function generateMonthlyPayroll(
       };
     }
 
+    console.log('Calling payroll function with token:', session.access_token ? 'present' : 'missing');
+
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
         action: 'generate-payroll',
         month,
         year,
         employeeIds
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`
       }
     });
 
@@ -101,13 +106,18 @@ export async function calculateEmployeePayroll(
   year: number
 ): Promise<any> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
         action: 'calculate-employee',
         employeeId,
         month,
         year
-      }
+      },
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`
+      } : undefined
     });
 
     if (error) {
@@ -123,11 +133,16 @@ export async function calculateEmployeePayroll(
 
 export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
         action: 'approve-payroll',
         payrollIds
-      }
+      },
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`
+      } : undefined
     });
 
     if (error) {
