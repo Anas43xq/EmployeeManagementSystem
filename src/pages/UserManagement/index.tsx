@@ -9,6 +9,8 @@ import GrantAccessModal from './GrantAccessModal';
 import EditUserModal from './EditUserModal';
 import RevokeAccessModal from './RevokeAccessModal';
 import ResetPasswordModal from './ResetPasswordModal';
+import BanUserModal from './BanUserModal';
+import UnbanUserModal from './UnbanUserModal';
 
 export default function UserManagement() {
   const { t } = useTranslation();
@@ -27,6 +29,10 @@ export default function UserManagement() {
     setShowRevokeAccessModal,
     showResetPasswordModal,
     setShowResetPasswordModal,
+    showBanModal,
+    setShowBanModal,
+    showUnbanModal,
+    setShowUnbanModal,
     selectedUser,
     submitting,
     showPassword,
@@ -35,6 +41,8 @@ export default function UserManagement() {
     setGrantAccessForm,
     editForm,
     setEditForm,
+    banForm,
+    setBanForm,
     currentUserId,
     loadUsers,
     loadEmployeesWithoutAccess,
@@ -42,9 +50,15 @@ export default function UserManagement() {
     handleEditUser,
     handleRevokeAccess,
     handleResetPassword,
+    handleBanUser,
+    handleUnbanUser,
+    handleDeactivateUser,
+    handleActivateUser,
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
+    openBanModal,
+    openUnbanModal,
     filteredUsers,
     stats,
   } = useUserManagement();
@@ -110,6 +124,10 @@ export default function UserManagement() {
         onEdit={openEditModal}
         onRevokeAccess={openRevokeAccessModal}
         onResetPassword={openResetPasswordModal}
+        onBan={openBanModal}
+        onUnban={openUnbanModal}
+        onDeactivate={handleDeactivateUser}
+        onActivate={handleActivateUser}
         getRoleIcon={getRoleIcon}
         getRoleBadge={getRoleBadge}
       />
@@ -150,6 +168,24 @@ export default function UserManagement() {
         selectedUser={selectedUser}
         onReset={handleResetPassword}
         onClose={() => setShowResetPasswordModal(false)}
+        submitting={submitting}
+      />
+
+      <BanUserModal
+        show={showBanModal}
+        user={selectedUser}
+        form={banForm}
+        onFormChange={setBanForm}
+        onConfirm={handleBanUser}
+        onCancel={() => setShowBanModal(false)}
+        submitting={submitting}
+      />
+
+      <UnbanUserModal
+        show={showUnbanModal}
+        user={selectedUser}
+        onConfirm={handleUnbanUser}
+        onCancel={() => setShowUnbanModal(false)}
         submitting={submitting}
       />
     </div>

@@ -4,8 +4,9 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../lib/activityLog';
-import type { User, EmployeeWithoutAccess, GrantAccessFormData, EditUserFormData } from './types';
+import type { User, EmployeeWithoutAccess, GrantAccessFormData, EditUserFormData, BanUserFormData } from './types';
 import { getUserEmail } from './types';
+import { banUser, unbanUser, deactivateUser, activateUser } from './userStatusApi';
 
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -17,6 +18,8 @@ export function useUserManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRevokeAccessModal, setShowRevokeAccessModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [showUnbanModal, setShowUnbanModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +35,11 @@ export function useUserManagement() {
 
   const [editForm, setEditForm] = useState<EditUserFormData>({
     role: 'staff',
+  });
+
+  const [banForm, setBanForm] = useState<BanUserFormData>({
+    banDuration: '24',
+    reason: '',
   });
 
   useEffect(() => {
@@ -298,6 +306,141 @@ export function useUserManagement() {
     setShowResetPasswordModal(true);
   };
 
+  const openBanModal = (user: User) => {
+    setSelectedUser(user);
+    setBanForm({ banDuration: '24', reason: '' });
+    setShowBanModal(true);
+  };
+
+  const openUnbanModal = (user: User) => {
+    setSelectedUser(user);
+    setShowUnbanModal(true);
+  };
+
+  const handleBanUser = async () => {
+    if (!selectedUser) return;
+
+    if (selectedUser.id === currentUser?.id) {
+      showNotification('error', t('userManagement.cannotBanSelf'));
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await banUser(selectedUser.id, banForm.banDuration, banForm.reason);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      showNotification('success', t('userManagement.userBanned'));
+      
+      if (currentUser) {
+        logActivity(currentUser.id, 'user_banned', 'user', selectedUser.id, {
+          employee_email: getUserEmail(selectedUser),
+          ban_duration: banForm.banDuration,
+          reason: banForm.reason,
+        });
+      }
+
+      setShowBanModal(false);
+      setSelectedUser(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error banning user:', error);
+      showNotification('error', error.message || t('userManagement.failedToBan'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUnbanUser = async () => {
+    if (!selectedUser) return;
+
+    setSubmitting(true);
+    try {
+      const result = await unbanUser(selectedUser.id);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      showNotification('success', t('userManagement.userUnbanned'));
+      
+      if (currentUser) {
+        logActivity(currentUser.id, 'user_unbanned', 'user', selectedUser.id, {
+          employee_email: getUserEmail(selectedUser),
+        });
+      }
+
+      setShowUnbanModal(false);
+      setSelectedUser(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error unbanning user:', error);
+      showNotification('error', error.message || t('userManagement.failedToUnban'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeactivateUser = async (user: User) => {
+    if (user.id === currentUser?.id) {
+      showNotification('error', t('userManagement.cannotDeactivateSelf'));
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await deactivateUser(user.id);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      showNotification('success', t('userManagement.userDeactivated'));
+      
+      if (currentUser) {
+        logActivity(currentUser.id, 'user_deactivated', 'user', user.id, {
+          employee_email: getUserEmail(user),
+        });
+      }
+
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error deactivating user:', error);
+      showNotification('error', error.message || t('userManagement.failedToDeactivate'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleActivateUser = async (user: User) => {
+    setSubmitting(true);
+    try {
+      const result = await activateUser(user.id);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      showNotification('success', t('userManagement.userActivated'));
+      
+      if (currentUser) {
+        logActivity(currentUser.id, 'user_activated', 'user', user.id, {
+          employee_email: getUserEmail(user),
+        });
+      }
+
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error activating user:', error);
+      showNotification('error', error.message || t('userManagement.failedToActivate'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const userEmail = getUserEmail(user);
     const matchesSearch = 
@@ -317,6 +460,8 @@ export function useUserManagement() {
     hr: users.filter(u => u.role === 'hr').length,
     employees: users.filter(u => u.role === 'staff').length,
     withoutAccess: employeesWithoutAccess.length,
+    banned: users.filter(u => u.banned_at).length,
+    inactive: users.filter(u => u.is_active === false).length,
   };
 
   return {
@@ -335,6 +480,10 @@ export function useUserManagement() {
     setShowRevokeAccessModal,
     showResetPasswordModal,
     setShowResetPasswordModal,
+    showBanModal,
+    setShowBanModal,
+    showUnbanModal,
+    setShowUnbanModal,
     selectedUser,
     setSelectedUser,
     submitting,
@@ -344,6 +493,8 @@ export function useUserManagement() {
     setGrantAccessForm,
     editForm,
     setEditForm,
+    banForm,
+    setBanForm,
     currentUserId: currentUser?.id,
 
     loadUsers,
@@ -352,9 +503,15 @@ export function useUserManagement() {
     handleEditUser,
     handleRevokeAccess,
     handleResetPassword,
+    handleBanUser,
+    handleUnbanUser,
+    handleDeactivateUser,
+    handleActivateUser,
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
+    openBanModal,
+    openUnbanModal,
 
     filteredUsers,
     stats,

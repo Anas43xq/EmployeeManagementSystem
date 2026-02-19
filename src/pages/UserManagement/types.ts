@@ -7,6 +7,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   is_active?: boolean;
+  banned_at?: string | null;
+  ban_reason?: string | null;
   last_sign_in_at?: string;
   employees: {
     id: string;
@@ -57,3 +59,13 @@ export interface GrantAccessFormData {
 export interface EditUserFormData {
   role: 'admin' | 'hr' | 'staff';
 }
+
+export interface BanUserFormData {
+  banDuration: 'permanent' | '24' | '168' | '720' | '8760'; // hours: 1 day, 1 week, 30 days, 1 year
+  reason: string;
+}
+
+export type BanDurationOption = {
+  value: BanUserFormData['banDuration'];
+  label: string;
+};
