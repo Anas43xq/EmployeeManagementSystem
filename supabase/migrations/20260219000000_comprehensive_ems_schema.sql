@@ -1144,27 +1144,22 @@ ON CONFLICT (employee_id, date) DO NOTHING;
 -- Delete existing demo auth users
 DELETE FROM auth.users WHERE email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com');
 
--- Create auth users for demo accounts (pre-computed bcrypt hashes for compatibility)
--- Also create auth.identities records which GoTrue requires for email/password login
-DO $$
-DECLARE
-  admin_uid UUID := gen_random_uuid();
-  hr_uid UUID := gen_random_uuid();
-  staff_uid UUID := gen_random_uuid();
-BEGIN
-  INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
-  VALUES 
-    ('00000000-0000-0000-0000-000000000000', admin_uid, 'authenticated', 'authenticated', 'anas.essam.work@gmail.com', '$2a$10$3wyQrxricyx5vNgoffmjLOvjP9Q1F1uS6WfRNuM9gBBG5Mbu/.ktW', now(), '{"provider": "email", "providers": ["email"], "role": "admin"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
-    ('00000000-0000-0000-0000-000000000000', hr_uid, 'authenticated', 'authenticated', 'essamanas86@gmail.com', '$2a$10$nhMhJ6LrN8HOtFQfyXKj.uXijDuLKP1aFZ59Kgif8poJw1oA7BXEa', now(), '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
-    ('00000000-0000-0000-0000-000000000000', staff_uid, 'authenticated', 'authenticated', 'tvissam96@gmail.com', '$2a$10$HOtHFhJoaLYr.tVzlZRa1eHxFEW9Jop45kz65yrF.jqf/Qb4BJtWm', now(), '{"provider": "email", "providers": ["email"], "role": "staff"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', '');
+-- Create auth users for demo accounts using FIXED UUIDs for repeatability
+-- Password hashes are pre-computed bcrypt ($2a$ prefix) for GoTrue compatibility
+-- NOTE: After db reset, run seed-auth.ps1 to set passwords via admin API (creates auth.identities)
+INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+VALUES 
+  ('00000000-0000-0000-0000-000000000000', 'a1b2c3d4-e5f6-4a5b-8c7d-1234567890ab'::uuid, 'authenticated', 'authenticated', 'anas.essam.work@gmail.com', '$2a$10$3wyQrxricyx5vNgoffmjLOvjP9Q1F1uS6WfRNuM9gBBG5Mbu/.ktW', now(), '{"provider": "email", "providers": ["email"], "role": "admin"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'b2c3d4e5-f6a7-4b5c-9d8e-234567890abc'::uuid, 'authenticated', 'authenticated', 'essamanas86@gmail.com', '$2a$10$nhMhJ6LrN8HOtFQfyXKj.uXijDuLKP1aFZ59Kgif8poJw1oA7BXEa', now(), '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'c3d4e5f6-a7b8-4c5d-ae9f-34567890abcd'::uuid, 'authenticated', 'authenticated', 'tvissam96@gmail.com', '$2a$10$HOtHFhJoaLYr.tVzlZRa1eHxFEW9Jop45kz65yrF.jqf/Qb4BJtWm', now(), '{"provider": "email", "providers": ["email"], "role": "staff"}'::jsonb, '{}'::jsonb, now(), now(), '', '', '', '');
 
-  -- Create identity records (required for email/password authentication)
-  INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
-  VALUES
-    (gen_random_uuid(), admin_uid, jsonb_build_object('sub', admin_uid::text, 'email', 'anas.essam.work@gmail.com', 'email_verified', true), 'email', admin_uid::text, now(), now(), now()),
-    (gen_random_uuid(), hr_uid, jsonb_build_object('sub', hr_uid::text, 'email', 'essamanas86@gmail.com', 'email_verified', true), 'email', hr_uid::text, now(), now(), now()),
-    (gen_random_uuid(), staff_uid, jsonb_build_object('sub', staff_uid::text, 'email', 'tvissam96@gmail.com', 'email_verified', true), 'email', staff_uid::text, now(), now(), now());
-END $$;
+-- Create identity records (required for GoTrue email/password authentication)
+-- Using separate INSERT so errors are visible (not swallowed inside DO block)
+INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'a1b2c3d4-e5f6-4a5b-8c7d-1234567890ab'::uuid, '{"sub": "a1b2c3d4-e5f6-4a5b-8c7d-1234567890ab", "email": "anas.essam.work@gmail.com", "email_verified": true}'::jsonb, 'email', 'a1b2c3d4-e5f6-4a5b-8c7d-1234567890ab', now(), now(), now()),
+  (gen_random_uuid(), 'b2c3d4e5-f6a7-4b5c-9d8e-234567890abc'::uuid, '{"sub": "b2c3d4e5-f6a7-4b5c-9d8e-234567890abc", "email": "essamanas86@gmail.com", "email_verified": true}'::jsonb, 'email', 'b2c3d4e5-f6a7-4b5c-9d8e-234567890abc', now(), now(), now()),
+  (gen_random_uuid(), 'c3d4e5f6-a7b8-4c5d-ae9f-34567890abcd'::uuid, '{"sub": "c3d4e5f6-a7b8-4c5d-ae9f-34567890abcd", "email": "tvissam96@gmail.com", "email_verified": true}'::jsonb, 'email', 'c3d4e5f6-a7b8-4c5d-ae9f-34567890abcd', now(), now(), now());
 
 -- January 2026 Payroll (Paid)
 INSERT INTO public.payrolls (employee_id, period_month, period_year, base_salary, total_bonuses, total_deductions, gross_salary, net_salary, status, notes, generated_at)
