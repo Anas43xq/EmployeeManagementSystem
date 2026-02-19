@@ -32,7 +32,7 @@ export default function AnnouncementsWidget() {
       const { data, error } = await (supabase
         .from('announcements')
         .select('id, title, content, priority, created_at')
-        .eq('is_active', true)
+        .match({ is_active: true })
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(6) as any) as { data: Announcement[] | null; error: any };
