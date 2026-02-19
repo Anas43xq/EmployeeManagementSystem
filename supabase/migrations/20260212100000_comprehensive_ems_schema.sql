@@ -789,23 +789,23 @@ BEGIN
     (dept_admin, 'Administration', 'administrative', 'General Administration and Support');
 
   -- Insert Employees with auto-generated UUIDs and employee_numbers
-  -- Admin employee (login: admin@staffhub.com / admin123)
+  -- Admin employee (login: anas.essam.work@gmail.com / admin123)
   emp_id := gen_random_uuid();
   emp_ids := emp_ids || emp_id;
   INSERT INTO public.employees (id, first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES (emp_id, 'John', 'Smith', 'admin@staffhub.com', '555-0101', '1975-03-15', 'male', '123 Admin St', 'Boston', 'MA', '02101', dept_admin, 'System Administrator', 'full-time', 'active', '2010-01-15', 95000, '[{"degree": "MBA", "institution": "Harvard University"}]', 'Jane Smith', '555-0102');
+  VALUES (emp_id, 'John', 'Smith', 'anas.essam.work@gmail.com', '555-0101', '1975-03-15', 'male', '123 Admin St', 'Boston', 'MA', '02101', dept_admin, 'System Administrator', 'full-time', 'active', '2010-01-15', 95000, '[{"degree": "MBA", "institution": "Harvard University"}]', 'Jane Smith', '555-0102');
 
   -- HR employee
   emp_id := gen_random_uuid();
   emp_ids := emp_ids || emp_id;
   INSERT INTO public.employees (id, first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES (emp_id, 'Sarah', 'Johnson', 'hr@staffhub.com', '555-0103', '1982-07-22', 'female', '456 HR Ave', 'Boston', 'MA', '02102', dept_admin, 'HR Manager', 'full-time', 'active', '2015-03-20', 75000, '[{"degree": "MS Human Resources", "institution": "Boston College"}]', 'Mike Johnson', '555-0104');
+  VALUES (emp_id, 'Sarah', 'Johnson', 'essamanas86@gmail.com', '555-0103', '1982-07-22', 'female', '456 HR Ave', 'Boston', 'MA', '02102', dept_admin, 'HR Manager', 'full-time', 'active', '2015-03-20', 75000, '[{"degree": "MS Human Resources", "institution": "Boston College"}]', 'Mike Johnson', '555-0104');
 
   -- Regular employee
   emp_id := gen_random_uuid();
   emp_ids := emp_ids || emp_id;
   INSERT INTO public.employees (id, first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES (emp_id, 'Michael', 'Davis', 'employee@staffhub.com', '555-0105', '1988-11-10', 'male', '789 Faculty Rd', 'Boston', 'MA', '02103', dept_tech, 'Senior Analyst', 'full-time', 'active', '2018-09-01', 68000, '[{"degree": "PhD Computer Science", "institution": "MIT"}]', 'Emily Davis', '555-0106');
+  VALUES (emp_id, 'Michael', 'Davis', 'tvissam96@gmail.com', '555-0105', '1988-11-10', 'male', '789 Faculty Rd', 'Boston', 'MA', '02103', dept_tech, 'Senior Analyst', 'full-time', 'active', '2018-09-01', 68000, '[{"degree": "PhD Computer Science", "institution": "MIT"}]', 'Emily Davis', '555-0106');
 
   -- Director Tech
   emp_id := gen_random_uuid();
@@ -1240,7 +1240,7 @@ END $$;
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Delete existing demo users to avoid conflicts
-DELETE FROM auth.users WHERE email IN ('admin@staffhub.com', 'hr@staffhub.com', 'employee@staffhub.com');
+DELETE FROM auth.users WHERE email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com');
 
 INSERT INTO auth.users (
   instance_id,
@@ -1265,7 +1265,7 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'admin@staffhub.com',
+  'anas.essam.work@gmail.com',
   extensions.crypt('admin123', extensions.gen_salt('bf')),
   now(),
   '{"provider": "email", "providers": ["email"], "role": "admin"}'::jsonb,
@@ -1283,7 +1283,7 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'hr@staffhub.com',
+  'essamanas86@gmail.com',
   extensions.crypt('hr123', extensions.gen_salt('bf')),
   now(),
   '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb,
@@ -1301,7 +1301,7 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'employee@staffhub.com',
+  'tvissam96@gmail.com',
   extensions.crypt('emp123', extensions.gen_salt('bf')),
   now(),
   '{"provider": "email", "providers": ["email"], "role": "staff"}'::jsonb,
