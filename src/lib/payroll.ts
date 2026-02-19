@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from './supabase';
+import { getValidAccessToken, getFreshAccessToken } from './sessionManager';
 
 export interface PayrollData {
   id: string;
@@ -53,18 +54,18 @@ export async function generateMonthlyPayroll(
   employeeIds?: string[]
 ): Promise<PayrollCalculationResult> {
   try {
-    // Ensure we have a valid session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Use getFreshAccessToken for critical payroll operations to ensure valid token
+    const accessToken = await getFreshAccessToken();
     
-    if (sessionError || !session) {
-      console.error('No valid session:', sessionError?.message);
+    if (!accessToken) {
+      console.error('[Payroll] No valid session - could not get access token');
       return {
         success: false,
-        message: 'Please log in again to generate payroll'
+        message: 'Session expired. Please log out and log in again to generate payroll.'
       };
     }
 
-    console.log('Calling payroll function with token:', session.access_token ? 'present' : 'missing');
+    console.log('[Payroll] Calling payroll function with fresh token...');
 
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
@@ -74,25 +75,49 @@ export async function generateMonthlyPayroll(
         employeeIds
       },
       headers: {
-        Authorization: `Bearer ${session.access_token}`
+        Authorization: `Bearer ${accessToken}`
       }
     });
 
     if (error) {
-      // Try to extract error details from response
-      const errorMessage = error.message || 'Failed to generate payroll';
-      console.error('Payroll error:', error);
-      throw new Error(errorMessage);
+      console.error('[Payroll] Error:', error);
+      
+      // Check if it's an auth error
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        return {
+          success: false,
+          message: 'Authentication failed. Please log out and log in again.'
+        };
+      }
+      
+      throw new Error(error.message || 'Failed to generate payroll');
     }
 
     // Check if data contains an error (non-2xx responses may return error in data)
     if (data?.error) {
-      throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
+      const errorMsg = data.error + (data.details ? `: ${data.details}` : '');
+      
+      // Provide user-friendly messages for common errors
+      if (errorMsg.includes('Unauthorized') || errorMsg.includes('Invalid or expired token')) {
+        return {
+          success: false,
+          message: 'Your session has expired. Please log out and log in again.'
+        };
+      }
+      
+      if (errorMsg.includes('Insufficient permissions')) {
+        return {
+          success: false,
+          message: 'You do not have permission to generate payroll. Only Admin and HR users can do this.'
+        };
+      }
+      
+      throw new Error(errorMsg);
     }
 
     return data;
   } catch (error) {
-    console.error('Error generating payroll:', error);
+    console.error('[Payroll] Error generating payroll:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to generate payroll'
@@ -106,7 +131,7 @@ export async function calculateEmployeePayroll(
   year: number
 ): Promise<any> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = await getValidAccessToken();
     
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
@@ -115,8 +140,8 @@ export async function calculateEmployeePayroll(
         month,
         year
       },
-      headers: session?.access_token ? {
-        Authorization: `Bearer ${session.access_token}`
+      headers: accessToken ? {
+        Authorization: `Bearer ${accessToken}`
       } : undefined
     });
 
@@ -126,23 +151,28 @@ export async function calculateEmployeePayroll(
 
     return data;
   } catch (error) {
-    console.error('Error calculating employee payroll:', error);
+    console.error('[Payroll] Error calculating employee payroll:', error);
     throw error;
   }
 }
 
 export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = await getFreshAccessToken();
+    
+    if (!accessToken) {
+      console.error('[Payroll] No valid session for approval');
+      return false;
+    }
     
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
         action: 'approve-payroll',
         payrollIds
       },
-      headers: session?.access_token ? {
-        Authorization: `Bearer ${session.access_token}`
-      } : undefined
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
     });
 
     if (error) {
@@ -151,7 +181,7 @@ export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
 
     return data.success;
   } catch (error) {
-    console.error('Error approving payroll:', error);
+    console.error('[Payroll] Error approving payroll:', error);
     return false;
   }
 }

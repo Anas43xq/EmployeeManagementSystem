@@ -240,17 +240,6 @@ const { data, error } = await supabase.functions.invoke('manage-user-status', {
 4. Deploy
 
 Vercel will automatically build and deploy on every push to the main branch.
-
----
-
-## Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@staffhub.com | admin123 |
-| HR | hr@staffhub.com | hr123 |
-| Staff | employee@staffhub.com | emp123 |
-
 ---
 
 ## License

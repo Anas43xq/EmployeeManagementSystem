@@ -7,6 +7,7 @@ import Login from './components/Login';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotificationContainer from './components/NotificationContainer';
+import { ErrorBoundary, RouteErrorBoundary } from './components/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Employees = lazy(() => import('./pages/Employees'));
@@ -41,38 +42,40 @@ function PageLoader() {
 
 function App() {
   return (
-    <NotificationProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <NotificationContainer />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
-              <Route path="profile" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
-              <Route path="employees" element={<Suspense fallback={<PageLoader />}><Employees /></Suspense>} />
-              <Route path="employees/new" element={<Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense>} />
-              <Route path="employees/:id" element={<Suspense fallback={<PageLoader />}><EmployeeView /></Suspense>} />
-              <Route path="employees/:id/edit" element={<Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense>} />
-              <Route path="departments" element={<Suspense fallback={<PageLoader />}><Departments /></Suspense>} />
-              <Route path="attendance" element={<Suspense fallback={<PageLoader />}><Attendance /></Suspense>} />
-              <Route path="leaves" element={<Suspense fallback={<PageLoader />}><Leaves /></Suspense>} />
-              <Route path="tasks" element={<Suspense fallback={<PageLoader />}><Tasks /></Suspense>} />
-              <Route path="warnings" element={<Suspense fallback={<PageLoader />}><Warnings /></Suspense>} />
-              <Route path="complaints" element={<Suspense fallback={<PageLoader />}><Complaints /></Suspense>} />
-              <Route path="payroll" element={<Suspense fallback={<PageLoader />}><PayrollDashboard /></Suspense>} />
-              <Route path="payslips" element={<Suspense fallback={<PageLoader />}><PayslipView /></Suspense>} />
-              <Route path="announcements" element={<Suspense fallback={<PageLoader />}><Announcements /></Suspense>} />
-              <Route path="reports" element={<Suspense fallback={<PageLoader />}><Reports /></Suspense>} />
-              <Route path="users" element={<Suspense fallback={<PageLoader />}><UserManagement /></Suspense>} />
-              <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </NotificationProvider>
+    <ErrorBoundary>
+      <NotificationProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <NotificationContainer />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></RouteErrorBoundary>} />
+                <Route path="profile" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Profile /></Suspense></RouteErrorBoundary>} />
+                <Route path="employees" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Employees /></Suspense></RouteErrorBoundary>} />
+                <Route path="employees/new" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary>} />
+                <Route path="employees/:id" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeView /></Suspense></RouteErrorBoundary>} />
+                <Route path="employees/:id/edit" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary>} />
+                <Route path="departments" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Departments /></Suspense></RouteErrorBoundary>} />
+                <Route path="attendance" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Attendance /></Suspense></RouteErrorBoundary>} />
+                <Route path="leaves" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Leaves /></Suspense></RouteErrorBoundary>} />
+                <Route path="tasks" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Tasks /></Suspense></RouteErrorBoundary>} />
+                <Route path="warnings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Warnings /></Suspense></RouteErrorBoundary>} />
+                <Route path="complaints" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Complaints /></Suspense></RouteErrorBoundary>} />
+                <Route path="payroll" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayrollDashboard /></Suspense></RouteErrorBoundary>} />
+                <Route path="payslips" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayslipView /></Suspense></RouteErrorBoundary>} />
+                <Route path="announcements" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Announcements /></Suspense></RouteErrorBoundary>} />
+                <Route path="reports" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Reports /></Suspense></RouteErrorBoundary>} />
+                <Route path="users" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><UserManagement /></Suspense></RouteErrorBoundary>} />
+                <Route path="settings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></RouteErrorBoundary>} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </NotificationProvider>
+    </ErrorBoundary>
   );
 }
 

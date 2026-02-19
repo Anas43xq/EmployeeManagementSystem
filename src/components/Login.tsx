@@ -385,16 +385,6 @@ export default function Login() {
           </div>
         )}
 
-        {import.meta.env.DEV && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-700 font-medium mb-2">{t('auth.demoAccounts')}</p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>{t('auth.demoAdmin')}</p>
-              <p>{t('auth.demoHR')}</p>
-              <p>{t('auth.demoEmployee')}</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

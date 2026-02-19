@@ -30,26 +30,18 @@ export function useLeaves() {
     loadLeaveBalance();
   }, [user]);
 
+  // Use polling instead of realtime for leaves (reduces database load)
+  // Realtime for leaves caused heavy database overhead
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('leaves-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leaves',
-        },
-        () => {
-          loadLeaves();
-        }
-      )
-      .subscribe();
+    // Poll every 30 seconds for leave updates
+    const pollInterval = setInterval(() => {
+      loadLeaves();
+    }, 30000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [user]);
 

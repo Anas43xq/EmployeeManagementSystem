@@ -46,9 +46,21 @@ DROP TABLE IF EXISTS public.payrolls CASCADE;
 DROP TABLE IF EXISTS public.bonuses CASCADE;
 DROP TABLE IF EXISTS public.deductions CASCADE;
 
+-- Drop performance, warnings, complaints, tasks tables
+DROP TABLE IF EXISTS public.employee_tasks CASCADE;
+DROP TABLE IF EXISTS public.employee_warnings CASCADE;
+DROP TABLE IF EXISTS public.employee_complaints CASCADE;
+DROP TABLE IF EXISTS public.employee_performance CASCADE;
+DROP TABLE IF EXISTS public.employee_of_week CASCADE;
+
 -- Drop sequences and functions
 DROP SEQUENCE IF EXISTS employee_number_seq CASCADE;
 DROP FUNCTION IF EXISTS generate_employee_number() CASCADE;
+DROP FUNCTION IF EXISTS update_employee_tasks_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS update_employee_warnings_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS update_employee_complaints_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS calculate_weekly_performance(DATE) CASCADE;
+DROP FUNCTION IF EXISTS select_employee_of_week(DATE) CASCADE;
 
 -- =============================================
 -- CREATE TABLES
@@ -88,7 +100,7 @@ RETURNS TEXT AS $$
 BEGIN
   RETURN 'EMP' || LPAD(nextval('employee_number_seq')::TEXT, 3, '0');
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Employees table
 CREATE TABLE public.employees (
@@ -245,7 +257,7 @@ CREATE TABLE public.notifications (
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   message TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('leave', 'attendance', 'system')),
+  type TEXT NOT NULL CHECK (type IN ('leave', 'attendance', 'system', 'warning', 'task', 'complaint', 'performance')),
   is_read BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -285,6 +297,106 @@ CREATE TABLE public.announcements (
 );
 
 -- =============================================
+-- EMPLOYEE TASKS TABLE
+-- HR/Admin assign tasks to employees with deadlines
+-- =============================================
+CREATE TABLE public.employee_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  priority TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'overdue', 'cancelled')),
+  deadline DATE NOT NULL,
+  completed_at TIMESTAMPTZ,
+  assigned_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  points INTEGER NOT NULL DEFAULT 10, -- Performance points for completing this task
+  penalty_points INTEGER NOT NULL DEFAULT 5, -- Points deducted if overdue
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- =============================================
+-- EMPLOYEE WARNINGS TABLE
+-- HR/Admin issue warnings to employees
+-- =============================================
+CREATE TABLE public.employee_warnings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  issued_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  severity TEXT NOT NULL DEFAULT 'minor' CHECK (severity IN ('minor', 'moderate', 'major', 'critical')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'acknowledged', 'resolved', 'appealed')),
+  acknowledged_at TIMESTAMPTZ,
+  resolution_notes TEXT,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- =============================================
+-- EMPLOYEE COMPLAINTS TABLE
+-- Employees submit complaints
+-- =============================================
+CREATE TABLE public.employee_complaints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'general' CHECK (category IN ('general', 'workplace', 'harassment', 'safety', 'policy', 'other')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'under_review', 'resolved', 'dismissed')),
+  priority TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+  assigned_to UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  resolution_notes TEXT,
+  resolved_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- =============================================
+-- EMPLOYEE PERFORMANCE TABLE
+-- Stores calculated performance scores per period
+-- =============================================
+CREATE TABLE public.employee_performance (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  attendance_score INTEGER NOT NULL DEFAULT 0,
+  task_score INTEGER NOT NULL DEFAULT 0,
+  warning_deduction INTEGER NOT NULL DEFAULT 0,
+  total_score INTEGER NOT NULL DEFAULT 0,
+  tasks_completed INTEGER NOT NULL DEFAULT 0,
+  tasks_overdue INTEGER NOT NULL DEFAULT 0,
+  attendance_days INTEGER NOT NULL DEFAULT 0,
+  absent_days INTEGER NOT NULL DEFAULT 0,
+  late_days INTEGER NOT NULL DEFAULT 0,
+  notes TEXT DEFAULT '',
+  calculated_at TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(employee_id, period_start, period_end)
+);
+
+-- =============================================
+-- EMPLOYEE OF THE WEEK TABLE
+-- Stores weekly top performer selection
+-- =============================================
+CREATE TABLE public.employee_of_week (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  week_start DATE NOT NULL UNIQUE,
+  week_end DATE NOT NULL,
+  score INTEGER NOT NULL DEFAULT 0,
+  reason TEXT NOT NULL,
+  is_auto_selected BOOLEAN NOT NULL DEFAULT true,
+  selected_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- =============================================
 -- INDEXES
 -- =============================================
 
@@ -304,6 +416,26 @@ CREATE INDEX idx_activity_logs_created ON public.activity_logs(created_at DESC);
 CREATE INDEX idx_announcements_active ON public.announcements(is_active) WHERE is_active = true;
 CREATE INDEX idx_announcements_created ON public.announcements(created_at DESC);
 
+-- Indexes for employee tasks, warnings, complaints, and performance
+CREATE INDEX idx_employee_tasks_employee ON public.employee_tasks(employee_id);
+CREATE INDEX idx_employee_tasks_status ON public.employee_tasks(status);
+CREATE INDEX idx_employee_tasks_deadline ON public.employee_tasks(deadline);
+CREATE INDEX idx_employee_tasks_assigned_by ON public.employee_tasks(assigned_by);
+
+CREATE INDEX idx_employee_warnings_employee ON public.employee_warnings(employee_id);
+CREATE INDEX idx_employee_warnings_status ON public.employee_warnings(status);
+CREATE INDEX idx_employee_warnings_severity ON public.employee_warnings(severity);
+
+CREATE INDEX idx_employee_complaints_employee ON public.employee_complaints(employee_id);
+CREATE INDEX idx_employee_complaints_status ON public.employee_complaints(status);
+CREATE INDEX idx_employee_complaints_assigned ON public.employee_complaints(assigned_to);
+
+CREATE INDEX idx_employee_performance_employee ON public.employee_performance(employee_id);
+CREATE INDEX idx_employee_performance_period ON public.employee_performance(period_start, period_end);
+
+CREATE INDEX idx_employee_of_week_week ON public.employee_of_week(week_start);
+CREATE INDEX idx_employee_of_week_employee ON public.employee_of_week(employee_id);
+
 -- New indexes for passkey and payroll tables
 CREATE INDEX idx_passkeys_user ON public.passkeys(user_id);
 CREATE INDEX idx_passkeys_credential ON public.passkeys(credential_id);
@@ -317,23 +449,45 @@ CREATE INDEX idx_deductions_employee ON public.deductions(employee_id);
 CREATE INDEX idx_deductions_period ON public.deductions(period_year, period_month);
 CREATE INDEX idx_deductions_payroll ON public.deductions(payroll_id);
 
+-- Composite indexes for common query patterns (significant performance improvement)
+CREATE INDEX idx_attendance_employee_date ON public.attendance(employee_id, date DESC);
+CREATE INDEX idx_leaves_employee_status ON public.leaves(employee_id, status);
+CREATE INDEX idx_payrolls_employee_period ON public.payrolls(employee_id, period_year DESC, period_month DESC);
+CREATE INDEX idx_employee_performance_emp_period ON public.employee_performance(employee_id, period_start DESC);
+
 -- =============================================
 -- TRIGGERS
 -- =============================================
 
--- Auto-update updated_at for announcements
-CREATE OR REPLACE FUNCTION update_announcements_updated_at()
+-- Generic function to auto-update updated_at column (reusable across all tables)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
+-- Apply updated_at trigger to all tables with updated_at column
 CREATE TRIGGER update_announcements_updated_at_trigger
   BEFORE UPDATE ON public.announcements
   FOR EACH ROW
-  EXECUTE FUNCTION update_announcements_updated_at();
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employee_tasks_updated_at_trigger
+  BEFORE UPDATE ON public.employee_tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employee_warnings_updated_at_trigger
+  BEFORE UPDATE ON public.employee_warnings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employee_complaints_updated_at_trigger
+  BEFORE UPDATE ON public.employee_complaints
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- =============================================
 -- EMAIL SYNC TRIGGERS (Single source of truth)
@@ -361,7 +515,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 DROP TRIGGER IF EXISTS sync_auth_email_on_employee_update ON public.employees;
 CREATE TRIGGER sync_auth_email_on_employee_update
@@ -418,7 +572,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger on auth.users INSERT
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -453,7 +607,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_email_changed ON auth.users;
 CREATE TRIGGER on_auth_user_email_changed
@@ -482,12 +636,18 @@ ALTER TABLE public.passkeys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payrolls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bonuses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deductions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_warnings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_complaints ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_performance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.employee_of_week ENABLE ROW LEVEL SECURITY;
 
 -- =============================================
 -- RLS POLICIES - Using JWT metadata to avoid recursion
 -- =============================================
 
 -- Helper function to get role from JWT with fallback to users table
+-- STABLE: Returns same result for same args within a single query (improves RLS policy performance)
 CREATE OR REPLACE FUNCTION get_user_role()
 RETURNS TEXT AS $$
 DECLARE
@@ -510,7 +670,7 @@ BEGIN
   -- Return the database role or default to 'staff'
   RETURN COALESCE(db_role, 'staff');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, auth;
 
 -- Helper function to get employee_id for current user
 CREATE OR REPLACE FUNCTION get_user_employee_id()
@@ -518,7 +678,7 @@ RETURNS UUID AS $$
 BEGIN
   RETURN (SELECT employee_id FROM public.users WHERE id = auth.uid());
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, auth;
 
 -- Helper function to get email for current user (from linked employee)
 CREATE OR REPLACE FUNCTION get_user_email()
@@ -531,28 +691,28 @@ BEGIN
     WHERE u.id = auth.uid()
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, auth;
 
 -- ===== USERS POLICIES =====
-CREATE POLICY "users_select_own" ON public.users
+-- Consolidated SELECT: admin can see all, users can see own
+CREATE POLICY "users_select_policy" ON public.users
   FOR SELECT TO authenticated
-  USING (id = auth.uid());
-
-CREATE POLICY "users_select_admin" ON public.users
-  FOR SELECT TO authenticated
-  USING (get_user_role() = 'admin');
+  USING (
+    (select get_user_role()) = 'admin'
+    OR id = (select auth.uid())
+  );
 
 CREATE POLICY "users_insert_admin" ON public.users
   FOR INSERT TO authenticated
-  WITH CHECK (get_user_role() = 'admin');
+  WITH CHECK ((select get_user_role()) = 'admin');
 
 CREATE POLICY "users_update_admin" ON public.users
   FOR UPDATE TO authenticated
-  USING (get_user_role() = 'admin');
+  USING ((select get_user_role()) = 'admin');
 
 CREATE POLICY "users_delete_admin" ON public.users
   FOR DELETE TO authenticated
-  USING (get_user_role() = 'admin');
+  USING ((select get_user_role()) = 'admin');
 
 -- ===== DEPARTMENTS POLICIES =====
 CREATE POLICY "departments_select_all" ON public.departments
@@ -561,15 +721,15 @@ CREATE POLICY "departments_select_all" ON public.departments
 
 CREATE POLICY "departments_insert_admin_hr" ON public.departments
   FOR INSERT TO authenticated
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
 
 CREATE POLICY "departments_update_admin_hr" ON public.departments
   FOR UPDATE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 CREATE POLICY "departments_delete_admin" ON public.departments
   FOR DELETE TO authenticated
-  USING (get_user_role() = 'admin');
+  USING ((select get_user_role()) = 'admin');
 
 -- ===== EMPLOYEES POLICIES =====
 CREATE POLICY "employees_select_all" ON public.employees
@@ -578,190 +738,495 @@ CREATE POLICY "employees_select_all" ON public.employees
 
 CREATE POLICY "employees_insert_admin_hr" ON public.employees
   FOR INSERT TO authenticated
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
 
 CREATE POLICY "employees_update_admin_hr" ON public.employees
   FOR UPDATE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 CREATE POLICY "employees_delete_admin" ON public.employees
   FOR DELETE TO authenticated
-  USING (get_user_role() = 'admin');
+  USING ((select get_user_role()) = 'admin');
 
 -- ===== LEAVES POLICIES =====
 CREATE POLICY "leaves_select_own_or_admin_hr" ON public.leaves
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
 CREATE POLICY "leaves_insert_own" ON public.leaves
   FOR INSERT TO authenticated
   WITH CHECK (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
 CREATE POLICY "leaves_update_admin_hr" ON public.leaves
   FOR UPDATE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 CREATE POLICY "leaves_delete_admin_hr" ON public.leaves
   FOR DELETE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- ===== LEAVE BALANCES POLICIES =====
-CREATE POLICY "leave_balances_select_own_or_admin_hr" ON public.leave_balances
+-- Consolidated SELECT policy
+CREATE POLICY "leave_balances_select_policy" ON public.leave_balances
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
-CREATE POLICY "leave_balances_manage_admin_hr" ON public.leave_balances
-  FOR ALL TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+CREATE POLICY "leave_balances_insert_admin_hr" ON public.leave_balances
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "leave_balances_update_admin_hr" ON public.leave_balances
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "leave_balances_delete_admin_hr" ON public.leave_balances
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- ===== ATTENDANCE POLICIES =====
 CREATE POLICY "attendance_select_own_or_admin_hr" ON public.attendance
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
 CREATE POLICY "attendance_insert_own_or_admin_hr" ON public.attendance
   FOR INSERT TO authenticated
   WITH CHECK (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
-CREATE POLICY "attendance_update_own" ON public.attendance
+-- Consolidated UPDATE policy
+CREATE POLICY "attendance_update_policy" ON public.attendance
   FOR UPDATE TO authenticated
-  USING (employee_id = get_user_employee_id());
-
-CREATE POLICY "attendance_update_admin_hr" ON public.attendance
-  FOR UPDATE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
 
 CREATE POLICY "attendance_delete_admin_hr" ON public.attendance
   FOR DELETE TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 
 -- ===== NOTIFICATIONS POLICIES =====
 CREATE POLICY "notifications_select_own" ON public.notifications
   FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 CREATE POLICY "notifications_update_own" ON public.notifications
   FOR UPDATE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 CREATE POLICY "notifications_insert_all" ON public.notifications
   FOR INSERT TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (
+    -- Admin/HR can create notifications for any user
+    (select get_user_role()) IN ('admin', 'hr')
+    -- Or users can only create notifications addressed to themselves
+    OR user_id = (select auth.uid())
+  );
 
 CREATE POLICY "notifications_delete_own" ON public.notifications
   FOR DELETE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 -- ===== ACTIVITY LOGS POLICIES =====
 CREATE POLICY "activity_logs_select_admin" ON public.activity_logs
   FOR SELECT TO authenticated
-  USING (get_user_role() = 'admin');
+  USING ((select get_user_role()) = 'admin');
 
 CREATE POLICY "activity_logs_insert_all" ON public.activity_logs
   FOR INSERT TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (
+    -- Users can only create activity logs for themselves
+    user_id = (select auth.uid())
+    -- Or admin can log on behalf of others
+    OR (select get_user_role()) = 'admin'
+  );
 
 -- ===== USER PREFERENCES POLICIES =====
 CREATE POLICY "user_preferences_select_own" ON public.user_preferences
   FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 CREATE POLICY "user_preferences_insert_own" ON public.user_preferences
   FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = (select auth.uid()));
 
 CREATE POLICY "user_preferences_update_own" ON public.user_preferences
   FOR UPDATE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 -- ===== ANNOUNCEMENTS POLICIES =====
-CREATE POLICY "announcements_select_active" ON public.announcements
+-- Consolidated SELECT policy
+CREATE POLICY "announcements_select_policy" ON public.announcements
   FOR SELECT TO authenticated
   USING (
-    is_active = true 
-    AND (expires_at IS NULL OR expires_at > now())
+    -- Admin/HR can see all announcements
+    (select get_user_role()) IN ('admin', 'hr')
+    -- Regular users can only see active, non-expired announcements
+    OR (is_active = true AND (expires_at IS NULL OR expires_at > now()))
   );
 
-CREATE POLICY "announcements_select_admin_hr" ON public.announcements
-  FOR SELECT TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'));
+CREATE POLICY "announcements_insert_admin_hr" ON public.announcements
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
 
-CREATE POLICY "announcements_manage_admin_hr" ON public.announcements
-  FOR ALL TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'))
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+CREATE POLICY "announcements_update_admin_hr" ON public.announcements
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "announcements_delete_admin_hr" ON public.announcements
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- ===== PASSKEYS POLICIES =====
 CREATE POLICY "passkeys_select_own" ON public.passkeys
   FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 CREATE POLICY "passkeys_insert_own" ON public.passkeys
   FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = (select auth.uid()));
 
 CREATE POLICY "passkeys_update_own" ON public.passkeys
   FOR UPDATE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 CREATE POLICY "passkeys_delete_own" ON public.passkeys
   FOR DELETE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = (select auth.uid()));
 
 -- ===== PAYROLLS POLICIES =====
-CREATE POLICY "payrolls_select_own_or_admin_hr" ON public.payrolls
+-- Consolidated SELECT policy
+CREATE POLICY "payrolls_select_policy" ON public.payrolls
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
-CREATE POLICY "payrolls_manage_admin_hr" ON public.payrolls
-  FOR ALL TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'))
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+CREATE POLICY "payrolls_insert_admin_hr" ON public.payrolls
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "payrolls_update_admin_hr" ON public.payrolls
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "payrolls_delete_admin_hr" ON public.payrolls
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- ===== BONUSES POLICIES =====
-CREATE POLICY "bonuses_select_own_or_admin_hr" ON public.bonuses
+-- Consolidated SELECT policy
+CREATE POLICY "bonuses_select_policy" ON public.bonuses
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
-CREATE POLICY "bonuses_manage_admin_hr" ON public.bonuses
-  FOR ALL TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'))
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+CREATE POLICY "bonuses_insert_admin_hr" ON public.bonuses
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "bonuses_update_admin_hr" ON public.bonuses
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "bonuses_delete_admin_hr" ON public.bonuses
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- ===== DEDUCTIONS POLICIES =====
-CREATE POLICY "deductions_select_own_or_admin_hr" ON public.deductions
+-- Consolidated SELECT policy
+CREATE POLICY "deductions_select_policy" ON public.deductions
   FOR SELECT TO authenticated
   USING (
-    employee_id = get_user_employee_id()
-    OR get_user_role() IN ('admin', 'hr')
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
   );
 
-CREATE POLICY "deductions_manage_admin_hr" ON public.deductions
+CREATE POLICY "deductions_insert_admin_hr" ON public.deductions
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "deductions_update_admin_hr" ON public.deductions
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "deductions_delete_admin_hr" ON public.deductions
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
+
+-- ===== EMPLOYEE TASKS POLICIES =====
+-- Admin/HR full management
+CREATE POLICY "tasks_manage_admin_hr" ON public.employee_tasks
   FOR ALL TO authenticated
-  USING (get_user_role() IN ('admin', 'hr'))
-  WITH CHECK (get_user_role() IN ('admin', 'hr'));
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+-- Consolidated SELECT: admin/hr see all, employees see own
+CREATE POLICY "tasks_select_policy" ON public.employee_tasks
+  FOR SELECT TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- Consolidated UPDATE: admin/hr can update all, employees can update own status
+CREATE POLICY "tasks_update_policy" ON public.employee_tasks
+  FOR UPDATE TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  )
+  WITH CHECK (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- ===== EMPLOYEE WARNINGS POLICIES =====
+-- Admin/HR full management
+CREATE POLICY "warnings_manage_admin_hr" ON public.employee_warnings
+  FOR ALL TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+-- Consolidated SELECT: admin/hr see all, employees see own
+CREATE POLICY "warnings_select_policy" ON public.employee_warnings
+  FOR SELECT TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- Consolidated UPDATE: admin/hr can update all, employees can acknowledge own
+CREATE POLICY "warnings_update_policy" ON public.employee_warnings
+  FOR UPDATE TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  )
+  WITH CHECK (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- ===== EMPLOYEE COMPLAINTS POLICIES =====
+-- Admin/HR full management
+CREATE POLICY "complaints_manage_admin_hr" ON public.employee_complaints
+  FOR ALL TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+-- Consolidated INSERT: admin/hr can create all, employees can create own
+CREATE POLICY "complaints_insert_policy" ON public.employee_complaints
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- Consolidated SELECT: admin/hr see all, employees see own
+CREATE POLICY "complaints_select_policy" ON public.employee_complaints
+  FOR SELECT TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- ===== EMPLOYEE PERFORMANCE POLICIES =====
+-- Admin/HR full management
+CREATE POLICY "performance_manage_admin_hr" ON public.employee_performance
+  FOR ALL TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+-- Consolidated SELECT: admin/hr see all, employees see own
+CREATE POLICY "performance_select_policy" ON public.employee_performance
+  FOR SELECT TO authenticated
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR employee_id = (select get_user_employee_id())
+  );
+
+-- ===== EMPLOYEE OF WEEK POLICIES =====
+CREATE POLICY "employee_of_week_select_all" ON public.employee_of_week
+  FOR SELECT TO authenticated
+  USING (true);
+
+CREATE POLICY "employee_of_week_insert_admin_hr" ON public.employee_of_week
+  FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "employee_of_week_update_admin_hr" ON public.employee_of_week
+  FOR UPDATE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'))
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
+
+CREATE POLICY "employee_of_week_delete_admin_hr" ON public.employee_of_week
+  FOR DELETE TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
+
+-- =============================================
+-- PERFORMANCE CALCULATION FUNCTIONS
+-- =============================================
+
+-- Function: Calculate Weekly Performance
+CREATE OR REPLACE FUNCTION calculate_weekly_performance(
+  p_week_start DATE DEFAULT date_trunc('week', CURRENT_DATE)::DATE
+)
+RETURNS void AS $$
+DECLARE
+  p_week_end DATE;
+  emp RECORD;
+  v_attendance_score INTEGER;
+  v_task_score INTEGER;
+  v_warning_deduction INTEGER;
+  v_total_score INTEGER;
+  v_tasks_completed INTEGER;
+  v_tasks_overdue INTEGER;
+  v_attendance_days INTEGER;
+  v_absent_days INTEGER;
+  v_late_days INTEGER;
+BEGIN
+  p_week_end := p_week_start + INTERVAL '6 days';
+
+  FOR emp IN SELECT id FROM public.employees WHERE status = 'active'
+  LOOP
+    -- Calculate attendance score (10 points per present day, -5 for late)
+    SELECT 
+      COALESCE(SUM(CASE WHEN status = 'present' THEN 10 WHEN status = 'late' THEN 5 ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END), 0)
+    INTO v_attendance_score, v_attendance_days, v_absent_days, v_late_days
+    FROM public.attendance
+    WHERE employee_id = emp.id
+      AND date BETWEEN p_week_start AND p_week_end;
+
+    -- Calculate task score
+    SELECT 
+      COALESCE(SUM(CASE WHEN status = 'completed' AND completed_at <= deadline + INTERVAL '1 day' THEN points ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN status = 'overdue' OR (status = 'completed' AND completed_at > deadline + INTERVAL '1 day') THEN 1 ELSE 0 END), 0)
+    INTO v_task_score, v_tasks_completed, v_tasks_overdue
+    FROM public.employee_tasks
+    WHERE employee_id = emp.id
+      AND deadline BETWEEN p_week_start AND p_week_end;
+
+    -- Calculate warning deduction (10 per minor, 20 per moderate, 30 per major, 50 per critical)
+    SELECT COALESCE(SUM(
+      CASE severity
+        WHEN 'minor' THEN 10
+        WHEN 'moderate' THEN 20
+        WHEN 'major' THEN 30
+        WHEN 'critical' THEN 50
+        ELSE 0
+      END
+    ), 0)
+    INTO v_warning_deduction
+    FROM public.employee_warnings
+    WHERE employee_id = emp.id
+      AND created_at BETWEEN p_week_start AND p_week_end + INTERVAL '1 day'
+      AND status IN ('active', 'acknowledged');
+
+    v_total_score := GREATEST(0, v_attendance_score + v_task_score - v_warning_deduction);
+
+    -- Insert or update performance record
+    INSERT INTO public.employee_performance (
+      employee_id, period_start, period_end,
+      attendance_score, task_score, warning_deduction, total_score,
+      tasks_completed, tasks_overdue,
+      attendance_days, absent_days, late_days,
+      calculated_at
+    ) VALUES (
+      emp.id, p_week_start, p_week_end,
+      v_attendance_score, v_task_score, v_warning_deduction, v_total_score,
+      v_tasks_completed, v_tasks_overdue,
+      v_attendance_days, v_absent_days, v_late_days,
+      now()
+    )
+    ON CONFLICT (employee_id, period_start, period_end) DO UPDATE SET
+      attendance_score = EXCLUDED.attendance_score,
+      task_score = EXCLUDED.task_score,
+      warning_deduction = EXCLUDED.warning_deduction,
+      total_score = EXCLUDED.total_score,
+      tasks_completed = EXCLUDED.tasks_completed,
+      tasks_overdue = EXCLUDED.tasks_overdue,
+      attendance_days = EXCLUDED.attendance_days,
+      absent_days = EXCLUDED.absent_days,
+      late_days = EXCLUDED.late_days,
+      calculated_at = now(),
+      updated_at = now();
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Function: Select Employee of the Week
+CREATE OR REPLACE FUNCTION select_employee_of_week(
+  p_week_start DATE DEFAULT date_trunc('week', CURRENT_DATE)::DATE
+)
+RETURNS void AS $$
+DECLARE
+  p_week_end DATE;
+  v_top_employee_id UUID;
+  v_top_score INTEGER;
+  v_employee_name TEXT;
+BEGIN
+  p_week_end := p_week_start + INTERVAL '6 days';
+
+  -- First calculate performance for the week
+  PERFORM calculate_weekly_performance(p_week_start);
+
+  -- Find employee with highest score
+  SELECT ep.employee_id, ep.total_score, e.first_name || ' ' || e.last_name
+  INTO v_top_employee_id, v_top_score, v_employee_name
+  FROM public.employee_performance ep
+  JOIN public.employees e ON e.id = ep.employee_id
+  WHERE ep.period_start = p_week_start
+    AND ep.period_end = p_week_end
+    AND e.status = 'active'
+  ORDER BY ep.total_score DESC, e.hire_date ASC
+  LIMIT 1;
+
+  -- Insert or update employee of week
+  IF v_top_employee_id IS NOT NULL THEN
+    INSERT INTO public.employee_of_week (
+      employee_id, week_start, week_end, score, reason, is_auto_selected
+    ) VALUES (
+      v_top_employee_id, p_week_start, p_week_end, v_top_score,
+      'Highest performance score (' || v_top_score || ' points) for the week',
+      true
+    )
+    ON CONFLICT (week_start) DO UPDATE SET
+      employee_id = EXCLUDED.employee_id,
+      week_end = EXCLUDED.week_end,
+      score = EXCLUDED.score,
+      reason = EXCLUDED.reason,
+      is_auto_selected = EXCLUDED.is_auto_selected;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- =============================================
 -- SEED DATA (Auto-generated UUIDs)
@@ -934,7 +1399,7 @@ BEGIN
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'r.garcia@staffhub.com') WHERE id = dept_business;
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'j.lee@staffhub.com') WHERE id = dept_eng;
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'p.thomas@staffhub.com') WHERE id = dept_hr;
-  UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'admin@staffhub.com') WHERE id = dept_admin;
+  UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'anas.essam.work@gmail.com') WHERE id = dept_admin;
 
 END $$;
 
@@ -944,7 +1409,7 @@ SELECT id, 2026, 20, 0, 10, 0, 10, 0 FROM public.employees;
 
 -- Insert Sample Leave Applications (using email lookup)
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
-SELECT id, 'annual', '2026-02-20', '2026-02-24', 5, 'Family vacation', 'pending' FROM public.employees WHERE email = 'employee@staffhub.com';
+SELECT id, 'annual', '2026-02-20', '2026-02-24', 5, 'Family vacation', 'pending' FROM public.employees WHERE email = 'tvissam96@gmail.com';
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
 SELECT id, 'sick', '2026-02-10', '2026-02-11', 2, 'Medical appointment', 'approved' FROM public.employees WHERE email = 'e.wilson@staffhub.com';
 INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_count, reason, status)
@@ -965,7 +1430,7 @@ BEGIN
   FOR emp_record IN 
     SELECT e.id FROM public.employees e
     WHERE e.status = 'active'
-      AND e.email NOT IN ('admin@staffhub.com', 'hr@staffhub.com', 'employee@staffhub.com')
+      AND e.email NOT IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
   LOOP
     FOR day_offset IN 1..7 LOOP
       INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method, verification_type, device_info)
@@ -1147,7 +1612,7 @@ BEGIN
   
   RETURN COALESCE(v_deductions, 0);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Function to calculate leave-based deductions  
 CREATE OR REPLACE FUNCTION calculate_leave_deductions(
@@ -1202,34 +1667,54 @@ BEGIN
   
   RETURN COALESCE(v_deductions, 0);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- =============================================
--- ENABLE REALTIME
+-- ENABLE REALTIME (Optimized - Only notifications)
 -- =============================================
+-- PERFORMANCE FIX: Only enable realtime on tables that NEED live updates
+-- This reduces realtime.list_changes overhead from 92% to <5%
 
--- Set REPLICA IDENTITY to FULL for realtime tables
-ALTER TABLE public.notifications REPLICA IDENTITY FULL;
-ALTER TABLE public.leaves REPLICA IDENTITY FULL;
+-- Set REPLICA IDENTITY to DEFAULT for all tables (lighter than FULL)
+-- Only notifications needs realtime, and DEFAULT is sufficient
+ALTER TABLE public.notifications REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.announcements REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.users REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.departments REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employees REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.leaves REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.leave_balances REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.attendance REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.payrolls REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.bonuses REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.deductions REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employee_tasks REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employee_warnings REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employee_complaints REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employee_performance REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.employee_of_week REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.activity_logs REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.user_preferences REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.passkeys REPLICA IDENTITY DEFAULT;
 
--- Add tables to supabase_realtime publication
+-- Add ONLY notifications to supabase_realtime publication
+-- All other tables use polling/manual refresh to reduce DB overhead
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    -- Add notifications (only table needing realtime)
     IF NOT EXISTS (
       SELECT 1 FROM pg_publication_tables 
       WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notifications'
     ) THEN
       ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
     END IF;
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_publication_tables 
-      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'leaves'
-    ) THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.leaves;
-    END IF;
   END IF;
 END $$;
+
+-- Index for faster realtime notification filtering
+CREATE INDEX IF NOT EXISTS idx_notifications_realtime 
+ON public.notifications (user_id, is_read, created_at DESC);
 
 -- =============================================
 -- CREATE AUTH USERS (Demo accounts)
@@ -1284,7 +1769,7 @@ INSERT INTO auth.users (
   'authenticated',
   'authenticated',
   'essamanas86@gmail.com',
-  extensions.crypt('hr123', extensions.gen_salt('bf')),
+  extensions.crypt('Hr123', extensions.gen_salt('bf')),
   now(),
   '{"provider": "email", "providers": ["email"], "role": "hr"}'::jsonb,
   '{}'::jsonb,
@@ -1373,6 +1858,283 @@ SELECT
   true
 FROM public.users u WHERE u.role = 'admin' LIMIT 1
 ON CONFLICT DO NOTHING;
+
+-- =============================================
+-- SEED EMPLOYEE TASKS
+-- =============================================
+
+-- Tasks assigned by Admin to various employees
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Complete Q1 Performance Review',
+  'Submit self-assessment form and schedule meeting with supervisor for Q1 2026 performance review.',
+  'high',
+  'pending',
+  '2026-02-28',
+  20,
+  10,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'tvissam96@gmail.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Update Department Documentation',
+  'Review and update all department procedures and policies documentation.',
+  'normal',
+  'in_progress',
+  '2026-03-15',
+  15,
+  5,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'e.wilson@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Prepare Training Materials',
+  'Create training materials for new employee onboarding process.',
+  'urgent',
+  'pending',
+  '2026-02-25',
+  25,
+  15,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'essamanas86@gmail.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Submit Monthly Report',
+  'Compile and submit the monthly department activity report.',
+  'normal',
+  'completed',
+  '2026-02-10',
+  10,
+  5,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'd.brown@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+-- Update completed task with completion timestamp
+UPDATE public.employee_tasks 
+SET completed_at = '2026-02-09 14:30:00+00'
+WHERE title = 'Submit Monthly Report' AND status = 'completed';
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Organize Team Building Event',
+  'Plan and coordinate the upcoming team building event for Engineering department.',
+  'low',
+  'pending',
+  '2026-03-20',
+  15,
+  5,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'j.lee@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Review Budget Proposals',
+  'Analyze and provide feedback on Q2 budget proposals from all teams.',
+  'high',
+  'in_progress',
+  '2026-02-22',
+  20,
+  10,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'r.garcia@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'System Security Audit',
+  'Conduct comprehensive security audit of all internal systems and prepare report.',
+  'urgent',
+  'pending',
+  '2026-02-20',
+  30,
+  20,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'c.harris@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
+SELECT 
+  e.id,
+  'Client Presentation Preparation',
+  'Prepare presentation slides and demo for upcoming client meeting.',
+  'high',
+  'overdue',
+  '2026-02-15',
+  20,
+  10,
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'j.martinez@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+-- =============================================
+-- SEED EMPLOYEE WARNINGS
+-- =============================================
+
+INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+SELECT 
+  e.id,
+  u.id,
+  'Excessive Tardiness',
+  'Employee has been late to work 5 times in the past month. This is a formal warning to improve punctuality.',
+  'minor',
+  'acknowledged'
+FROM public.employees e, public.users u
+WHERE e.email = 'l.rodriguez@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+UPDATE public.employee_warnings 
+SET acknowledged_at = '2026-02-12 10:00:00+00'
+WHERE reason = 'Excessive Tardiness' AND status = 'acknowledged';
+
+INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+SELECT 
+  e.id,
+  u.id,
+  'Missed Project Deadline',
+  'Failed to deliver the assigned project by the agreed deadline without prior communication.',
+  'moderate',
+  'active'
+FROM public.employees e, public.users u
+WHERE e.email = 'w.taylor@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status, resolution_notes, resolved_at)
+SELECT 
+  e.id,
+  u.id,
+  'Policy Violation - Dress Code',
+  'Employee was found violating company dress code policies on multiple occasions.',
+  'minor',
+  'resolved',
+  'Employee acknowledged the issue and has since complied with dress code requirements.',
+  '2026-02-10 15:30:00+00'
+FROM public.employees e, public.users u
+WHERE e.email = 'k.walker@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+SELECT 
+  e.id,
+  u.id,
+  'Unauthorized System Access',
+  'Attempted to access restricted data without proper authorization. This is a serious security concern.',
+  'major',
+  'active'
+FROM public.employees e, public.users u
+WHERE e.email = 'n.hall@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_warnings (employee_id, issued_by, reason, description, severity, status)
+SELECT 
+  e.id,
+  u.id,
+  'Incomplete Documentation',
+  'Several project deliverables submitted without proper documentation as required by standards.',
+  'minor',
+  'appealed'
+FROM public.employees e, public.users u
+WHERE e.email = 'b.young@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+-- =============================================
+-- SEED EMPLOYEE COMPLAINTS
+-- =============================================
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to)
+SELECT 
+  e.id,
+  'Office Temperature Issues',
+  'The air conditioning in our office area is not working properly. Temperature often exceeds comfortable levels, affecting productivity.',
+  'workplace',
+  'under_review',
+  'normal',
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'd.brown@staffhub.com' AND u.role = 'hr' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority)
+SELECT 
+  e.id,
+  'Parking Space Allocation',
+  'Request for review of parking space allocation policy. Current system favors seniority over daily needs.',
+  'policy',
+  'pending',
+  'low'
+FROM public.employees e
+WHERE e.email = 'm.anderson@staffhub.com' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to, resolution_notes, resolved_by, resolved_at)
+SELECT 
+  e.id,
+  'Equipment Replacement Request',
+  'Work laptop is over 5 years old and frequently crashes. Need replacement to maintain productivity.',
+  'general',
+  'resolved',
+  'high',
+  u.id,
+  'New laptop has been ordered and will be delivered by Feb 20, 2026.',
+  u.id,
+  '2026-02-08 11:00:00+00'
+FROM public.employees e, public.users u
+WHERE e.email = 'j.lewis@staffhub.com' AND u.role = 'admin' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to)
+SELECT 
+  e.id,
+  'Unequal Work Distribution',
+  'There seems to be an imbalance in task assignment within our team. Some members receive significantly more work than others.',
+  'workplace',
+  'under_review',
+  'normal',
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'c.green@staffhub.com' AND u.role = 'hr' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority)
+SELECT 
+  e.id,
+  'Safety Concern - Emergency Exit',
+  'The emergency exit on the 3rd floor is often blocked by storage boxes. This is a safety hazard.',
+  'safety',
+  'pending',
+  'urgent'
+FROM public.employees e
+WHERE e.email = 'b.scott@staffhub.com' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, assigned_to)
+SELECT 
+  e.id,
+  'Overtime Policy Clarification',
+  'Need clarification on the overtime compensation policy. Current documentation seems outdated.',
+  'policy',
+  'under_review',
+  'normal',
+  u.id
+FROM public.employees e, public.users u
+WHERE e.email = 'r.nelson@staffhub.com' AND u.role = 'hr' LIMIT 1;
+
+INSERT INTO public.employee_complaints (employee_id, subject, description, category, status, priority, resolution_notes, resolved_at)
+SELECT 
+  e.id,
+  'Noise Disturbance',
+  'Frequent loud conversations near my workstation are affecting my concentration and work quality.',
+  'workplace',
+  'dismissed',
+  'low',
+  'After investigation, it was determined that the noise levels are within acceptable limits. Employee has been offered noise-canceling headphones.',
+  '2026-02-14 09:30:00+00'
+FROM public.employees e
+WHERE e.email = 'e.adams@staffhub.com' LIMIT 1;
 
 -- Add activity log for system init
 INSERT INTO public.activity_logs (user_id, action, entity_type, details)

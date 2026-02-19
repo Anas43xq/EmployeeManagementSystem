@@ -5,10 +5,17 @@ import {
   generateMonthlyPayroll,
   getPayrollRecords,
   approvePayroll,
+  getBonuses,
+  getDeductions,
+  generatePayslipPDF,
   formatCurrency,
   getMonthName,
-  type PayrollData
+  type PayrollData,
+  type BonusData,
+  type DeductionData
 } from '../lib/payroll';
+import { fetchActiveEmployees } from '../lib/queries';
+import type { EmployeeWithNumber } from '../lib/types';
 import { Card, Button, StatusBadge, Modal, FormField, PageHeader, EmptyState } from '../components/ui';
 import {
   Calculator,
@@ -18,7 +25,11 @@ import {
   CheckCircle,
   Play,
   Filter,
-  Users
+  Users,
+  Eye,
+  TrendingUp,
+  TrendingDown,
+  X
 } from 'lucide-react';
 
 export default function PayrollDashboard() {
@@ -37,13 +48,28 @@ export default function PayrollDashboard() {
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [generateMonth, setGenerateMonth] = useState(new Date().getMonth() + 1);
   const [generateYear, setGenerateYear] = useState(new Date().getFullYear());
-  const [selectedEmployees] = useState<string[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [employees, setEmployees] = useState<EmployeeWithNumber[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   const [selectedPayrolls, setSelectedPayrolls] = useState<string[]>([]);
+
+  // Payslip view modal state
+  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
+  const [viewingPayroll, setViewingPayroll] = useState<PayrollData | null>(null);
+  const [bonuses, setBonuses] = useState<BonusData[]>([]);
+  const [deductions, setDeductions] = useState<DeductionData[]>([]);
+  const [loadingPayslipDetails, setLoadingPayslipDetails] = useState(false);
 
   useEffect(() => {
     loadPayrollRecords();
   }, [selectedMonth, selectedYear, statusFilter]);
+
+  useEffect(() => {
+    if (isGenerateModalOpen) {
+      loadEmployees();
+    }
+  }, [isGenerateModalOpen]);
 
   const loadPayrollRecords = async () => {
     setLoading(true);
@@ -54,6 +80,63 @@ export default function PayrollDashboard() {
       showNotification('error', t('payroll.failedToLoad', 'Failed to load payroll records'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const data = await fetchActiveEmployees(true) as EmployeeWithNumber[];
+      setEmployees(data);
+    } catch (error) {
+      console.error('Failed to load employees:', error);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  const openPayslipModal = async (payroll: PayrollData) => {
+    setViewingPayroll(payroll);
+    setIsPayslipModalOpen(true);
+    setLoadingPayslipDetails(true);
+    
+    try {
+      const [bonusData, deductionData] = await Promise.all([
+        getBonuses(payroll.employee_id, payroll.period_month, payroll.period_year),
+        getDeductions(payroll.employee_id, payroll.period_month, payroll.period_year)
+      ]);
+      setBonuses(bonusData);
+      setDeductions(deductionData);
+    } catch (error) {
+      showNotification('error', t('payslip.failedToLoadDetails', 'Failed to load payslip details'));
+    } finally {
+      setLoadingPayslipDetails(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!viewingPayroll) return;
+    try {
+      generatePayslipPDF(viewingPayroll, bonuses, deductions);
+      showNotification('success', t('payslip.downloadStarted', 'Payslip download started'));
+    } catch (error) {
+      showNotification('error', t('payslip.downloadFailed', 'Failed to generate payslip PDF'));
+    }
+  };
+
+  const toggleEmployeeSelection = (employeeId: string) => {
+    setSelectedEmployees(prev =>
+      prev.includes(employeeId)
+        ? prev.filter(id => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const selectAllEmployees = () => {
+    if (selectedEmployees.length === employees.length) {
+      setSelectedEmployees([]);
+    } else {
+      setSelectedEmployees(employees.map(e => e.id));
     }
   };
 
@@ -366,7 +449,8 @@ export default function PayrollDashboard() {
                       <td className="py-3 px-3">
                         <Button
                           variant="secondary"
-                          icon={<Download className="w-4 h-4" />}
+                          icon={<Eye className="w-4 h-4" />}
+                          onClick={() => openPayslipModal(payroll)}
                         >
                           {t('payroll.viewPayslip', 'View Payslip')}
                         </Button>
@@ -421,6 +505,66 @@ export default function PayrollDashboard() {
               </div>
             </div>
 
+            {/* Employee Selection */}
+            <div>
+              <FormField label={t('payroll.selectEmployees', 'Select Employees (Optional)')}>
+                <div className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
+                  {loadingEmployees ? (
+                    <div className="p-4 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="text-sm text-gray-500 mt-2">{t('common.loading', 'Loading...')}</p>
+                    </div>
+                  ) : employees.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      {t('payroll.noEmployeesFound', 'No active employees found')}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-2 border-b border-gray-200 bg-gray-50">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployees.length === employees.length && employees.length > 0}
+                            onChange={selectAllEmployees}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {selectedEmployees.length === employees.length 
+                              ? t('payroll.deselectAll', 'Deselect All')
+                              : t('payroll.selectAll', 'Select All')} ({employees.length})
+                          </span>
+                        </label>
+                      </div>
+                      {employees.map((employee) => (
+                        <label
+                          key={employee.id}
+                          className="flex items-center space-x-3 p-2 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployees.includes(employee.id)}
+                            onChange={() => toggleEmployeeSelection(employee.id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              {employee.first_name} {employee.last_name}
+                            </p>
+                            <p className="text-xs text-gray-500">{employee.employee_number}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedEmployees.length > 0 
+                    ? t('payroll.selectedEmployeesCount', '{count} employees selected', { count: selectedEmployees.length })
+                    : t('payroll.allEmployeesHint', 'Leave empty to generate for all active employees')}
+                </p>
+              </FormField>
+            </div>
+
             <div className="flex space-x-3">
               <Button
                 type="button"
@@ -442,6 +586,149 @@ export default function PayrollDashboard() {
               </Button>
             </div>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Payslip View Modal */}
+      <Modal
+        show={isPayslipModalOpen}
+        onClose={() => {
+          setIsPayslipModalOpen(false);
+          setViewingPayroll(null);
+          setBonuses([]);
+          setDeductions([]);
+        }}
+      >
+        <Modal.Header onClose={() => setIsPayslipModalOpen(false)}>
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            <span>
+              {viewingPayroll 
+                ? `${t('payslip.payslipFor', 'Payslip for')} ${getMonthName(viewingPayroll.period_month)} ${viewingPayroll.period_year}`
+                : t('payslip.viewPayslip', 'View Payslip')}
+            </span>
+          </div>
+        </Modal.Header>
+        <Modal.Body>
+          {viewingPayroll && (
+            <div className="space-y-6">
+              {/* Employee Info */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    {viewingPayroll.employees.first_name} {viewingPayroll.employees.last_name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {viewingPayroll.employees.employee_number} • {viewingPayroll.employees.position}
+                  </p>
+                  <p className="text-sm text-gray-500">{viewingPayroll.employees.email}</p>
+                </div>
+                <StatusBadge status={viewingPayroll.status} />
+              </div>
+
+              {loadingPayslipDetails ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-600 mt-2">{t('payslip.loadingDetails', 'Loading details...')}</p>
+                </div>
+              ) : (
+                <>
+                  {/* Salary Summary */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600">{t('payslip.baseSalary', 'Base Salary')}</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {formatCurrency(viewingPayroll.base_salary)}
+                      </p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <p className="text-sm text-green-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
+                      <p className="text-xl font-bold text-green-600">
+                        +{formatCurrency(viewingPayroll.total_bonuses)}
+                      </p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-4">
+                      <p className="text-sm text-red-700">{t('payslip.totalDeductions', 'Total Deductions')}</p>
+                      <p className="text-xl font-bold text-red-600">
+                        -{formatCurrency(viewingPayroll.total_deductions)}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm text-blue-700">{t('payslip.netSalary', 'Net Salary')}</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {formatCurrency(viewingPayroll.net_salary)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bonuses Section */}
+                  {bonuses.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 flex items-center mb-3">
+                        <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
+                        {t('payslip.bonuses', 'Bonuses')}
+                      </h4>
+                      <div className="space-y-2">
+                        {bonuses.map((bonus: BonusData) => (
+                          <div key={bonus.id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                            <div>
+                              <p className="font-medium text-gray-900">{bonus.type}</p>
+                              <p className="text-sm text-gray-600">{bonus.description}</p>
+                            </div>
+                            <span className="font-bold text-green-600">+{formatCurrency(bonus.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Deductions Section */}
+                  {deductions.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-900 flex items-center mb-3">
+                        <TrendingDown className="w-4 h-4 text-red-600 mr-2" />
+                        {t('payslip.deductions', 'Deductions')}
+                      </h4>
+                      <div className="space-y-2">
+                        {deductions.map((deduction: DeductionData) => (
+                          <div key={deduction.id} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                            <div>
+                              <p className="font-medium text-gray-900">{deduction.type}</p>
+                              <p className="text-sm text-gray-600">{deduction.description}</p>
+                            </div>
+                            <span className="font-bold text-red-600">-{formatCurrency(deduction.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Actions */}
+              <div className="flex space-x-3 pt-4 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsPayslipModalOpen(false)}
+                  className="flex-1"
+                  icon={<X className="w-4 h-4" />}
+                >
+                  {t('common.close', 'Close')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingPayslipDetails}
+                  className="flex-1"
+                  icon={<Download className="w-4 h-4" />}
+                >
+                  {t('payslip.downloadPDF', 'Download PDF')}
+                </Button>
+              </div>
+            </div>
+          )}
         </Modal.Body>
       </Modal>
     </div>
