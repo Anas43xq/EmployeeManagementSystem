@@ -25,6 +25,21 @@ const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
          message.includes('not found');
 };
 
+// Check if error is a transient network error that shouldn't clear the session
+const isTransientError = (error: AuthError | Error | null): boolean => {
+  if (!error) return false;
+  const message = error.message?.toLowerCase() || '';
+  const name = error.name?.toLowerCase() || '';
+  
+  return name === 'aborterror' || 
+         message.includes('aborterror') || 
+         message.includes('signal is aborted') ||
+         message.includes('network') ||
+         message.includes('fetch') ||
+         message.includes('timeout') ||
+         message.includes('failed to fetch');
+};
+
 type UserRole = 'admin' | 'hr' | 'staff';
 
 export interface AuthUser {
@@ -52,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const initRef = useRef(false);
   const loadingUserRef = useRef<string | null>(null);
+  const visibilityCheckRef = useRef(false);
+  const lastVisibilityCheckRef = useRef(0);
 
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
     const cached = userDataCache.get(authUser.id);
@@ -175,28 +192,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const handleVisibilityChange = async () => {
+      // Skip if not visible, not mounted, or check already in progress
       if (document.visibilityState !== 'visible' || !mounted) return;
+      
+      // Debounce: skip if checked within last 2 seconds
+      const now = Date.now();
+      if (now - lastVisibilityCheckRef.current < 2000) return;
+      
+      // Skip if another check is in progress
+      if (visibilityCheckRef.current) return;
+      
+      visibilityCheckRef.current = true;
+      lastVisibilityCheckRef.current = now;
       
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!session || error) {
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError || !refreshData.session) {
-            if (mounted) {
-              userDataCache.clear();
-              setUser(null);
+        // If we have a valid session, just check if refresh is needed
+        if (session && !error) {
+          const expiresAt = session.expires_at || 0;
+          const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
+          
+          // Only refresh if token is about to expire (within 2 minutes)
+          if (expiresIn < 120 && expiresIn > 0) {
+            try {
+              await supabase.auth.refreshSession();
+            } catch {
+              // Ignore refresh errors as long as we still have a valid session
             }
           }
           return;
         }
-
-        const expiresAt = session.expires_at || 0;
-        const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
-        if (expiresIn < 120) {
-          await supabase.auth.refreshSession();
+        
+        // If error is transient (network), don't clear the session
+        if (isTransientError(error)) {
+          return;
         }
-      } catch {
+        
+        // No session - try to refresh once
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        // If refresh failed with a transient error, keep the user logged in
+        if (isTransientError(refreshError)) {
+          return;
+        }
+        
+        // If refresh succeeded, we're good
+        if (refreshData?.session) {
+          return;
+        }
+        
+        // Only clear user if this is a confirmed auth failure (not a transient error)
+        if (isRefreshTokenError(refreshError) && mounted) {
+          userDataCache.clear();
+          setUser(null);
+        }
+      } catch (err) {
+        // Don't clear session on unexpected errors - they're likely transient
+        if (isRefreshTokenError(err as Error) && mounted) {
+          userDataCache.clear();
+          setUser(null);
+        }
+      } finally {
+        visibilityCheckRef.current = false;
       }
     };
 

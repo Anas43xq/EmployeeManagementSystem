@@ -519,3 +519,24 @@ export async function createComplaintNotification(
 
   return await createNotification(userId, title, message, 'complaint');
 }
+
+export async function getMyTotalPoints(employeeId: string): Promise<number> {
+  try {
+    const { data, error } = await db
+      .from('employee_performance')
+      .select('total_score')
+      .eq('employee_id', employeeId);
+
+    if (error) {
+      return 0;
+    }
+
+    const totalPoints = (data || []).reduce((sum: number, record: { total_score: number }) => {
+      return sum + (record.total_score || 0);
+    }, 0);
+
+    return totalPoints;
+  } catch {
+    return 0;
+  }
+}

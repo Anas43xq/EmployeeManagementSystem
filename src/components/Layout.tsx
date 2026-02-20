@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationCenter from './NotificationCenter';
+import { getMyTotalPoints } from '../services/performanceQueries';
 import {
   LayoutDashboard,
   Users,
@@ -24,15 +25,26 @@ import {
   ListTodo,
   AlertTriangle,
   MessageSquare,
+  Star,
 } from 'lucide-react';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
+
+  // Fetch points for staff user
+  useEffect(() => {
+    if (user?.role === 'staff' && user?.employeeId) {
+      getMyTotalPoints(user.employeeId)
+        .then(setTotalPoints)
+        .catch(() => setTotalPoints(0));
+    }
+  }, [user?.role, user?.employeeId]);
 
   const navigation = [
     { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'hr', 'staff'] },
@@ -155,6 +167,14 @@ export default function Layout() {
             <div className="flex-1 lg:block hidden" />
 
             <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+              {/* Points display for staff users */}
+              {user?.role === 'staff' && totalPoints !== null && (
+                <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-1.5' : 'space-x-1.5'} px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 rounded-lg border border-amber-200`}>
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span className="font-semibold">{totalPoints}</span>
+                  <span className="text-xs text-amber-600">{t('common.points', 'pts')}</span>
+                </div>
+              )}
               <button
                 onClick={toggleLanguage}
                 className={`flex items-center ${isRTL ? 'space-x-reverse space-x-1' : 'space-x-1'} px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors`}

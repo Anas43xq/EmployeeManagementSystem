@@ -35,7 +35,8 @@
     "password": "Password",
     "required": "Required",
     "days": "days",
-    "back": "Back"
+    "back": "Back",
+    "points": "pts"
   },
   "auth": {
     "ems": "Al-Mustaqbal",
