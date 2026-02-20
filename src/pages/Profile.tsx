@@ -31,6 +31,7 @@ export default function Profile() {
         const { data, error } = await db
           .from('employees')
           .select(`
+            *,
             departments!department_id (name)
           `)
           .eq('id', user.employeeId)
@@ -58,6 +59,7 @@ export default function Profile() {
       const { data, error } = await db
         .from('employees')
         .select(`
+          *,
           departments!department_id (name)
         `)
         .eq('id', userRecord.employee_id)

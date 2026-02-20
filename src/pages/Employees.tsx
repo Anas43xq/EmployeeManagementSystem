@@ -31,6 +31,7 @@ export default function Employees() {
       const { data, error } = await db
         .from('employees')
         .select(`
+          *,
           departments!employees_department_id_fkey (
             name
           )

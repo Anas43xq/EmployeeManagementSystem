@@ -101,6 +101,7 @@ export function useLeaves() {
       let query = db
         .from('leaves')
         .select(`
+          *,
           employees (
             first_name,
             last_name,

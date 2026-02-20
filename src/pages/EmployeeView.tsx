@@ -38,6 +38,7 @@ export default function EmployeeView() {
       const { data, error } = await db
         .from('employees')
         .select(`
+          *,
           departments!department_id (name)
         `)
         .eq('id', id!)

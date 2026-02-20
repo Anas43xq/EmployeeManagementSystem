@@ -52,6 +52,7 @@ export function useUserManagement() {
       const { data, error } = await db
         .from('users')
         .select(`
+          *,
           employees!inner (
             id,
             email,

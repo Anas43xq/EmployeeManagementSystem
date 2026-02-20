@@ -191,6 +191,7 @@ export async function getPayrollRecords(
     const { data, error } = await db
       .from('payrolls')
       .select(`
+        *,
         employees (
           first_name,
           last_name,

@@ -77,6 +77,7 @@ export function useAttendance() {
       let query = db
         .from('attendance')
         .select(`
+          *,
           employees (
             first_name,
             last_name,

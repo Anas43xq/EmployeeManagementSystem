@@ -34,6 +34,7 @@ export function useDepartments() {
       const { data, error } = await (db
         .from('departments') as any)
         .select(`
+          *,
           employees!employees_department_id_fkey (count)
         `)
         .order('name');
