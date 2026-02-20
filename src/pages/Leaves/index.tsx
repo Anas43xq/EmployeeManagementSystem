@@ -29,6 +29,7 @@ export default function Leaves() {
     leaveConflicts,
     checkingConflicts,
     checkLeaveConflicts,
+    processingLeaves,
   } = useLeaves();
 
   if (loading) {
@@ -62,6 +63,7 @@ export default function Leaves() {
               userRole={user?.role}
               onApprove={handleApprove}
               onReject={handleReject}
+              processingLeaves={processingLeaves}
             />
           ))}
         </div>

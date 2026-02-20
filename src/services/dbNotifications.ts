@@ -69,7 +69,8 @@ export async function createNotification(
   userId: string,
   title: string,
   message: string,
-  type: NotificationType
+  type: NotificationType,
+  sendEmail: boolean = false
 ): Promise<{ notificationSaved: boolean; emailSent: boolean }> {
   let notificationSaved = false;
   let emailSent = false;
@@ -88,8 +89,11 @@ export async function createNotification(
       notificationSaved = true;
     }
 
-    emailSent = await sendNotificationEmail(userId, title, message, type);
-  } catch {
+    if (sendEmail) {
+      emailSent = await sendNotificationEmail(userId, title, message, type);
+    }
+  } catch (err) {
+    console.error('Error creating notification:', err);
   }
 
   return { notificationSaved, emailSent };
@@ -101,6 +105,7 @@ export async function createNotifications(
     title: string;
     message: string;
     type: NotificationType;
+    sendEmail?: boolean;
   }>
 ): Promise<void> {
   try {
@@ -116,39 +121,50 @@ export async function createNotifications(
 
     if (!error) {
       for (const n of notifications) {
-        await sendNotificationEmail(n.userId, n.title, n.message, n.type);
+        if (n.sendEmail) {
+          await sendNotificationEmail(n.userId, n.title, n.message, n.type);
+        }
       }
     }
-  } catch {
+  } catch (err) {
+    console.error('Error creating notifications:', err);
   }
 }
 
 export async function notifyHRAndAdmins(
   title: string,
   message: string,
-  type: NotificationType
+  type: NotificationType,
+  sendEmail: boolean = true
 ): Promise<void> {
   try {
     const { data: users, error: fetchError } = await db
       .from('users')
       .select('id')
-      .in('role', ['admin', 'hr']);
+      .in('role', ['admin', 'hr'])
+      .eq('is_active', true);
 
     if (fetchError) {
+      console.error('Error fetching HR/Admin users:', fetchError);
       return;
     }
 
-    if (!users || users.length === 0) return;
+    if (!users || users.length === 0) {
+      console.warn('No active HR/Admin users found to notify');
+      return;
+    }
 
     const notifications = (users as { id: string }[]).map((user) => ({
       userId: user.id,
       title,
       message,
       type,
+      sendEmail,
     }));
 
     await createNotifications(notifications);
   } catch (err) {
+    console.error('Error in notifyHRAndAdmins:', err);
   }
 }
 

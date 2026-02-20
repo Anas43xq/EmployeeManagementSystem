@@ -7,10 +7,12 @@ interface LeaveCardProps {
   userRole: string | undefined;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
+  processingLeaves?: Set<string>;
 }
 
-export default function LeaveCard({ leave, userRole, onApprove, onReject }: LeaveCardProps) {
+export default function LeaveCard({ leave, userRole, onApprove, onReject, processingLeaves }: LeaveCardProps) {
   const { t } = useTranslation();
+  const isProcessing = processingLeaves?.has(leave.id) || false;
 
   return (
     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
@@ -61,13 +63,23 @@ export default function LeaveCard({ leave, userRole, onApprove, onReject }: Leav
             <div className="flex space-x-2">
               <button
                 onClick={() => onApprove(leave.id)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                disabled={isProcessing}
+                className={`p-2 rounded-lg transition-colors ${
+                  isProcessing 
+                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                    : 'text-blue-600 hover:bg-blue-50'
+                }`}
               >
                 <CheckCircle className="w-5 h-5" />
               </button>
               <button
                 onClick={() => onReject(leave.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                disabled={isProcessing}
+                className={`p-2 rounded-lg transition-colors ${
+                  isProcessing 
+                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed' 
+                    : 'text-red-600 hover:bg-red-50'
+                }`}
               >
                 <XCircle className="w-5 h-5" />
               </button>

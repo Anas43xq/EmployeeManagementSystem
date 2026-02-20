@@ -288,7 +288,8 @@ export function useLeaves() {
       await notifyHRAndAdmins(
         'New Leave Request',
         `${employeeName} has submitted a ${formData.leave_type} leave request (${formData.start_date} to ${formData.end_date})`,
-        'leave'
+        'leave',
+        true
       );
 
       setFormData({
@@ -306,10 +307,30 @@ export function useLeaves() {
     }
   };
 
+  const [processingLeaves, setProcessingLeaves] = useState<Set<string>>(new Set());
+
   const handleApprove = async (leaveId: string) => {
+    // Prevent spam clicking by checking if already processing
+    if (processingLeaves.has(leaveId)) {
+      return;
+    }
+
     try {
+      setProcessingLeaves(prev => new Set(prev).add(leaveId));
+      
       const leave = leaves.find(l => l.id === leaveId);
       if (!leave) return;
+
+      // Check if already approved to prevent double processing
+      if (leave.status === 'approved') {
+        showNotification('info', 'Leave request is already approved');
+        return;
+      }
+
+      if (leave.status !== 'pending') {
+        showNotification('error', 'Can only approve pending leave requests');
+        return;
+      }
 
       const { error } = await (db.from('leaves') as any)
         .update({
@@ -317,10 +338,12 @@ export function useLeaves() {
           approved_by: user?.id,
           approved_at: new Date().toISOString(),
         })
-        .eq('id', leaveId);
+        .eq('id', leaveId)
+        .eq('status', 'pending'); // Only update if still pending
 
       if (error) throw error;
 
+      // Only update balance if database update succeeded
       await updateLeaveBalance(leave.employee_id, leave.leave_type, leave.days_count, 'add');
 
       showNotification('success', t('leaves.leaveApproved'));
@@ -343,20 +366,45 @@ export function useLeaves() {
           employeeUser.id,
           'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
-          'leave'
+          'leave',
+          false
         );
       }
 
       loadLeaves();
     } catch (error) {
       showNotification('error', 'Failed to approve leave request');
+    } finally {
+      setProcessingLeaves(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(leaveId);
+        return newSet;
+      });
     }
   };
 
   const handleReject = async (leaveId: string) => {
+    // Prevent spam clicking by checking if already processing
+    if (processingLeaves.has(leaveId)) {
+      return;
+    }
+
     try {
+      setProcessingLeaves(prev => new Set(prev).add(leaveId));
+      
       const leave = leaves.find(l => l.id === leaveId);
       if (!leave) return;
+
+      // Check if already rejected to prevent double processing
+      if (leave.status === 'rejected') {
+        showNotification('info', 'Leave request is already rejected');
+        return;
+      }
+
+      if (leave.status !== 'pending') {
+        showNotification('error', 'Can only reject pending leave requests');
+        return;
+      }
 
       const { error } = await (db.from('leaves') as any)
         .update({
@@ -364,7 +412,8 @@ export function useLeaves() {
           approved_by: user?.id,
           approved_at: new Date().toISOString(),
         })
-        .eq('id', leaveId);
+        .eq('id', leaveId)
+        .eq('status', 'pending'); // Only update if still pending
 
       if (error) throw error;
 
@@ -388,13 +437,20 @@ export function useLeaves() {
           employeeUser.id,
           'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
-          'leave'
+          'leave',
+          false
         );
       }
 
       loadLeaves();
     } catch (error) {
       showNotification('error', 'Failed to reject leave request');
+    } finally {
+      setProcessingLeaves(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(leaveId);
+        return newSet;
+      });
     }
   };
 
@@ -416,7 +472,6 @@ export function useLeaves() {
     formData,
     setFormData,
     filteredLeaves,
-    handleApplyLeave,
     handleApprove,
     handleReject,
     calculateDays,
@@ -424,6 +479,8 @@ export function useLeaves() {
     leaveConflicts,
     checkingConflicts,
     checkLeaveConflicts,
+    processingLeaves,
+    handleApplyLeave,
   };
 }
 
