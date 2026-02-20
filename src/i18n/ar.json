@@ -261,7 +261,12 @@
     "availableBalance": "رصيد {{type}} المتاح: {{count}} أيام",
     "leaveSubmitted": "تم تقديم طلب الإجازة بنجاح",
     "leaveApproved": "تم قبول طلب الإجازة بنجاح",
-    "leaveRejected": "تم رفض طلب الإجازة"
+    "leaveRejected": "تم رفض طلب الإجازة",
+    "conflictDetected": "تم اكتشاف تعارض في الإجازات!",
+    "conflictMessage": "لديك بالفعل إجازة {{type}} {{status}} من {{startDate}} إلى {{endDate}} تتعارض مع هذه التواريخ.",
+    "conflictsFound": "تم العثور على {{count}} إجازة(إجازات) متعارضة",
+    "checkingConflicts": "جارٍ التحقق من التعارضات...",
+    "noConflicts": "لم يتم اكتشاف تعارضات"
   },
   "attendance": {
     "title": "الحضور",

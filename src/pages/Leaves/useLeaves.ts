@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createNotification, notifyHRAndAdmins } from '../../services/dbNotifications';
 import { logActivity } from '../../services/activityLog';
-import type { Leave, LeaveFormData, LeaveBalance } from './types';
+import type { Leave, LeaveFormData, LeaveBalance, LeaveConflict } from './types';
 
 export function useLeaves() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -23,6 +23,8 @@ export function useLeaves() {
     end_date: '',
     reason: '',
   });
+  const [leaveConflicts, setLeaveConflicts] = useState<LeaveConflict[]>([]);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
 
   useEffect(() => {
     loadLeaves();
@@ -93,6 +95,51 @@ export function useLeaves() {
         return (leaveBalance.casual_total || 0) - (leaveBalance.casual_used || 0);
       default:
         return 999;
+    }
+  };
+
+  const checkLeaveConflicts = async (startDate: string, endDate: string, employeeId?: string): Promise<LeaveConflict[]> => {
+    const targetEmployeeId = employeeId || user?.employeeId;
+    if (!targetEmployeeId || !startDate || !endDate) {
+      setLeaveConflicts([]);
+      return [];
+    }
+
+    setCheckingConflicts(true);
+    try {
+      // Query for overlapping leaves (approved or pending) for the same employee
+      // Overlap condition: NOT (new_end < existing_start OR new_start > existing_end)
+      // Which simplifies to: new_start <= existing_end AND new_end >= existing_start
+      const { data, error } = await db
+        .from('leaves')
+        .select('id, leave_type, start_date, end_date, status')
+        .eq('employee_id', targetEmployeeId)
+        .in('status', ['approved', 'pending'])
+        .lte('start_date', endDate)
+        .gte('end_date', startDate);
+
+      if (error) {
+        console.error('Error checking leave conflicts:', error);
+        setLeaveConflicts([]);
+        return [];
+      }
+
+      const conflicts: LeaveConflict[] = (data || []).map((leave: any) => ({
+        id: leave.id,
+        leave_type: leave.leave_type,
+        start_date: leave.start_date,
+        end_date: leave.end_date,
+        status: leave.status,
+      }));
+
+      setLeaveConflicts(conflicts);
+      return conflicts;
+    } catch (error) {
+      console.error('Error checking leave conflicts:', error);
+      setLeaveConflicts([]);
+      return [];
+    } finally {
+      setCheckingConflicts(false);
     }
   };
 
@@ -195,6 +242,13 @@ export function useLeaves() {
     const availableBalance = getAvailableBalance(formData.leave_type);
     if (daysCount > availableBalance && availableBalance !== 999) {
       showNotification('error', `Insufficient ${formData.leave_type} leave balance. Available: ${availableBalance} days`);
+      return;
+    }
+
+    // Check for leave conflicts
+    const conflicts = await checkLeaveConflicts(formData.start_date, formData.end_date);
+    if (conflicts.length > 0) {
+      showNotification('error', t('leaves.conflictDetected'));
       return;
     }
 
@@ -367,6 +421,9 @@ export function useLeaves() {
     handleReject,
     calculateDays,
     getAvailableBalance,
+    leaveConflicts,
+    checkingConflicts,
+    checkLeaveConflicts,
   };
 }
 

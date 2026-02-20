@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
-import type { LeaveFormData, LeaveBalance } from './types';
+import { X, AlertTriangle } from 'lucide-react';
+import { useEffect } from 'react';
+import type { LeaveFormData, LeaveBalance, LeaveConflict } from './types';
 
 interface ApplyLeaveModalProps {
   show: boolean;
@@ -12,6 +13,9 @@ interface ApplyLeaveModalProps {
   leaveBalance: LeaveBalance | null;
   calculateDays: (s: string, e: string) => number;
   getAvailableBalance: (type: string) => number;
+  leaveConflicts: LeaveConflict[];
+  checkingConflicts: boolean;
+  checkLeaveConflicts: (startDate: string, endDate: string) => Promise<LeaveConflict[]>;
 }
 
 export default function ApplyLeaveModal({
@@ -24,8 +28,23 @@ export default function ApplyLeaveModal({
   leaveBalance,
   calculateDays,
   getAvailableBalance,
+  leaveConflicts,
+  checkingConflicts,
+  checkLeaveConflicts,
 }: ApplyLeaveModalProps) {
   const { t } = useTranslation();
+
+  // Check for conflicts when dates change
+  useEffect(() => {
+    if (show && formData.start_date && formData.end_date) {
+      checkLeaveConflicts(formData.start_date, formData.end_date);
+    }
+  }, [formData.start_date, formData.end_date, show]);
+
+  const hasConflicts = leaveConflicts.length > 0;
+  const hasInsufficientBalance = formData.start_date && formData.end_date && 
+    calculateDays(formData.start_date, formData.end_date) > getAvailableBalance(formData.leave_type) && 
+    getAvailableBalance(formData.leave_type) !== 999;
 
   if (!show) return null;
 
@@ -108,6 +127,44 @@ export default function ApplyLeaveModal({
                   </p>
                 </div>
               )}
+              
+              {/* Conflict Warning */}
+              {checkingConflicts && (
+                <div className="bg-gray-50 px-3 py-2 rounded-lg">
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                    {t('leaves.checkingConflicts')}
+                  </p>
+                </div>
+              )}
+              
+              {!checkingConflicts && hasConflicts && (
+                <div className="bg-red-50 border border-red-200 px-3 py-3 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-red-800">
+                        {t('leaves.conflictDetected')}
+                      </p>
+                      <p className="text-sm text-red-600 mt-1">
+                        {t('leaves.conflictsFound', { count: leaveConflicts.length })}
+                      </p>
+                      <ul className="mt-2 space-y-1">
+                        {leaveConflicts.map((conflict) => (
+                          <li key={conflict.id} className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">
+                            {t('leaves.conflictMessage', {
+                              status: conflict.status,
+                              type: t(`leaves.${conflict.leave_type}`),
+                              startDate: new Date(conflict.start_date).toLocaleDateString(),
+                              endDate: new Date(conflict.end_date).toLocaleDateString(),
+                            })}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -135,7 +192,7 @@ export default function ApplyLeaveModal({
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || hasConflicts || hasInsufficientBalance || checkingConflicts}
               className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {submitting ? (

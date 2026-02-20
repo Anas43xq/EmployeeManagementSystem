@@ -263,7 +263,12 @@
     "availableBalance": "Available {{type}} balance: {{count}} days",
     "leaveSubmitted": "Leave request submitted successfully",
     "leaveApproved": "Leave request approved successfully",
-    "leaveRejected": "Leave request rejected"
+    "leaveRejected": "Leave request rejected",
+    "conflictDetected": "Leave conflict detected!",
+    "conflictMessage": "You already have a {{status}} {{type}} leave from {{startDate}} to {{endDate}} that overlaps with these dates.",
+    "conflictsFound": "{{count}} conflicting leave(s) found",
+    "checkingConflicts": "Checking for conflicts...",
+    "noConflicts": "No conflicts detected"
   },
   "attendance": {
     "title": "Attendance",

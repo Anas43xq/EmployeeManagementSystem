@@ -1,7 +1,10 @@
 -- =============================================
 -- EMPLOYEE MANAGEMENT SYSTEM - COMPREHENSIVE SCHEMA
--- Version: 3.1 | Date: February 20, 2026
+-- Version: 3.2 | Date: February 20, 2026
 -- Optimized, error-free schema with all modules
+-- Changelog v3.2:
+--   - Added leave overlap prevention trigger (check_leave_overlap)
+--   - Prevents employees from having overlapping leave periods
 -- Changelog v3.1:
 --   - Optimized RLS helper functions (SQL instead of PL/pgSQL)
 --   - Fixed conflicting ALL+SELECT/UPDATE policies
@@ -34,6 +37,7 @@ BEGIN
   DROP TRIGGER IF EXISTS sync_auth_email_on_employee_update ON public.employees;
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
   DROP TRIGGER IF EXISTS on_auth_user_email_changed ON auth.users;
+  DROP TRIGGER IF EXISTS check_leave_overlap_trigger ON public.leaves;
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
@@ -76,6 +80,7 @@ DROP FUNCTION IF EXISTS calculate_weekly_performance(DATE) CASCADE;
 DROP FUNCTION IF EXISTS select_employee_of_week(DATE) CASCADE;
 DROP FUNCTION IF EXISTS calculate_attendance_deductions(UUID, INTEGER, INTEGER) CASCADE;
 DROP FUNCTION IF EXISTS calculate_leave_deductions(UUID, INTEGER, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS check_leave_overlap() CASCADE;
 
 -- =============================================
 -- EXTENSIONS
@@ -851,7 +856,6 @@ CREATE POLICY "deductions_delete_admin_hr" ON public.deductions FOR DELETE TO au
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- EMPLOYEE TASKS
--- FIXED: Removed conflicting ALL policy, using granular per-operation policies
 CREATE POLICY "tasks_select_policy" ON public.employee_tasks FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "tasks_insert_admin_hr" ON public.employee_tasks FOR INSERT TO authenticated
@@ -904,6 +908,58 @@ CREATE POLICY "employee_of_week_update_admin_hr" ON public.employee_of_week FOR 
   USING ((select get_user_role()) IN ('admin', 'hr')) WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
 CREATE POLICY "employee_of_week_delete_admin_hr" ON public.employee_of_week FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
+
+-- =============================================
+-- LEAVE OVERLAP PREVENTION
+-- Prevents employees from having overlapping leave periods
+-- =============================================
+
+CREATE OR REPLACE FUNCTION check_leave_overlap()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_conflict_count INTEGER;
+  v_conflict_details TEXT;
+BEGIN
+  -- Only check for overlaps if status is 'approved' or 'pending'
+  IF NEW.status NOT IN ('approved', 'pending') THEN
+    RETURN NEW;
+  END IF;
+
+  -- Count overlapping leaves for the same employee
+  -- Overlap condition: ranges overlap if they share any common dates
+  SELECT COUNT(*), 
+         STRING_AGG(
+           FORMAT('%s leave (%s to %s) - %s', 
+                  leave_type, 
+                  start_date::TEXT, 
+                  end_date::TEXT, 
+                  status),
+           '; '
+         )
+  INTO v_conflict_count, v_conflict_details
+  FROM public.leaves
+  WHERE employee_id = NEW.employee_id
+    AND status IN ('approved', 'pending')
+    AND NEW.start_date <= end_date
+    AND NEW.end_date >= start_date
+    -- Exclude current record on UPDATE
+    AND (TG_OP = 'INSERT' OR id != NEW.id);
+
+  IF v_conflict_count > 0 THEN
+    RAISE EXCEPTION 'Leave date conflict detected: Employee already has overlapping leave(s): %', 
+      v_conflict_details
+      USING ERRCODE = 'P0001',
+            HINT = 'Please choose different dates that do not overlap with existing approved or pending leaves.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER check_leave_overlap_trigger
+  BEFORE INSERT OR UPDATE ON public.leaves
+  FOR EACH ROW
+  EXECUTE FUNCTION check_leave_overlap();
 
 -- =============================================
 -- PERFORMANCE CALCULATION FUNCTIONS (OPTIMIZED)

@@ -26,6 +26,9 @@ export default function Leaves() {
     handleReject,
     calculateDays,
     getAvailableBalance,
+    leaveConflicts,
+    checkingConflicts,
+    checkLeaveConflicts,
   } = useLeaves();
 
   if (loading) {
@@ -78,6 +81,9 @@ export default function Leaves() {
         leaveBalance={leaveBalance}
         calculateDays={calculateDays}
         getAvailableBalance={getAvailableBalance}
+        leaveConflicts={leaveConflicts}
+        checkingConflicts={checkingConflicts}
+        checkLeaveConflicts={checkLeaveConflicts}
       />
     </div>
   );

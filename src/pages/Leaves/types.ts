@@ -34,3 +34,11 @@ export interface LeaveBalance {
   casual_total: number | null;
   casual_used: number | null;
 }
+
+export interface LeaveConflict {
+  id: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+}
