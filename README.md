@@ -1,226 +1,225 @@
-<p align="center">
-  <h1 align="center">DevTeam Hub</h1>
-  <p align="center">
-    <strong>Modern Employee Management for IT Teams</strong>
-    <br />
-    <em>Streamline HR operations for software companies</em>
-  </p>
-</p>
+# DevTeam Hub 💼
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-18.x-61DAFB?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Supabase-Backend-3FCF8E?logo=supabase" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Vite-Build-646CFF?logo=vite" alt="Vite" />
-  <img src="https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel" alt="Vercel" />
-</p>
+**Employee Management for IT Teams**
+
+*Making HR actually work for software companies*
+
+![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript) ![Supabase](https://img.shields.io/badge/Supabase-Backend-3FCF8E?logo=supabase) ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss) ![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite) ![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)
 
 ---
 
-## What is this?
+## What's this about?
 
-DevTeam Hub is a comprehensive employee management platform built specifically for IT companies and software development teams. It handles team management, attendance tracking, payroll generation, and performance monitoring with modern biometric authentication support.
+So I built DevTeam Hub because honestly, most HR systems suck for tech teams. They're either too bloated with features you don't need, or they're missing the basics that actually matter when you're managing developers, designers, and IT folks.
 
-**Stack**: React + TypeScript frontend, Supabase backend with bilingual support (English/Arabic) and three role-based access levels.
+This thing handles all the usual stuff - employee records, time tracking, payroll, performance reviews - but it's designed specifically with tech companies in mind. Plus it's got some pretty cool features like biometric login (WebAuthn/passkeys) and a smart employee scoring system that actually makes sense.
+
+Built with React and TypeScript on the frontend, Supabase handling the backend. It's bilingual (English/Arabic) and has proper role-based permissions.
 
 ---
 
-## Contents
+## What's inside
 
-- [Features](#features)
-- [Tech Used](#tech-used)
-- [How It's Built](#how-its-built)
-- [Roles & Access](#roles--access)
-- [Setup](#setup)
-- [DB Tables](#db-tables)
-- [Folder Structure](#folder-structure)
-- [Edge Functions](#edge-functions)
-- [Deploying](#deploying)
-- [Test Accounts](#test-accounts)
-- [License](#license)
+- [The good stuff](#features)
+- [Tech stack](#what-tech)
+- [How it works](#architecture) 
+- [Who can do what](#permissions)
+- [Getting it running](#setup)
+- [Database stuff](#tables)
+- [Code structure](#folders)
+- [Serverless functions](#functions)
+- [Going live](#deployment)
+- [Demo accounts](#test-logins)
 
 ---
 
 ## Features
 
-**Core Modules:**
-- **Dashboard** - Overview with stats, charts, employee of the week, announcements
-- **Employee Management** - Full CRUD with profiles, photos, search/filter
-- **Attendance** - Manual or biometric check-in via WebAuthn passkeys
-- **Leave Management** - Request/approval workflow with balance tracking
-- **Task Assignment** - Priority-based tasks with performance scoring
-- **Payroll System** - Monthly generation with bonuses/deductions, PDF export
-- **Disciplinary** - Warnings system with severity levels and appeals
-- **Complaints** - Filing and resolution workflow
-- **Reports** - Date-filtered exports to CSV
+### The main modules:
 
-**Key Features:**
-- **Security**: Row-level security (RLS) with role-based access control
-- **Biometric Auth**: WebAuthn/FIDO2 passkey authentication
-- **Bilingual**: English/Arabic with RTL layout support
-- **Performance Tracking**: Automated weekly scoring and employee recognition
-- **Notifications**: In-app alerts and email notifications
-- **Audit Trail**: Complete activity logging
-- **Mobile Responsive**: Collapsible sidebar for mobile devices
+**Dashboard** - Clean overview with charts, stats, and announcements. Shows employee of the week (which is actually based on data, not favoritism).
 
----
+**Employee Management** - Standard CRUD operations but with photo uploads, advanced search, proper filtering. Nothing fancy, just works well.
 
-## Point System
+**Attendance Tracking** - Here's where it gets interesting. Regular manual check-in/out, but also supports biometric authentication through WebAuthn. Your devs can literally use their fingerprint or face to clock in. Pretty neat.
 
-Automated weekly performance calculation that determines "Employee of the Week" based on objective metrics.
+**Leave Management** - Complete workflow from request to approval. Tracks balances automatically. No more spreadsheet mess.
 
-**Scoring Formula:**
-```
-Weekly Score = Attendance + Tasks - Warnings
-```
+**Task Assignment** - Priority-based task management with a point system. Integrates with the performance scoring.
 
-**Point Values:**
-- **Attendance**: Present (+10), Late (+5), Half Day (+5), Absent (0)
-- **Tasks**: Critical (+20), High (+15), Medium (+10), Low (+5)
-- **Warnings**: Critical (-50), Major (-35), Moderate (-20), Minor (-10)
+**Payroll System** - Monthly payroll generation with bonuses, deductions, the works. Exports to PDF. 
 
-**Features:**
-- Staff can view total points in navbar
-- Automatic employee of the week selection
-- Historical performance tracking
-- Transparent, objective scoring system
+**Warnings & Complaints** - Because sometimes you need a paper trail. Proper escalation flows.
+
+**Reporting** - Export anything to CSV. Date filters, role filters, whatever you need.
+
+- **WebAuthn Authentication** - Passkey login is surprisingly smooth once you try it
+- **Smart Performance Scoring** - Weekly calculations based on attendance + completed tasks - warnings received. Totally transparent algorithm.
+- **Bilingual Support** - English and Arabic with proper RTL layouts (learned this the hard way)
+- **Real-time Notifications** - In-app alerts plus email notifications
+- **Mobile Responsive** - Works on phones, though honestly most HR stuff is better on desktop
+- **Complete Audit Trail** - Every action gets logged. Compliance teams love this.
 
 ---
 
-## Tech Used
+## Point System (This is kinda clever)
 
-| What | Stack |
-|------|-------|
-| Frontend | React 18, TypeScript 5, Tailwind CSS, Vite |
-| Backend | Supabase - PostgreSQL 15, GoTrue Auth, Edge Functions, Realtime, Storage |
-| Auth | Supabase Auth + WebAuthn (SimpleWebAuthn library) |
-| DB Security | Row Level Security with role-based policies |
-| Serverless | 6 Deno-based Edge Functions on Supabase |
-| i18n | react-i18next for English + Arabic (RTL) |
-| Charts | Recharts |
-| PDF | jsPDF + jspdf-autotable + html2canvas |
-| Icons | Lucide React |
-| Emails | Nodemailer through a Supabase Edge Function |
-| Hosting | Vercel for the frontend, Supabase Cloud for everything else |
+I implemented this automated weekly scoring system that picks "Employee of the Week" based on actual metrics instead of who brought donuts.
+
+**The math:**
+```
+Weekly Score = Attendance Points + Task Points - Warning Penalties
+```
+
+**How points work:**
+- Show up on time: +10 points
+- Come in late: +5 points (at least you showed up)
+- Half day: +5 points
+- No show: 0 points (obviously)
+
+**Task completion:**
+- Critical priority: +20 points
+- High priority: +15 points  
+- Medium: +10 points
+- Low priority: +5 points
+
+**Warnings (yeah, these hurt):**
+- Critical warning: -50 points
+- Major: -35 points
+- Moderate: -20 points
+- Minor: -10 points
+
+Staff can see their running total in the navbar. It's gamified without being stupid about it.
 
 ---
 
-## How It's Built
+## What Tech
 
-```
-+---------------------------------------------------------+
-|                   Frontend (Vercel)                      |
-|         React 18 + TypeScript + Tailwind CSS            |
-|                                                         |
-|  +--------+ +--------+ +------+ +---------------+       |
-|  |  Auth  | | Pages  | | i18n | |  Notification |       |
-|  |Context | |(18 mod)| |EN/AR | |    Context    |       |
-|  +---+----+ +---+----+ +------+ +-------+-------+       |
-|      |          |                        |              |
-|      +----------+------------------------+              |
-|                         |                               |
-+---------------------------------------------------------+
-                          | HTTPS / WebSocket
-+---------------------------------------------------------+
-|                  Supabase Cloud                          |
-|                                                         |
-|  +----------+  +--------------+  +---------------+      |
-|  |PostgreSQL|  |Edge Functions|  |   Storage     |      |
-|  |  + RLS   |  |  (6 Deno)   |  |  (Photos)     |      |
-|  | 19 tables|  |             |  |               |      |
-|  +----------+  +--------------+  +---------------+      |
-|  +----------+  +--------------+                         |
-|  |  Auth    |  |  Realtime   |                         |
-|  | (GoTrue) |  | (WebSocket) |                         |
-|  +----------+  +--------------+                         |
-+---------------------------------------------------------+
-```
-
-The frontend is a React SPA hosted on Vercel. It talks to Supabase over HTTPS for regular queries and WebSocket for realtime stuff (notifications). Auth is handled by Supabase's GoTrue with JWT tokens. Edge functions run on Deno for things that need server-side logic (payroll math, user management, email sending, WebAuthn ceremony handling).
+| Component | What I used |
+|-----------|-------------|
+| Frontend | React 18 + TypeScript 5 + Tailwind CSS + Vite |
+| Backend | Supabase (PostgreSQL 15, Auth, Edge Functions, Realtime, Storage) |
+| Authentication | Supabase Auth + WebAuthn via SimpleWebAuthn |
+| Database Security | Row Level Security with proper policies |
+| Serverless | 6 Deno functions running on Supabase Edge Runtime |
+| Internationalization | react-i18next (English + Arabic RTL) |
+| Charts | Recharts (simple and lightweight) |
+| PDFs | jsPDF + autotable plugin |
+| Icons | Lucide React (cleanest icon set IMO) |
+| Email | Nodemailer through Supabase function |
+| Deployment | Vercel for frontend, Supabase Cloud for everything else |
 
 ---
 
-## Roles & Access
+## Architecture
 
-There are three roles. Here's what each one can do:
+```
+Frontend (React SPA on Vercel)
+├── Auth Context (JWT tokens)  
+├── 18 page modules
+├── i18n support (EN/AR)
+└── Notification system
+          │
+          │ HTTPS / WebSocket
+          ▼
+Supabase Cloud
+├── PostgreSQL (19 tables + RLS)
+├── Edge Functions (6 Deno functions) 
+├── Storage (employee photos)
+├── Auth (GoTrue)
+└── Realtime (WebSocket notifications)
+```
 
-| Feature | Admin | HR | Staff |
-|---------|:-----:|:--:|:-----:|
-| Dashboard | Full | Full | Limited (own stats) |
-| Employees | CRUD | CRUD | View own profile |
-| Departments | CRUD | CRUD | View only |
-| Leaves | Approve/Reject | Approve/Reject | Submit requests |
-| Attendance | View all records | View all + mark | Clock in/out |
-| Tasks | Create & assign | Create & assign | See own tasks |
-| Warnings | Issue & resolve | Issue & resolve | See own warnings |
-| Complaints | View & resolve | View & resolve | File & track own |
-| Payroll | Full control | View only | See own payslip |
-| Announcements | CRUD | CRUD | Read only |
-| Reports | Generate any | Generate any | No access |
-| User Management | Full | No access | No access |
-| Settings | Everything | Limited | Limited |
+Pretty standard setup. React talks to Supabase over HTTPS for regular stuff, WebSocket for real-time notifications. JWT tokens handle auth. The edge functions run server-side logic for things like payroll calculations and WebAuthn ceremonies.
+
+Nothing revolutionary, just solid architecture choices.
+
+---
+
+## Permissions
+
+Three roles, different access levels:
+
+| What they can do | Admin | HR | Staff |
+|------------------|:-----:|:--:|:-----:|
+| Dashboard | Everything | Everything | Just their own stats |
+| Employee management | Full CRUD | Full CRUD | View own profile only |
+| Departments | Full CRUD | Full CRUD | Read-only |
+| Leave requests | Approve/reject | Approve/reject | Submit and track own |
+| Attendance | View everyone | View all + manual entry | Clock in/out only |
+| Task management | Create & assign | Create & assign | View own tasks |
+| Warnings | Issue & resolve | Issue & resolve | View own warnings |
+| Complaints | View & resolve all | View & resolve all | File and track own |
+| Payroll | Complete control | View-only access | See own payslip |
+| Announcements | Full CRUD | Full CRUD | Read-only |
+| Reports | Generate anything | Generate anything | No access |
+| User management | Everything | No access | No access |
+| System settings | Everything | Limited access | Basic preferences |
+
+Makes sense, right? Staff get what they need, HR gets operational control, admins get the keys to the kingdom.
 
 ---
 
 ## Setup
 
-You'll need **Node.js 18+**, a **Supabase project**, and **Git**.
+You'll need Node.js 18+ and a Supabase account. That's it.
 
-### Clone & install
+### Get the code
 
 ```bash
-git clone https://github.com/Anas43xq/EmployeeManagementSystem.git
-cd EmployeeManagementSystem/project
+git clone https://github.com/your-username/devteam-hub.git
+cd devteam-hub
 npm install
 ```
 
-### Configure environment
+### Environment setup
 
 ```bash
 cp .env.example .env
 ```
 
-Then fill in your Supabase URL and anon key:
+Fill in your Supabase details:
 
+```env
+VITE_SUPABASE_URL=https://yourproject.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
 
-### Set up the database
+### Database setup
 
-This runs the migration which creates all 19 tables, RLS policies, triggers, functions, and loads seed data:
+This creates all the tables, policies, triggers, and loads demo data:
 
 ```bash
 npx supabase db reset --linked
 ```
 
-### Deploy the edge functions
+### Deploy the functions
 
 ```bash
 npx supabase functions deploy --project-ref YOUR_PROJECT_REF --no-verify-jwt
 ```
 
-That pushes all 6 functions:
-- `generate-monthly-payroll` - handles payroll generation, approval, and net salary calculation
-- `manage-user-status` - ban, unban, activate, deactivate accounts
-- `send-notification-email` - sends emails via SMTP
-- `webauthn-register` - registers a new passkey for a user
-- `webauthn-authenticate` - authenticates with an existing passkey
-- `verify-passkey-attendance` - verifies passkey specifically for attendance check-in
+This pushes 6 functions:
+- `generate-monthly-payroll` - payroll calculations and approval
+- `manage-user-status` - user account management 
+- `send-notification-email` - SMTP email sending
+- `webauthn-register` - passkey registration
+- `webauthn-authenticate` - passkey login
+- `verify-passkey-attendance` - biometric attendance
 
-### Run it
+### Fire it up
 
 ```bash
 npm run dev
 ```
 
+Should open on `localhost:5173`. The demo data includes 3 test accounts you can use right away.
+
 ---
 
-## DB Tables
+## Tables
 
-19 tables total, all with RLS policies:
+19 tables with proper RLS policies on everything:
 
 | Table | What it stores |
 |-------|---------------|
@@ -329,20 +328,20 @@ The database is managed through migrations. Edge functions get deployed via the 
 
 ---
 
-## Test Accounts
+## Test Logins
 
-These are pre-seeded and ready to use after running the migration:
+Pre-configured accounts for testing:
 
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | anas.essam.work@gmail.com | admin123 |
-| HR | essamanas86@gmail.com | Hr1234 |
+| HR | essamanas86@gmail.com | Hr1234 |  
 | Staff | tvissam96@gmail.com | emp123 |
 
-Log in with any of these to explore the system from different permission levels.
+Each account has different permissions so you can test the full role-based access system.
 
+---
 
+MIT License — Built for IT teams who deserve better HR tools.
 
-<p align="center">
-  <sub>DevTeam Hub — React + TypeScript + Supabase</sub>
-</p>
+*DevTeam Hub — React + TypeScript + Supabase*
