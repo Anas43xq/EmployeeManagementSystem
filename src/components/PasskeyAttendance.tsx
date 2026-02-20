@@ -52,8 +52,8 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
 
       if (result.success) {
         const message = type === 'check-in'
-          ? t('attendance.checkedInSuccessfully', 'Checked in successfully with biometric verification')
-          : t('attendance.checkedOutSuccessfully', 'Checked out successfully with biometric verification');
+          ? t('attendance.checkedInSuccessfully')
+          : t('attendance.checkedOutSuccessfully');
 
         showNotification('success', message);
 
@@ -64,7 +64,7 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
         throw new Error(result.error);
       }
     } catch (error: any) {
-      const errorMessage = error.message || t('attendance.biometricFailed', 'Biometric verification failed');
+      const errorMessage = error.message || t('attendance.biometricFailed');
       showNotification('error', errorMessage);
     } finally {
       setLoading(false);
@@ -80,10 +80,10 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
         <div className="p-6 text-center">
           <Fingerprint className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {t('attendance.biometricNotSupported', 'Biometric attendance not supported')}
+            {t('attendance.biometricNotSupported')}
           </h3>
           <p className="text-gray-600">
-            {t('attendance.upgradeBrowser', 'Please use a modern browser to enable biometric attendance.')}
+            {t('attendance.upgradeBrowser')}
           </p>
         </div>
       </Card>
@@ -100,10 +100,10 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {t('attendance.biometricAttendance', 'Biometric Attendance')}
+                {t('attendance.biometricAttendance')}
               </h3>
               <p className="text-sm text-gray-600">
-                {t('attendance.secureCheckInOut', 'Secure check-in/out with face or fingerprint')}
+                {t('attendance.secureCheckInOut')}
               </p>
             </div>
           </div>
@@ -120,11 +120,11 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h4 className="font-medium text-gray-900 mb-3 flex items-center">
               <Clock className="w-4 h-4 mr-2" />
-              {t('attendance.todayStatus', 'Today\'s Status')}
+              {t('attendance.todayStatus')}
             </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">{t('attendance.checkIn', 'Check In')}:</span>
+                <span className="text-gray-600">{t('attendance.checkIn')}:</span>
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_in ? (
                     <>
@@ -132,12 +132,12 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
                       {currentAttendance.check_in}
                     </>
                   ) : (
-                    <span className="text-gray-400">{t('attendance.notCheckedIn', 'Not checked in')}</span>
+                    <span className="text-gray-400">{t('attendance.notCheckedIn')}</span>
                   )}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">{t('attendance.checkOut', 'Check Out')}:</span>
+                <span className="text-gray-600">{t('attendance.checkOut')}:</span>
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_out ? (
                     <>
@@ -145,7 +145,7 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
                       {currentAttendance.check_out}
                     </>
                   ) : (
-                    <span className="text-gray-400">{t('attendance.notCheckedOut', 'Not checked out')}</span>
+                    <span className="text-gray-400">{t('attendance.notCheckedOut')}</span>
                   )}
                 </span>
               </div>
@@ -159,11 +159,11 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
               <div className="flex items-center space-x-2 mb-2">
                 <Eye className="w-4 h-4 text-primary-600" />
                 <span className="text-primary-800 font-medium text-sm">
-                  {t('attendance.biometricReady', 'Biometric authentication ready')}
+                  {t('attendance.biometricReady')}
                 </span>
               </div>
               <p className="text-primary-700 text-xs">
-                {t('attendance.biometricDescription', 'Up to 10x faster than typing passwords - just look at your device or touch the sensor.')}
+                {t('attendance.biometricDescription')}
               </p>
             </div>
           )}
@@ -182,12 +182,12 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
             >
               <div className="text-center">
                 <div className="text-lg font-semibold">
-                  {t('attendance.biometricCheckIn', 'Biometric Check In')}
+                  {t('attendance.biometricCheckIn')}
                 </div>
                 <div className="text-sm opacity-90">
                   {platformAuthAvailable
-                    ? t('attendance.useFaceFingerprint', 'Use Face or Fingerprint')
-                    : t('attendance.usePasskey', 'Use Your Passkey')
+                    ? t('attendance.useFaceFingerprint')
+                    : t('attendance.usePasskey')
                   }
                 </div>
               </div>
@@ -206,12 +206,12 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
             >
               <div className="text-center">
                 <div className="text-lg font-semibold">
-                  {t('attendance.biometricCheckOut', 'Biometric Check Out')}
+                  {t('attendance.biometricCheckOut')}
                 </div>
                 <div className="text-sm opacity-90">
                   {platformAuthAvailable
-                    ? t('attendance.useFaceFingerprint', 'Use Face or Fingerprint')
-                    : t('attendance.usePasskey', 'Use Your Passkey')
+                    ? t('attendance.useFaceFingerprint')
+                    : t('attendance.usePasskey')
                   }
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
               <div className="flex items-center space-x-2">
                 <Fingerprint className="w-4 h-4 text-yellow-600" />
                 <span className="text-yellow-800 text-sm font-medium">
-                  {t('attendance.passkeyOnly', 'Using registered passkeys')}
+                  {t('attendance.passkeyOnly')}
                 </span>
               </div>
               <p className="text-yellow-700 text-xs mt-1">

@@ -45,7 +45,7 @@ export default function PasskeyManagement() {
       const data = await getUserPasskeys();
       setPasskeys(data);
     } catch (error) {
-      showNotification('error', t('passkeys.failedToLoad', 'Failed to load passkeys'));
+      showNotification('error', t('passkeys.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ export default function PasskeyManagement() {
   const handleRegisterPasskey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deviceName.trim()) {
-      showNotification('error', t('passkeys.deviceNameRequired', 'Device name is required'));
+      showNotification('error', t('passkeys.deviceNameRequired'));
       return;
     }
 
@@ -63,7 +63,7 @@ export default function PasskeyManagement() {
       const result = await registerPasskey(deviceName.trim());
 
       if (result.success) {
-        showNotification('success', t('passkeys.registeredSuccessfully', 'Passkey registered successfully'));
+        showNotification('success', t('passkeys.registeredSuccessfully'));
         setIsRegisterModalOpen(false);
         setDeviceName('');
         loadPasskeys();
@@ -71,7 +71,7 @@ export default function PasskeyManagement() {
         throw new Error(result.error);
       }
     } catch (error: any) {
-      showNotification('error', error.message || t('passkeys.registrationFailed', 'Failed to register passkey'));
+      showNotification('error', error.message || t('passkeys.registrationFailed'));
     } finally {
       setRegisterLoading(false);
     }
@@ -79,7 +79,7 @@ export default function PasskeyManagement() {
 
   const handleDeletePasskey = async (passkeyId: string, deviceName: string) => {
     const confirmed = window.confirm(
-      t('passkeys.confirmDelete', `Are you sure you want to delete the passkey for "${deviceName}"?`, { deviceName })
+      t('passkeys.confirmDelete', { deviceName })
     );
 
     if (!confirmed) return;
@@ -88,13 +88,13 @@ export default function PasskeyManagement() {
       const success = await deletePasskey(passkeyId);
 
       if (success) {
-        showNotification('success', t('passkeys.deletedSuccessfully', 'Passkey deleted successfully'));
+        showNotification('success', t('passkeys.deletedSuccessfully'));
         loadPasskeys();
       } else {
         throw new Error('Failed to delete passkey');
       }
     } catch (error: any) {
-      showNotification('error', error.message || t('passkeys.deletionFailed', 'Failed to delete passkey'));
+      showNotification('error', error.message || t('passkeys.deletionFailed'));
     }
   };
 
@@ -115,10 +115,10 @@ export default function PasskeyManagement() {
         <div className="text-center p-8">
           <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {t('passkeys.notSupported', 'Passkeys Not Supported')}
+            {t('passkeys.notSupported')}
           </h3>
           <p className="text-gray-600">
-            {t('passkeys.browserNotSupported', 'Your browser does not support WebAuthn passkeys. Please use a modern browser like Chrome, Firefox, Safari, or Edge.')}
+            {t('passkeys.browserNotSupported')}
           </p>
         </div>
       </Card>
@@ -134,10 +134,10 @@ export default function PasskeyManagement() {
               <Fingerprint className="w-6 h-6 text-primary-600" />
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {t('passkeys.title', 'Passkey Management')}
+                  {t('passkeys.title')}
                 </h2>
                 <p className="text-sm text-gray-600">
-                  {t('passkeys.description', 'Manage your biometric authentication methods')}
+                  {t('passkeys.description')}
                 </p>
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function PasskeyManagement() {
               onClick={() => setIsRegisterModalOpen(true)}
               disabled={loading}
             >
-              {t('passkeys.addNew', 'Add New Passkey')}
+              {t('passkeys.addNew')}
             </Button>
           </div>
 
@@ -157,11 +157,11 @@ export default function PasskeyManagement() {
               <div className="flex items-center space-x-2">
                 <Shield className="w-5 h-5 text-primary-600" />
                 <span className="text-primary-800 font-medium">
-                  {t('passkeys.biometricAvailable', 'Biometric authentication available')}
+                  {t('passkeys.biometricAvailable')}
                 </span>
               </div>
               <p className="text-primary-700 text-sm mt-1">
-                {t('passkeys.biometricDescription', 'You can use face recognition or fingerprint to secure your account.')}
+                {t('passkeys.biometricDescription')}
               </p>
             </div>
           )}
@@ -169,23 +169,23 @@ export default function PasskeyManagement() {
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">{t('passkeys.loading', 'Loading passkeys...')}</p>
+              <p className="text-gray-600 mt-2">{t('passkeys.loading')}</p>
             </div>
           ) : passkeys.length === 0 ? (
             <div className="text-center py-8">
               <Fingerprint className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {t('passkeys.noPasskeys', 'No Passkeys Registered')}
+                {t('passkeys.noPasskeys')}
               </h3>
               <p className="text-gray-600 mb-4">
-                {t('passkeys.getStarted', 'Get started by registering your first passkey for secure authentication.')}
+                {t('passkeys.getStarted')}
               </p>
               <Button
                 variant="primary"
                 icon={<Plus className="w-5 h-5" />}
                 onClick={() => setIsRegisterModalOpen(true)}
               >
-                {t('passkeys.registerFirst', 'Register Your First Passkey')}
+                {t('passkeys.registerFirst')}
               </Button>
             </div>
           ) : (
@@ -198,11 +198,11 @@ export default function PasskeyManagement() {
                       <div>
                         <h4 className="font-medium text-gray-900">{passkey.device_name}</h4>
                         <p className="text-sm text-gray-600">
-                          {t('passkeys.registeredOn', 'Registered on')} {passkey.created_at ? new Date(passkey.created_at).toLocaleDateString() : ''}
+                          {t('passkeys.registeredOn')} {passkey.created_at ? new Date(passkey.created_at).toLocaleDateString() : ''}
                         </p>
                         {passkey.last_used_at && (
                           <p className="text-xs text-gray-500">
-                            {t('passkeys.lastUsed', 'Last used')}: {new Date(passkey.last_used_at).toLocaleDateString()}
+                            {t('passkeys.lastUsed')}: {new Date(passkey.last_used_at).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -235,24 +235,24 @@ export default function PasskeyManagement() {
           setIsRegisterModalOpen(false);
           setDeviceName('');
         }}>
-          {t('passkeys.registerNew', 'Register New Passkey')}
+          {t('passkeys.registerNew')}
         </Modal.Header>
         <Modal.Body>
         <form onSubmit={handleRegisterPasskey} className="space-y-6">
           <div>
             <p className="text-gray-600 mb-4">
-              {t('passkeys.registerDescription', 'Give your device a name to help you identify it later. Your browser will then prompt you to use your biometric authentication.')}
+              {t('passkeys.registerDescription')}
             </p>
 
             <FormField
-              label={t('passkeys.deviceName', 'Device Name')}
+              label={t('passkeys.deviceName')}
               required
             >
               <input
                 type="text"
                 value={deviceName}
                 onChange={(e) => setDeviceName(e.target.value)}
-                placeholder={t('passkeys.deviceNamePlaceholder', 'e.g., iPhone, Work Computer, Personal Laptop')}
+                placeholder={t('passkeys.deviceNamePlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 maxLength={50}
                 required
@@ -279,7 +279,7 @@ export default function PasskeyManagement() {
               icon={<Fingerprint className="w-4 h-4" />}
               className="flex-1"
             >
-              {t('passkeys.register', 'Register Passkey')}
+              {t('passkeys.register')}
             </Button>
           </div>
         </form>

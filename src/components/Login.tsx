@@ -110,7 +110,7 @@ export default function Login() {
       const result = await authenticateWithPasskey(passkeyEmail);
 
       if (result.success) {
-        showNotification('success', t('auth.passkeyLoginSuccess', 'Signed in with passkey successfully!'));
+        showNotification('success', t('auth.passkeyLoginSuccess'));
         navigate('/dashboard', { replace: true });
       } else {
         const errorMessage = result.error?.toLowerCase() || '';
@@ -118,7 +118,7 @@ export default function Login() {
           setError(t('auth.accountBanned'));
           showNotification('error', t('auth.accountBanned'));
         } else {
-          setError(result.error || t('auth.passkeyLoginFailed', 'Passkey authentication failed'));
+          setError(result.error || t('auth.passkeyLoginFailed'));
         }
       }
     } catch (err: any) {
@@ -144,7 +144,7 @@ export default function Login() {
             className={`flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
           >
             <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span>{t('auth.backToSignIn', 'Back to Sign In')}</span>
+            <span>{t('auth.backToSignIn')}</span>
           </button>
 
           <div className="flex items-center justify-center mb-8">
@@ -157,7 +157,7 @@ export default function Login() {
             {t('auth.passkeyLogin', 'Passkey Login')}
           </h1>
           <p className="text-center text-gray-600 mb-8">
-            {t('auth.passkeyLoginDesc', 'Sign in using your face, fingerprint, or device security')}
+            {t('auth.passkeyLoginDesc')}
           </p>
 
           {error && (
@@ -187,11 +187,11 @@ export default function Login() {
               className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {passkeyLoading ? (
-                <span>{t('auth.authenticating', 'Authenticating...')}</span>
+                <span>{t('auth.authenticating')}</span>
               ) : (
                 <>
                   <Fingerprint className="w-5 h-5" />
-                  <span>{t('auth.signInWithPasskey', 'Sign in with Passkey')}</span>
+                  <span>{t('auth.signInWithPasskey')}</span>
                 </>
               )}
             </button>
@@ -365,7 +365,7 @@ export default function Login() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  {t('auth.orSignInWith', 'Or sign in with')}
+                  {t('auth.orSignInWith')}
                 </span>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function Login() {
                 className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Fingerprint className="w-5 h-5" />
-                <span>{t('auth.passkeyLogin', 'Passkey Login')}</span>
+                <span>{t('auth.passkeyLogin')}</span>
               </button>
             </div>
           </div>
