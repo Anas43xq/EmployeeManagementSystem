@@ -2,8 +2,10 @@
 import { supabase } from './supabase';
 
 const SESSION_HEALTH_KEY = 'ems_session_health';
+const LAST_ACTIVITY_KEY = 'ems_last_activity';
 const MAX_FAILED_ATTEMPTS = 3;
 const RECOVERY_COOLDOWN_MS = 5000;
+const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
 
 interface SessionHealth {
   failedAttempts: number;
@@ -122,6 +124,44 @@ export async function getValidAccessToken(): Promise<string | null> {
     return session.access_token;
   } catch {
     return null;
+  }
+}
+
+// =============================================
+// INACTIVITY TRACKING
+// =============================================
+
+export function updateLastActivity(): void {
+  try {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+export function getLastActivity(): number {
+  try {
+    const stored = localStorage.getItem(LAST_ACTIVITY_KEY);
+    return stored ? parseInt(stored, 10) : Date.now();
+  } catch {
+    return Date.now();
+  }
+}
+
+export function isInactivityTimeoutExceeded(): boolean {
+  const lastActivity = getLastActivity();
+  return Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS;
+}
+
+export function getInactivityTimeoutMs(): number {
+  return INACTIVITY_TIMEOUT_MS;
+}
+
+export function clearLastActivity(): void {
+  try {
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+  } catch {
+    // Ignore localStorage errors
   }
 }
 

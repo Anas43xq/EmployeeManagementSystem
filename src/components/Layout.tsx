@@ -37,14 +37,14 @@ export default function Layout() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
-  // Fetch points for staff user
+  // Fetch points for all users
   useEffect(() => {
-    if (user?.role === 'staff' && user?.employeeId) {
+    if (user?.employeeId) {
       getMyTotalPoints(user.employeeId)
         .then(setTotalPoints)
         .catch(() => setTotalPoints(0));
     }
-  }, [user?.role, user?.employeeId]);
+  }, [user?.employeeId]);
 
   const navigation = [
     { name: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'hr', 'staff'] },
@@ -167,8 +167,8 @@ export default function Layout() {
             <div className="flex-1 lg:block hidden" />
 
             <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
-              {/* Points display for staff users */}
-              {user?.role === 'staff' && totalPoints !== null && (
+              {/* Points display for all users */}
+              {totalPoints !== null && (
                 <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-1.5' : 'space-x-1.5'} px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 rounded-lg border border-amber-200`}>
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span className="font-semibold">{totalPoints}</span>

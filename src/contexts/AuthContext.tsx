@@ -5,7 +5,11 @@ import { logActivity } from '../services/activityLog';
 import { 
   clearAuthState, 
   recordAuthSuccess, 
-  resetSessionHealth 
+  resetSessionHealth,
+  updateLastActivity,
+  getLastActivity,
+  getInactivityTimeoutMs,
+  clearLastActivity
 } from '../services/sessionManager';
 import { clearAllCache } from '../services/apiCache';
 
@@ -69,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadingUserRef = useRef<string | null>(null);
   const visibilityCheckRef = useRef(false);
   const lastVisibilityCheckRef = useRef(0);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoggingOutRef = useRef(false);
 
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
     const cached = userDataCache.get(authUser.id);
@@ -268,6 +274,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadUserData]);
 
+  // Inactivity timeout - auto logout after 8 minutes
+  useEffect(() => {
+    if (!user || isLoggingOutRef.current) return;
+
+    const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll', 'mousemove'];
+    const CHECK_INTERVAL = 30000; // Check every 30 seconds
+    
+    // Initialize last activity on mount
+    updateLastActivity();
+
+    const handleActivity = () => {
+      if (!isLoggingOutRef.current) {
+        updateLastActivity();
+      }
+    };
+
+    const checkInactivity = async () => {
+      if (isLoggingOutRef.current) return;
+      
+      const lastActivity = getLastActivity();
+      const timeSinceActivity = Date.now() - lastActivity;
+      const timeoutMs = getInactivityTimeoutMs();
+      
+      if (timeSinceActivity >= timeoutMs) {
+        isLoggingOutRef.current = true;
+        console.log('Session expired due to inactivity (8 minutes)');
+        
+        // Log activity before signing out
+        if (user) {
+          logActivity(user.id, 'session_timeout', 'user', user.id, {
+            reason: 'inactivity',
+            inactiveMinutes: Math.floor(timeSinceActivity / 60000)
+          });
+        }
+        
+        // Clear everything and sign out
+        userDataCache.clear();
+        clearAllCache();
+        clearLastActivity();
+        
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          // Force clear user even if signOut fails
+        }
+        
+        setUser(null);
+        isLoggingOutRef.current = false;
+      }
+    };
+
+    // Add activity listeners
+    ACTIVITY_EVENTS.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Start periodic check
+    inactivityTimerRef.current = setInterval(checkInactivity, CHECK_INTERVAL);
+    
+    // Also check immediately on visibility change (tab becomes visible)
+    const handleVisibilityForInactivity = () => {
+      if (document.visibilityState === 'visible') {
+        checkInactivity();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityForInactivity);
+
+    return () => {
+      ACTIVITY_EVENTS.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (inactivityTimerRef.current) {
+        clearInterval(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityForInactivity);
+    };
+  }, [user]);
+
   const resetSession = useCallback(async () => {
     setLoading(true);
     
@@ -305,6 +390,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();
+    updateLastActivity(); // Reset activity timer on login
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -327,6 +413,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();
+    clearLastActivity();
     
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
