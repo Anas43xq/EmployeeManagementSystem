@@ -1509,6 +1509,43 @@ BEGIN
     FROM public.employees e WHERE e.email = 'b.scott@staffhub.com';
 
     -- ============================================================================
+    -- THIS WEEK'S TASKS (Feb 16-22) - For performance calculation variety
+    -- ============================================================================
+    
+    -- Completed tasks THIS WEEK (deadline this week, completed this week)
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Weekly Team Sync', 'Lead weekly team synchronization meeting.', 'normal', 'completed', '2026-02-18', '2026-02-18 10:00:00+00', 15, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'anas.essam.work@gmail.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Code Review Sprint Tasks', 'Review all sprint pull requests and provide feedback.', 'high', 'completed', '2026-02-19', '2026-02-19 15:30:00+00', 20, 10, v_admin_id
+    FROM public.employees e WHERE e.email = 'anas.essam.work@gmail.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Engineering Team Report', 'Submit weekly engineering progress report.', 'normal', 'completed', '2026-02-20', '2026-02-20 09:00:00+00', 10, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'j.lee@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Review Hiring Candidates', 'Review resumes for open positions and schedule interviews.', 'high', 'completed', '2026-02-19', '2026-02-19 14:00:00+00', 20, 10, v_admin_id
+    FROM public.employees e WHERE e.email = 'j.lee@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Business Unit Planning', 'Prepare Q1 business unit planning document.', 'normal', 'completed', '2026-02-17', '2026-02-17 16:00:00+00', 15, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'e.wilson@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Financial Report Review', 'Review and approve weekly financial reports.', 'normal', 'completed', '2026-02-18', '2026-02-18 11:00:00+00', 10, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'r.garcia@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Update Training Materials', 'Update orientation training materials for new hires.', 'normal', 'completed', '2026-02-19', '2026-02-19 13:00:00+00', 10, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'j.martinez@staffhub.com';
+
+    INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
+    SELECT e.id, 'Staff Schedule Coordination', 'Coordinate next week staff schedule and coverage.', 'normal', 'completed', '2026-02-17', '2026-02-17 10:00:00+00', 10, 5, v_admin_id
+    FROM public.employees e WHERE e.email = 'p.thomas@staffhub.com';
+
+    -- ============================================================================
     -- WARNINGS - All severities, all statuses
     -- ============================================================================
     
