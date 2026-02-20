@@ -30,7 +30,10 @@ async function sendNotificationEmail(
       .eq('id', userId)
       .single();
 
-    if (!userData?.employee_id) return;
+    if (!userData?.employee_id) {
+      console.warn('[Email] No employee_id found for user:', userId);
+      return;
+    }
 
     const { data: employee } = await db
       .from('employees')
@@ -38,7 +41,10 @@ async function sendNotificationEmail(
       .eq('id', userData.employee_id)
       .single();
 
-    if (!employee?.email) return;
+    if (!employee?.email) {
+      console.warn('[Email] No email found for employee:', userData.employee_id);
+      return;
+    }
 
     await sendEmailNotification({
       to: employee.email,
@@ -47,6 +53,7 @@ async function sendNotificationEmail(
       type,
     });
   } catch (err) {
+    console.error('[Email] sendNotificationEmail error:', err);
   }
 }
 
@@ -67,10 +74,12 @@ export async function createNotification(
       .from('notifications') as any).insert(record);
 
     if (error) {
+      console.error('[Notification] Insert error:', error);
     }
 
-    sendNotificationEmail(userId, title, message, type);
+    await sendNotificationEmail(userId, title, message, type);
   } catch (err) {
+    console.error('[Notification] createNotification error:', err);
   }
 }
 
@@ -94,12 +103,14 @@ export async function createNotifications(
       .from('notifications') as any).insert(records);
 
     if (error) {
+      console.error('[Notification] Bulk insert error:', error);
     }
 
     for (const n of notifications) {
-      sendNotificationEmail(n.userId, n.title, n.message, n.type);
+      await sendNotificationEmail(n.userId, n.title, n.message, n.type);
     }
   } catch (err) {
+    console.error('[Notification] createNotifications error:', err);
   }
 }
 
