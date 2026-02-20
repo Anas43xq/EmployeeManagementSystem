@@ -29,7 +29,6 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
       return false;
     }
 

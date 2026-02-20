@@ -469,7 +469,7 @@ export async function createTaskNotification(
     overdue: `Task "${taskTitle}" is now overdue`,
   };
 
-  const { error } = await db
+  await db
     .from('notifications')
     .insert([{
       user_id: userId,
@@ -481,7 +481,7 @@ export async function createTaskNotification(
 }
 
 export async function createWarningNotification(userId: string, severity: string) {
-  const { error } = await db
+  await db
     .from('notifications')
     .insert([{
       user_id: userId,
@@ -502,7 +502,7 @@ export async function createComplaintNotification(
     ? 'Your complaint has been submitted and is under review.'
     : `Your complaint status has been updated to: ${status}`;
 
-  const { error } = await db
+  await db
     .from('notifications')
     .insert([{
       user_id: userId,
