@@ -36,7 +36,7 @@ export default function CustomReportPanel({
           <select
             value={selectedReport}
             onChange={(e) => setSelectedReport(e.target.value as ReportType)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="employee">{t('reports.employeeReportOption')}</option>
             <option value="leave">{t('reports.leaveReportOption')}</option>
@@ -50,7 +50,7 @@ export default function CustomReportPanel({
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="7">{t('reports.last7Days')}</option>
             <option value="30">{t('reports.last30Days')}</option>
@@ -64,7 +64,7 @@ export default function CustomReportPanel({
           <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="">{t('reports.allDepartments')}</option>
             {departments.map((dept) => (
@@ -78,7 +78,7 @@ export default function CustomReportPanel({
       <button
         onClick={onGenerate}
         disabled={loading}
-        className="mt-6 flex items-center space-x-2 bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-6 flex items-center space-x-2 bg-primary-900 text-white px-6 py-2 rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
           <>

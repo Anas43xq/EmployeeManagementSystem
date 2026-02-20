@@ -39,7 +39,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             onChange={onChange}
             required
             disabled={!isNewEmployee}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${isNewEmployee ? 'focus:ring-2 focus:ring-blue-500 focus:border-transparent' : 'bg-gray-50 cursor-not-allowed'}`}
+            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${isNewEmployee ? 'focus:ring-2 focus:ring-primary-500 focus:border-transparent' : 'bg-gray-50 cursor-not-allowed'}`}
           />
         </div>
         <div>
@@ -52,7 +52,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             value={formData.email}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -65,7 +65,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             value={formData.first_name}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -78,7 +78,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             value={formData.last_name}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -88,7 +88,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="phone"
             value={formData.phone}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -98,7 +98,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="date_of_birth"
             value={formData.date_of_birth}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -107,7 +107,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="gender"
             value={formData.gender}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="">{t('employees.selectGender')}</option>
             <option value="male">{t('employees.male')}</option>
@@ -121,7 +121,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="address"
             value={formData.address}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -131,7 +131,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="city"
             value={formData.city}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -141,7 +141,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="state"
             value={formData.state}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -151,7 +151,7 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="postal_code"
             value={formData.postal_code}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
       </div>

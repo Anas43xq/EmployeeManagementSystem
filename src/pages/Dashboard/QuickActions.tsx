@@ -26,7 +26,7 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
           };
           const Icon = iconMap[action.icon];
           const colorMap: { [key: string]: string } = {
-            blue: 'bg-blue-50 hover:bg-blue-100 text-blue-900',
+            blue: 'bg-primary-50 hover:bg-primary-100 text-primary-900',
             green: 'bg-green-50 hover:bg-green-100 text-green-900',
             teal: 'bg-teal-50 hover:bg-teal-100 text-teal-900',
             orange: 'bg-orange-50 hover:bg-orange-100 text-orange-900',

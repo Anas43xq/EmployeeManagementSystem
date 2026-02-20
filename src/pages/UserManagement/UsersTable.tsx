@@ -80,8 +80,8 @@ export default function UsersTable({
               <tr key={user.id} className={`hover:bg-gray-50 ${user.banned_at ? 'bg-red-50/30' : user.is_active === false ? 'bg-gray-50/50' : ''}`}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.banned_at ? 'bg-red-100' : user.is_active === false ? 'bg-gray-100' : 'bg-blue-100'}`}>
-                      <span className={`font-medium ${user.banned_at ? 'text-red-900' : user.is_active === false ? 'text-gray-600' : 'text-blue-900'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.banned_at ? 'bg-red-100' : user.is_active === false ? 'bg-gray-100' : 'bg-primary-100'}`}>
+                      <span className={`font-medium ${user.banned_at ? 'text-red-900' : user.is_active === false ? 'text-gray-600' : 'text-primary-900'}`}>
                         {userName.charAt(0).toUpperCase() || userEmail.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -98,7 +98,7 @@ export default function UsersTable({
                         <Mail className="w-3 h-3" />
                         <span>{userEmail}</span>
                         {user.id === currentUserId && (
-                          <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{t('userManagement.you')}</span>
+                          <span className="ml-1 px-1.5 py-0.5 bg-primary-100 text-primary-700 rounded text-xs">{t('userManagement.you')}</span>
                         )}
                       </div>
                       <div className="text-xs text-gray-400">
@@ -147,14 +147,14 @@ export default function UsersTable({
                   <div className="flex items-center justify-end space-x-1">
                     <button
                       onClick={() => onResetPassword(user)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                       title={t('userManagement.resetPassword')}
                     >
                       <Key className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onEdit(user)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                       title={t('userManagement.editRole')}
                     >
                       <Edit2 className="w-4 h-4" />

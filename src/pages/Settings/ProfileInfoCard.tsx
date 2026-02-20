@@ -41,7 +41,7 @@ export default function ProfileInfoCard({
                   type="email"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={t('settings.enterNewEmail')}
                 />
                 <button
@@ -70,7 +70,7 @@ export default function ProfileInfoCard({
                 />
                 <button
                   onClick={() => setIsEditingEmail(true)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors"
+                  className="flex items-center space-x-1 px-3 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span className="text-sm">{t('common.edit')}</span>
@@ -80,7 +80,7 @@ export default function ProfileInfoCard({
           </div>
           {isEditingEmail && (
             <div className="text-xs mt-2 space-y-1">
-              <p className="text-blue-600 font-medium">
+              <p className="text-primary-600 font-medium">
                 {t('settings.confirmationNote')}
               </p>
               <p className="text-gray-500">

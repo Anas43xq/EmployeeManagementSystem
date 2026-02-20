@@ -81,7 +81,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="space-y-3">
               <button
                 onClick={this.handleReset}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
               >
                 Try Again
               </button>
@@ -146,7 +146,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
             <p className="text-gray-600 mb-4">Failed to load this section</p>
             <button
               onClick={this.handleRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm"
             >
               Retry
             </button>

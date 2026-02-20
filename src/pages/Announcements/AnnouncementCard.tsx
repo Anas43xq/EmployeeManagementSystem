@@ -74,7 +74,7 @@ export default function AnnouncementCard({
           </button>
           <button
             onClick={() => onEdit(announcement)}
-            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
           >
             <Edit2 className="w-5 h-5" />
           </button>

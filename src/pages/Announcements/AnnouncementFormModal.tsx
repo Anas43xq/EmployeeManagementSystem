@@ -63,7 +63,7 @@ export default function AnnouncementFormModal({
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder={t('announcements.titlePlaceholder')}
             />
           </div>
@@ -76,7 +76,7 @@ export default function AnnouncementFormModal({
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               rows={5}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder={t('announcements.contentPlaceholder')}
             />
           </div>
@@ -87,7 +87,7 @@ export default function AnnouncementFormModal({
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="low">{t('announcements.low')}</option>
                 <option value="normal">{t('announcements.normal')}</option>
@@ -103,7 +103,7 @@ export default function AnnouncementFormModal({
                 value={formData.expires_at}
                 onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function AnnouncementFormModal({
               id="is_active"
               checked={formData.is_active}
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
             <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
               {t('announcements.activeLabel')}
@@ -132,7 +132,7 @@ export default function AnnouncementFormModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? t('common.saving') : editingAnnouncement ? t('announcements.update') : t('announcements.create')}
             </button>

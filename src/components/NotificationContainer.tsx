@@ -28,7 +28,7 @@ export default function NotificationContainer() {
       case 'warning':
         return 'bg-yellow-50 border-yellow-500 text-yellow-900';
       case 'info':
-        return 'bg-blue-50 border-blue-500 text-blue-900';
+        return 'bg-primary-50 border-primary-500 text-primary-900';
       default:
         return 'bg-gray-50 border-gray-500 text-gray-900';
     }

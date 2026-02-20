@@ -155,14 +155,14 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
 
         <div className="space-y-4">
           {platformAuthAvailable && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-2">
-                <Eye className="w-4 h-4 text-blue-600" />
-                <span className="text-blue-800 font-medium text-sm">
+                <Eye className="w-4 h-4 text-primary-600" />
+                <span className="text-primary-800 font-medium text-sm">
                   {t('attendance.biometricReady', 'Biometric authentication ready')}
                 </span>
               </div>
-              <p className="text-blue-700 text-xs">
+              <p className="text-primary-700 text-xs">
                 {t('attendance.biometricDescription', 'Up to 10x faster than typing passwords - just look at your device or touch the sensor.')}
               </p>
             </div>

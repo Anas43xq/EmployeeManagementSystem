@@ -49,7 +49,7 @@ export default function WarningFormModal({
               value={formData.employee_id}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">{t('warnings.selectEmployee')}</option>
               {employees.map(emp => (
@@ -69,7 +69,7 @@ export default function WarningFormModal({
               value={formData.severity}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {severities.map(severity => (
                 <option key={severity} value={severity}>
@@ -89,7 +89,7 @@ export default function WarningFormModal({
               value={formData.reason}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('warnings.reasonPlaceholder')}
             />
           </div>
@@ -103,7 +103,7 @@ export default function WarningFormModal({
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('warnings.descriptionPlaceholder')}
             />
           </div>

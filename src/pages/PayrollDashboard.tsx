@@ -197,7 +197,7 @@ export default function PayrollDashboard() {
                 <p className="text-sm text-gray-600">{t('payroll.totalRecords', 'Total Records')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-600" />
+              <Users className="w-8 h-8 text-primary-600" />
             </div>
           </div>
         </Card>
@@ -231,9 +231,9 @@ export default function PayrollDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">{t('payroll.paid', 'Paid')}</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.paid}</p>
+                <p className="text-2xl font-bold text-primary-600">{stats.paid}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-blue-600" />
+              <DollarSign className="w-8 h-8 text-primary-600" />
             </div>
           </div>
         </Card>
@@ -263,7 +263,7 @@ export default function PayrollDashboard() {
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
                   <option key={month} value={month}>{getMonthName(month)}</option>
@@ -273,7 +273,7 @@ export default function PayrollDashboard() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                   <option key={year} value={year}>{year}</option>
@@ -283,7 +283,7 @@ export default function PayrollDashboard() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">{t('payroll.allStatuses', 'All Statuses')}</option>
                 <option value="draft">{t('payroll.draft', 'Draft')}</option>
@@ -321,7 +321,7 @@ export default function PayrollDashboard() {
 
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
               <p className="text-gray-600 mt-2">{t('payroll.loading', 'Loading payroll records...')}</p>
             </div>
           ) : payrolls.length === 0 ? (
@@ -349,7 +349,7 @@ export default function PayrollDashboard() {
                         type="checkbox"
                         checked={selectedPayrolls.length === payrolls.filter(p => p.status === 'draft').length && payrolls.filter(p => p.status === 'draft').length > 0}
                         onChange={selectAllDraftPayrolls}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                     </th>
                     <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.employee', 'Employee')}</th>
@@ -371,7 +371,7 @@ export default function PayrollDashboard() {
                           checked={selectedPayrolls.includes(payroll.id)}
                           onChange={() => togglePayrollSelection(payroll.id)}
                           disabled={payroll.status !== 'draft'}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                       </td>
                       <td className="py-3 px-3">
@@ -430,9 +430,9 @@ export default function PayrollDashboard() {
         <Modal.Body>
           <div className="space-y-6">
             <div>
-              <div className="flex items-center space-x-2 mb-4 p-3 bg-blue-50 rounded-lg">
-                <Calculator className="w-5 h-5 text-blue-600" />
-                <span className="font-medium text-blue-900">
+              <div className="flex items-center space-x-2 mb-4 p-3 bg-primary-50 rounded-lg">
+                <Calculator className="w-5 h-5 text-primary-600" />
+                <span className="font-medium text-primary-900">
                   {t('payroll.generatingFor', 'Generating for')}: {getMonthName(selectedMonth)} {selectedYear}
                 </span>
               </div>
@@ -478,7 +478,7 @@ export default function PayrollDashboard() {
       >
         <Modal.Header onClose={() => setIsPayslipModalOpen(false)}>
           <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-blue-600" />
+            <FileText className="w-5 h-5 text-primary-600" />
             <span>
               {viewingPayroll 
                 ? `${t('payslip.payslipFor', 'Payslip for')} ${getMonthName(viewingPayroll.period_month)} ${viewingPayroll.period_year}`
@@ -505,7 +505,7 @@ export default function PayrollDashboard() {
 
               {loadingPayslipDetails ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
                   <p className="text-gray-600 mt-2">{t('payslip.loadingDetails', 'Loading details...')}</p>
                 </div>
               ) : (
@@ -530,9 +530,9 @@ export default function PayrollDashboard() {
                         -{formatCurrency(viewingPayroll.total_deductions)}
                       </p>
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <p className="text-sm text-blue-700">{t('payslip.netSalary', 'Net Salary')}</p>
-                      <p className="text-xl font-bold text-blue-600">
+                    <div className="bg-primary-50 rounded-lg p-4">
+                      <p className="text-sm text-primary-700">{t('payslip.netSalary', 'Net Salary')}</p>
+                      <p className="text-xl font-bold text-primary-600">
                         {formatCurrency(viewingPayroll.net_salary)}
                       </p>
                     </div>

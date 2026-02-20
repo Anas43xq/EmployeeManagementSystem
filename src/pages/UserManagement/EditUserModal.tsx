@@ -37,7 +37,7 @@ export default function EditUserModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Edit2 className="w-5 h-5 text-blue-600" />
+            <Edit2 className="w-5 h-5 text-primary-600" />
             <h2 className="text-xl font-semibold text-gray-900">{t('userManagement.editRole')}</h2>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -71,7 +71,7 @@ export default function EditUserModal({
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'hr' | 'staff' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               disabled={isOwnAccount}
             >
               <option value="staff">{t('userManagement.staff')}</option>
@@ -94,7 +94,7 @@ export default function EditUserModal({
             <button
               type="submit"
               disabled={submitting || isOwnAccount}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
             >
               {submitting ? t('common.saving') : t('userManagement.saveChanges')}
             </button>

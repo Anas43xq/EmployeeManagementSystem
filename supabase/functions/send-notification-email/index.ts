@@ -119,14 +119,14 @@ function generateEmailTemplate(subject: string, body: string, type: string): str
   const styles = `
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .header { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
     .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
     .footer { background: #374151; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
     .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
     .badge-success { background: #d1fae5; color: #065f46; }
     .badge-warning { background: #fef3c7; color: #92400e; }
     .badge-danger { background: #fee2e2; color: #991b1b; }
-    .badge-info { background: #dbeafe; color: #1e40af; }
+    .badge-info { background: #ede9fe; color: #5b21b6; }
   `;
 
   const badgeClass = type.includes('approved') || type === 'performance' ? 'badge-success' :
@@ -145,7 +145,7 @@ function generateEmailTemplate(subject: string, body: string, type: string): str
     <body>
       <div class="container">
         <div class="header">
-          <h1 style="margin: 0; font-size: 24px;">StaffHub</h1>
+          <h1 style="margin: 0; font-size: 24px;">DevTeam Hub</h1>
           <p style="margin: 5px 0 0 0; opacity: 0.9;">HR Notifications</p>
         </div>
         <div class="content">
@@ -156,7 +156,7 @@ function generateEmailTemplate(subject: string, body: string, type: string): str
           </div>
         </div>
         <div class="footer">
-          <p style="margin: 0;">This is an automated notification from StaffHub — Al-Mustaqbal Group</p>
+          <p style="margin: 0;">This is an automated notification from DevTeam Hub</p>
           <p style="margin: 10px 0 0 0;">Please do not reply to this email</p>
         </div>
       </div>

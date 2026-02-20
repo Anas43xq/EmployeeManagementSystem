@@ -39,13 +39,13 @@
     "points": "pts"
   },
   "auth": {
-    "ems": "Al-Mustaqbal",
+    "ems": "DevTeam",
     "adminPortal": "Admin Portal",
     "hrPortal": "HR Portal",
     "employeePortal": "Staff Portal",
     "staffPortal": "Staff Portal",
-    "employeeManagementSystem": "Al-Mustaqbal Group",
-    "tagline": "Employee Management System",
+    "employeeManagementSystem": "DevTeam Hub",
+    "tagline": "Employee Management for IT Teams",
     "signInToContinue": "Sign in to your workspace",
     "emailAddress": "Email Address",
     "password": "Password",
@@ -95,7 +95,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome to StaffHub",
+    "welcome": "Welcome to DevTeam Hub",
     "totalEmployees": "Total Employees",
     "activeEmployees": "Active Employees",
     "departments": "Departments",

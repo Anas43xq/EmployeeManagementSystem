@@ -171,10 +171,10 @@ export default function ResetPassword() {
 
   if (validating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
           <div className="flex justify-center mb-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900"></div>
           </div>
           <p className="text-center text-gray-600">{t('resetPassword.validating')}</p>
         </div>
@@ -190,7 +190,7 @@ export default function ResetPassword() {
     switch (passwordStrength) {
       case 'weak': return 'bg-red-500';
       case 'fair': return 'bg-yellow-500';
-      case 'good': return 'bg-blue-500';
+      case 'good': return 'bg-primary-500';
       case 'strong': return 'bg-green-500';
       default: return 'bg-gray-300';
     }
@@ -207,12 +207,12 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <Lock className="w-8 h-8 text-blue-900" />
+            <div className="bg-primary-100 p-3 rounded-full">
+              <Lock className="w-8 h-8 text-primary-900" />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('resetPassword.title')}</h1>
@@ -231,7 +231,7 @@ export default function ResetPassword() {
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder={t('resetPassword.enterNewPassword')}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -284,7 +284,7 @@ export default function ResetPassword() {
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 placeholder={t('resetPassword.confirmYourPassword')}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition ${
                   errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -317,7 +317,7 @@ export default function ResetPassword() {
             className={`w-full py-2 px-4 rounded-lg font-medium transition duration-200 ${
               loading || !isValidToken
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-900 text-white hover:bg-blue-800 active:scale-95'
+                : 'bg-primary-900 text-white hover:bg-primary-800 active:scale-95'
             }`}
           >
             {loading ? (
@@ -331,7 +331,7 @@ export default function ResetPassword() {
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mt-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
           <p className="text-xs text-gray-700">
             {t('resetPassword.securityTip')}
           </p>

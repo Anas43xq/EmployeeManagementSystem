@@ -81,7 +81,7 @@ export default function Profile() {
   const getRoleBadge = () => {
     const roleColors = {
       admin: 'bg-purple-100 text-purple-800',
-      hr: 'bg-blue-100 text-blue-800',
+      hr: 'bg-primary-100 text-primary-800',
       staff: 'bg-green-100 text-green-800',
     };
     return (
@@ -99,7 +99,7 @@ export default function Profile() {
       <Card>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
             {employee?.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -107,7 +107,7 @@ export default function Profile() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-3xl font-bold text-blue-900">
+              <span className="text-3xl font-bold text-primary-900">
                 {employee ? `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}` : user?.email?.charAt(0).toUpperCase()}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <User className="w-5 h-5 text-blue-900" />
+              <User className="w-5 h-5 text-primary-900" />
               <span>{t('employees.personalInfo')}</span>
             </h3>
             <div className="space-y-4">
@@ -187,7 +187,7 @@ export default function Profile() {
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Briefcase className="w-5 h-5 text-blue-900" />
+              <Briefcase className="w-5 h-5 text-primary-900" />
               <span>{t('employees.employmentDetails')}</span>
             </h3>
             <div className="space-y-4">
@@ -223,7 +223,7 @@ export default function Profile() {
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Phone className="w-5 h-5 text-blue-900" />
+              <Phone className="w-5 h-5 text-primary-900" />
               <span>{t('employees.emergencyContact')}</span>
             </h3>
             <div className="space-y-4">

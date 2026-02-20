@@ -53,9 +53,9 @@ export default function UserStatsCards({ stats }: UserStatsCardsProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">{t('userManagement.employees')}</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.employees}</p>
+            <p className="text-2xl font-bold text-primary-600">{stats.employees}</p>
           </div>
-          <Shield className="w-8 h-8 text-blue-400" />
+          <Shield className="w-8 h-8 text-primary-400" />
         </div>
       </div>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

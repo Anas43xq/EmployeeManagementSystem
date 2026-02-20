@@ -38,7 +38,7 @@ export default function PerformanceChartWidget() {
     <Card>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-6 h-6 text-blue-600" />
+          <TrendingUp className="w-6 h-6 text-primary-600" />
           <h2 className="text-xl font-bold text-gray-900">{t('performance.topPerformers')}</h2>
         </div>
         <span className="text-sm text-gray-500">{t('performance.thisWeek')}</span>
@@ -62,7 +62,7 @@ export default function PerformanceChartWidget() {
                   index === 0 ? 'bg-yellow-100 text-yellow-700' :
                   index === 1 ? 'bg-gray-100 text-gray-700' :
                   index === 2 ? 'bg-orange-100 text-orange-700' :
-                  'bg-blue-50 text-blue-700'
+                  'bg-primary-50 text-primary-700'
                 }`}>
                   {index === 0 ? <Award className="w-4 h-4" /> : index + 1}
                 </div>
@@ -98,7 +98,7 @@ export default function PerformanceChartWidget() {
                         index === 0 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
                         index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
                         index === 2 ? 'bg-gradient-to-r from-orange-400 to-orange-500' :
-                        'bg-gradient-to-r from-blue-400 to-blue-500'
+                        'bg-gradient-to-r from-primary-400 to-primary-500'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />
@@ -137,7 +137,7 @@ export default function PerformanceChartWidget() {
             <span>{t('performance.tasksOverdue')}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+            <div className="w-3 h-3 bg-primary-500 rounded"></div>
             <span>{t('performance.attendanceDays')}</span>
           </div>
         </div>

@@ -13,7 +13,7 @@ interface Announcement {
 
 const PRIORITY_CONFIG = {
   low: { labelKey: 'announcements.low', color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Info },
-  normal: { labelKey: 'announcements.medium', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Bell },
+  normal: { labelKey: 'announcements.medium', color: 'bg-primary-50 text-primary-700 border-primary-200', icon: Bell },
   high: { labelKey: 'announcements.high', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: AlertTriangle },
   urgent: { labelKey: 'announcements.urgent', color: 'bg-red-50 text-red-700 border-red-200', icon: AlertCircle },
 };
@@ -55,13 +55,13 @@ export default function AnnouncementsWidget() {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="bg-blue-900 p-2 rounded-lg">
+          <div className="bg-primary-900 p-2 rounded-lg">
             <Megaphone className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">{t('announcements.latestNews')}</h2>
         </div>
         <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-900"></div>
         </div>
       </div>
     );
@@ -70,7 +70,7 @@ export default function AnnouncementsWidget() {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <div className="flex items-center space-x-3 mb-6">
-        <div className="bg-blue-900 p-2 rounded-lg">
+        <div className="bg-primary-900 p-2 rounded-lg">
           <Megaphone className="w-6 h-6 text-white" />
         </div>
         <div>

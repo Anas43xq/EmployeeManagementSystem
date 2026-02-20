@@ -46,7 +46,7 @@ export default function DepartmentFormModal({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('departments.eComputerScience')}
             />
           </div>
@@ -55,7 +55,7 @@ export default function DepartmentFormModal({
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="academic">{t('departments.academic')}</option>
               <option value="administrative">{t('departments.administrative')}</option>
@@ -67,7 +67,7 @@ export default function DepartmentFormModal({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('departments.briefDescription')}
             />
           </div>
@@ -76,7 +76,7 @@ export default function DepartmentFormModal({
             <select
               value={formData.head_id}
               onChange={(e) => setFormData({ ...formData, head_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">{t('departments.notAssigned')}</option>
               {employees.map((emp) => (
@@ -97,7 +97,7 @@ export default function DepartmentFormModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
             >
               {submitting ? t('common.saving') : editingDept ? t('announcements.update') : t('departments.addDepartment')}
             </button>

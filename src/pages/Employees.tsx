@@ -124,14 +124,14 @@ export default function Employees() {
               placeholder={t('employees.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <div className="flex items-center space-x-4">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">{t('employees.allStatus')}</option>
               <option value="active">{t('employees.active')}</option>
@@ -141,7 +141,7 @@ export default function Employees() {
             <select
               value={employmentTypeFilter}
               onChange={(e) => setEmploymentTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">{t('employees.allTypes')}</option>
               <option value="full-time">{t('employees.fullTime')}</option>
@@ -194,7 +194,7 @@ export default function Employees() {
                     <div className="text-sm text-gray-900">{employee.position}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
                       {employee.employment_type}
                     </span>
                   </td>
@@ -211,7 +211,7 @@ export default function Employees() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">
-                      <Link to={`/employees/${employee.id}`} className="text-blue-600 hover:text-blue-900">
+                      <Link to={`/employees/${employee.id}`} className="text-primary-600 hover:text-primary-900">
                         <Eye className="w-5 h-5" />
                       </Link>
                       <Link to={`/employees/${employee.id}/edit`} className="text-gray-600 hover:text-gray-900">

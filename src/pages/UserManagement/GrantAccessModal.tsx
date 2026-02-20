@@ -38,7 +38,7 @@ export default function GrantAccessModal({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <UserPlus className="w-5 h-5 text-blue-600" />
+            <UserPlus className="w-5 h-5 text-primary-600" />
             <h2 className="text-xl font-semibold text-gray-900">{t('userManagement.grantAccess')}</h2>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -53,7 +53,7 @@ export default function GrantAccessModal({
             <select
               value={formData.employee_id}
               onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             >
               <option value="">{t('userManagement.chooseEmployee')}</option>
@@ -69,15 +69,15 @@ export default function GrantAccessModal({
           </div>
 
           {selectedEmployee && (
-            <div className="bg-blue-50 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
+            <div className="bg-primary-50 rounded-lg p-3">
+              <p className="text-sm text-primary-800">
                 <strong>{t('userManagement.email')}:</strong> {selectedEmployee.email}
               </p>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm text-primary-800">
                 <strong>{t('userManagement.position')}:</strong> {selectedEmployee.position}
               </p>
               {selectedEmployee.departments && (
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-primary-800">
                   <strong>{t('userManagement.department')}:</strong> {selectedEmployee.departments.name}
                 </p>
               )}
@@ -93,7 +93,7 @@ export default function GrantAccessModal({
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
                 required
                 minLength={6}
                 placeholder={t('userManagement.enterPassword')}
@@ -116,7 +116,7 @@ export default function GrantAccessModal({
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'hr' | 'staff' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="staff">{t('userManagement.staff')}</option>
               <option value="hr">{t('userManagement.hr')}</option>
@@ -135,7 +135,7 @@ export default function GrantAccessModal({
             <button
               type="submit"
               disabled={submitting || !formData.employee_id}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
             >
               {submitting ? t('common.processing') : t('userManagement.grantAccessBtn')}
             </button>

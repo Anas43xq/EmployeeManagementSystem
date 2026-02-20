@@ -39,13 +39,13 @@
     "points": "نقاط"
   },
   "auth": {
-    "ems": "المستقبل",
+    "ems": "ديف تيم",
     "adminPortal": "بوابة الإدارة",
     "hrPortal": "بوابة الموارد البشرية",
     "employeePortal": "بوابة الموظفين",
     "staffPortal": "بوابة الموظفين",
-    "employeeManagementSystem": "مجموعة المستقبل",
-    "tagline": "نظام إدارة الموظفين",
+    "employeeManagementSystem": "ديف تيم هب",
+    "tagline": "إدارة الموظفين لفرق تقنية المعلومات",
     "signInToContinue": "سجّل دخولك إلى مساحة العمل",
     "emailAddress": "عنوان البريد الإلكتروني",
     "password": "كلمة المرور",
@@ -93,7 +93,7 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
-    "welcome": "مرحباً بك في StaffHub",
+    "welcome": "مرحباً بك في DevTeam Hub",
     "totalEmployees": "إجمالي الموظفين",
     "activeEmployees": "الموظفون النشطون",
     "departments": "الأقسام",

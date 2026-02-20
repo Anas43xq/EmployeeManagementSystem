@@ -23,7 +23,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             value={formData.department_id}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="">{t('employees.selectDepartment')}</option>
             {departments.map(dept => (
@@ -41,7 +41,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             value={formData.position}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -53,7 +53,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             value={formData.employment_type}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="full-time">{t('employees.fullTime')}</option>
             <option value="part-time">{t('employees.partTime')}</option>
@@ -70,7 +70,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             value={formData.status}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="active">{t('common.active')}</option>
             <option value="inactive">{t('common.inactive')}</option>
@@ -87,7 +87,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             value={formData.hire_date}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -99,7 +99,7 @@ export default function EmploymentDetailsSection({ formData, onChange, departmen
             onChange={onChange}
             step="0.01"
             min="0"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
       </div>

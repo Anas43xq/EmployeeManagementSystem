@@ -44,14 +44,14 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto mb-4"></div>
           {showResetOption && (
             <div className="mt-4">
               <p className="text-gray-600 text-sm mb-2">Taking longer than expected?</p>
               <button
                 onClick={handleReset}
                 disabled={isResetting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 text-sm"
               >
                 {isResetting ? 'Resetting...' : 'Reset Session'}
               </button>

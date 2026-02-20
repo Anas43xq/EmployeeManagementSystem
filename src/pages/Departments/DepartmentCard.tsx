@@ -16,8 +16,8 @@ export default function DepartmentCard({ dept, isAdminOrHR, getHeadName, onEdit,
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start space-x-4">
-        <div className={`p-3 rounded-lg ${dept.type === 'academic' ? 'bg-blue-100' : 'bg-green-100'}`}>
-          <Building2 className={`w-6 h-6 ${dept.type === 'academic' ? 'text-blue-900' : 'text-green-900'}`} />
+        <div className={`p-3 rounded-lg ${dept.type === 'academic' ? 'bg-primary-100' : 'bg-green-100'}`}>
+          <Building2 className={`w-6 h-6 ${dept.type === 'academic' ? 'text-primary-900' : 'text-green-900'}`} />
         </div>
         <div className="flex-1">
           <div className="flex items-start justify-between">
@@ -26,7 +26,7 @@ export default function DepartmentCard({ dept, isAdminOrHR, getHeadName, onEdit,
               <div className="flex space-x-1">
                 <button
                   onClick={() => onEdit(dept)}
-                  className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                  className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
                   title="Edit"
                 >
                   <Edit2 className="w-4 h-4" />
@@ -42,7 +42,7 @@ export default function DepartmentCard({ dept, isAdminOrHR, getHeadName, onEdit,
             )}
           </div>
           <span className={`inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full ${
-            dept.type === 'academic' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+            dept.type === 'academic' ? 'bg-primary-100 text-primary-800' : 'bg-green-100 text-green-800'
           }`}>
             {dept.type}
           </span>

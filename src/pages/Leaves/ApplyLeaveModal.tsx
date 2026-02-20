@@ -50,7 +50,7 @@ export default function ApplyLeaveModal({
             <select
               value={formData.leave_type}
               onChange={(e) => setFormData({ ...formData, leave_type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="annual">{t('leaves.annual')}</option>
               <option value="sick">{t('leaves.sick')}</option>
@@ -68,7 +68,7 @@ export default function ApplyLeaveModal({
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -81,7 +81,7 @@ export default function ApplyLeaveModal({
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 min={formData.start_date}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -89,8 +89,8 @@ export default function ApplyLeaveModal({
 
           {formData.start_date && formData.end_date && (
             <div className="space-y-2">
-              <div className="bg-blue-50 px-3 py-2 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="bg-primary-50 px-3 py-2 rounded-lg">
+                <p className="text-sm text-primary-800">
                   {t('leaves.duration')}: <strong>{calculateDays(formData.start_date, formData.end_date)} {t('common.days')}</strong>
                 </p>
               </div>
@@ -120,7 +120,7 @@ export default function ApplyLeaveModal({
               onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
               rows={3}
               placeholder={t('leaves.reasonPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               required
             />
           </div>
@@ -136,7 +136,7 @@ export default function ApplyLeaveModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {submitting ? (
                 <>

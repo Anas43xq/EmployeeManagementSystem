@@ -61,7 +61,7 @@ export default function Complaints() {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === status
-                  ? 'bg-blue-900 text-white'
+                  ? 'bg-primary-900 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -128,7 +128,7 @@ export default function Complaints() {
               onChange={(e) => setResolutionNotes(e.target.value)}
               required={resolveAction === 'resolved'}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('complaints.resolutionPlaceholder')}
             />
           </div>

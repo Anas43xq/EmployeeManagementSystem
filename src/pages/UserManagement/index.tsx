@@ -70,7 +70,7 @@ export default function UserManagement() {
       case 'hr':
         return <ShieldCheck className="w-4 h-4 text-purple-600" />;
       default:
-        return <Shield className="w-4 h-4 text-blue-600" />;
+        return <Shield className="w-4 h-4 text-primary-600" />;
     }
   };
 
@@ -81,7 +81,7 @@ export default function UserManagement() {
       case 'hr':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary-100 text-primary-800';
     }
   };
 

@@ -137,7 +137,7 @@ export default function Login() {
 
   if (showPasskeyLogin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
           <button
             onClick={() => setShowPasskeyLogin(false)}
@@ -148,7 +148,7 @@ export default function Login() {
           </button>
 
           <div className="flex items-center justify-center mb-8">
-            <div className="bg-blue-900 p-3 rounded-lg">
+            <div className="bg-primary-900 p-3 rounded-lg">
               <Fingerprint className="w-10 h-10 text-white" />
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function Login() {
                 type="email"
                 value={passkeyEmail}
                 onChange={(e) => setPasskeyEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -184,7 +184,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={passkeyLoading}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {passkeyLoading ? (
                 <span>{t('auth.authenticating', 'Authenticating...')}</span>
@@ -203,7 +203,7 @@ export default function Login() {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
           <button
             onClick={() => setShowForgotPassword(false)}
@@ -214,7 +214,7 @@ export default function Login() {
           </button>
 
           <div className="flex items-center justify-center mb-8">
-            <div className="bg-blue-900 p-3 rounded-lg">
+            <div className="bg-primary-900 p-3 rounded-lg">
               <Briefcase className="w-10 h-10 text-white" />
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function Login() {
                 type="email"
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -250,7 +250,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={resetLoading}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {resetLoading ? t('common.sending') : t('auth.sendResetLink')}
             </button>
@@ -261,15 +261,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="flex items-center justify-between mb-6">
           <div />
           <div className="flex flex-col items-center">
-            <div className="bg-blue-900 p-3 rounded-xl mb-3">
+            <div className="bg-primary-900 p-3 rounded-xl mb-3">
               <Briefcase className="w-10 h-10 text-white" />
             </div>
-            <span className="text-xs font-medium text-blue-600 tracking-widest uppercase">{t('auth.tagline', 'Al-Mustaqbal Group')}</span>
+            <span className="text-xs font-medium text-primary-600 tracking-widest uppercase">{t('auth.tagline', 'Employee Management for IT Teams')}</span>
           </div>
           <button
             onClick={toggleLanguage}
@@ -311,7 +311,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             />
           </div>
@@ -324,7 +324,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-blue-900 hover:text-blue-700 transition-colors"
+                className="text-sm text-primary-900 hover:text-primary-700 transition-colors"
               >
                 {t('auth.forgotPassword')}
               </button>
@@ -335,7 +335,7 @@ export default function Login() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
               <button
@@ -351,7 +351,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>

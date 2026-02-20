@@ -25,7 +25,7 @@ export function useAnnouncements() {
 
   const PRIORITY_CONFIG = {
     low: { label: t('announcements.low'), color: 'bg-gray-100 text-gray-700', icon: Info },
-    normal: { label: t('announcements.normal'), color: 'bg-blue-100 text-blue-700', icon: Bell },
+    normal: { label: t('announcements.normal'), color: 'bg-primary-100 text-primary-700', icon: Bell },
     high: { label: t('announcements.high'), color: 'bg-orange-100 text-orange-700', icon: AlertTriangle },
     urgent: { label: t('announcements.urgent'), color: 'bg-red-100 text-red-700', icon: AlertCircle },
   };

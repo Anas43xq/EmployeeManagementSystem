@@ -16,8 +16,8 @@ export default function RecentActivities({ activities }: RecentActivitiesProps) 
         {activities.length > 0 ? (
           activities.map((activity) => (
             <div key={activity.id} className="flex items-start space-x-3 pb-4 border-b border-gray-100 last:border-0">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Clock className="w-4 h-4 text-blue-900" />
+              <div className="bg-primary-100 p-2 rounded-lg">
+                <Clock className="w-4 h-4 text-primary-900" />
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-900">{activity.action}</p>

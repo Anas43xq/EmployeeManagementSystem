@@ -48,7 +48,7 @@ export default function ComplaintFormModal({
               value={formData.subject}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('complaints.subjectPlaceholder')}
             />
           </div>
@@ -63,7 +63,7 @@ export default function ComplaintFormModal({
                 value={formData.category}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -82,7 +82,7 @@ export default function ComplaintFormModal({
                 value={formData.priority}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {priorities.map(priority => (
                   <option key={priority} value={priority}>
@@ -103,13 +103,13 @@ export default function ComplaintFormModal({
               onChange={handleChange}
               required
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder={t('complaints.descriptionPlaceholder')}
             />
           </div>
 
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-            <p className="text-sm text-blue-700">
+          <div className="bg-primary-50 border-l-4 border-primary-400 p-4">
+            <p className="text-sm text-primary-700">
               {t('complaints.confidentialNote')}
             </p>
           </div>

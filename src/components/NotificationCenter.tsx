@@ -94,7 +94,7 @@ export default function NotificationCenter() {
       case 'leave':
         return <Calendar className="w-5 h-5 text-purple-600" />;
       case 'attendance':
-        return <Clock className="w-5 h-5 text-blue-600" />;
+        return <Clock className="w-5 h-5 text-primary-600" />;
       case 'system':
         return <Settings className="w-5 h-5 text-gray-600" />;
       default:
@@ -108,7 +108,7 @@ export default function NotificationCenter() {
       case 'leave':
         return 'bg-purple-50 ltr:border-l-4 rtl:border-r-4 border-purple-600';
       case 'attendance':
-        return 'bg-blue-50 ltr:border-l-4 rtl:border-r-4 border-blue-600';
+        return 'bg-primary-50 ltr:border-l-4 rtl:border-r-4 border-primary-600';
       case 'system':
         return 'bg-gray-100 ltr:border-l-4 rtl:border-r-4 border-gray-600';
       default:
@@ -201,7 +201,7 @@ export default function NotificationCenter() {
             <div className="p-3 border-t border-gray-200 flex justify-center">
               <button
                 onClick={handleClearAll}
-                className="text-sm text-blue-600 hover:text-blue-900 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-900 font-medium"
               >
                 {t('notifications.clearAll')}
               </button>

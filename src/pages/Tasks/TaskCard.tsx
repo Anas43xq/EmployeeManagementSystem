@@ -97,7 +97,7 @@ export default function TaskCard({
               {onEdit && task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => onEdit(task)}
-                  className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                 </button>

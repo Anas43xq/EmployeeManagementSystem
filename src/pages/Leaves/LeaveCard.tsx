@@ -16,8 +16,8 @@ export default function LeaveCard({ leave, userRole, onApprove, onReject }: Leav
     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4 flex-1">
-          <div className="bg-blue-100 p-3 rounded-lg">
-            <Calendar className="w-6 h-6 text-blue-900" />
+          <div className="bg-primary-100 p-3 rounded-lg">
+            <Calendar className="w-6 h-6 text-primary-900" />
           </div>
           <div className="flex-1">
             {userRole !== 'staff' && (
@@ -29,7 +29,7 @@ export default function LeaveCard({ leave, userRole, onApprove, onReject }: Leav
               </div>
             )}
             <div className="flex items-center space-x-4 mb-2">
-              <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+              <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
                 {t(`leaves.${leave.leave_type}`)}
               </span>
               <span className="text-sm text-gray-600">

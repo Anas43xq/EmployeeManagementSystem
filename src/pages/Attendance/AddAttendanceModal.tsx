@@ -61,7 +61,7 @@ export default function AddAttendanceModal({
             <select
               value={formData.employee_id}
               onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">{t('attendance.selectEmployee')}</option>
               {employees.map((emp) => (
@@ -80,7 +80,7 @@ export default function AddAttendanceModal({
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -91,7 +91,7 @@ export default function AddAttendanceModal({
                 type="time"
                 value={formData.check_in}
                 onChange={(e) => setFormData({ ...formData, check_in: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
@@ -100,7 +100,7 @@ export default function AddAttendanceModal({
                 type="time"
                 value={formData.check_out}
                 onChange={(e) => setFormData({ ...formData, check_out: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function AddAttendanceModal({
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="present">{t('attendance.present')}</option>
               <option value="absent">{t('attendance.absent')}</option>
@@ -126,7 +126,7 @@ export default function AddAttendanceModal({
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={2}
               placeholder={t('attendance.optionalNotes')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function AddAttendanceModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? t('common.adding') : t('attendance.addAttendance')}
             </button>

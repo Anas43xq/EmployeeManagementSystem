@@ -20,7 +20,7 @@ export default function EmergencyContactSection({ formData, onChange }: Emergenc
             name="emergency_contact_name"
             value={formData.emergency_contact_name}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
@@ -30,7 +30,7 @@ export default function EmergencyContactSection({ formData, onChange }: Emergenc
             name="emergency_contact_phone"
             value={formData.emergency_contact_phone}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
       </div>

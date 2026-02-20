@@ -80,18 +80,18 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-blue-900 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'} ${isRTL ? 'lg:translate-x-0' : 'lg:translate-x-0'}`}>
+      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-primary-900 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'} ${isRTL ? 'lg:translate-x-0' : 'lg:translate-x-0'}`}>
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-blue-800">
+          <div className="flex items-center justify-between p-4 border-b border-primary-800">
             <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
               <div className="bg-white p-2 rounded-xl shadow-sm">
-                <Briefcase className="w-6 h-6 text-blue-900" />
+                <Briefcase className="w-6 h-6 text-primary-900" />
               </div>
               <div>
                 <h1 className="text-white font-bold text-lg tracking-tight">
-                  {t('auth.ems')} <span className="text-blue-300 font-normal">Group</span>
+                  {t('auth.ems')} <span className="text-primary-300 font-normal">Hub</span>
                 </h1>
-                <p className="text-blue-300 text-[10px] tracking-wide uppercase">
+                <p className="text-primary-300 text-[10px] tracking-wide uppercase">
                   {user?.role === 'admin' && t('auth.adminPortal')}
                   {user?.role === 'hr' && t('auth.hrPortal')}
                   {user?.role === 'staff' && t('auth.staffPortal')}
@@ -100,7 +100,7 @@ export default function Layout() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-white hover:text-blue-200"
+              className="lg:hidden text-white hover:text-primary-200"
             >
               <X className="w-6 h-6" />
             </button>
@@ -116,8 +116,8 @@ export default function Layout() {
                       to={item.href}
                       className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-3 rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-blue-800 text-white'
-                          : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                          ? 'bg-primary-800 text-white'
+                          : 'text-primary-100 hover:bg-primary-800 hover:text-white'
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
@@ -129,9 +129,9 @@ export default function Layout() {
             </ul>
           </nav>
 
-          <div className="p-4 border-t border-blue-800">
-            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-2 mb-2 text-blue-100`}>
-              <div className="w-8 h-8 bg-blue-800 rounded-full flex items-center justify-center">
+          <div className="p-4 border-t border-primary-800">
+            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-2 mb-2 text-primary-100`}>
+              <div className="w-8 h-8 bg-primary-800 rounded-full flex items-center justify-center">
                 <span className="text-sm font-bold">
                   {user?.email.charAt(0).toUpperCase()}
                 </span>
@@ -140,12 +140,12 @@ export default function Layout() {
                 <p className="text-sm font-medium text-white truncate">
                   {user?.email}
                 </p>
-                <p className="text-xs text-blue-300 capitalize">{user?.role}</p>
+                <p className="text-xs text-primary-300 capitalize">{user?.role}</p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className={`w-full flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-3 rounded-lg text-blue-100 hover:bg-blue-800 hover:text-white transition-colors`}
+              className={`w-full flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} px-4 py-3 rounded-lg text-primary-100 hover:bg-primary-800 hover:text-white transition-colors`}
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">{t('auth.signOut')}</span>

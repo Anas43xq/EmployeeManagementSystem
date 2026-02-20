@@ -13,7 +13,7 @@ export default function LeaveStatusFilter({ filter, setFilter }: LeaveStatusFilt
       <button
         onClick={() => setFilter('all')}
         className={`px-4 py-2 rounded-lg font-medium ${
-          filter === 'all' ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-700'
+          filter === 'all' ? 'bg-primary-900 text-white' : 'bg-gray-100 text-gray-700'
         }`}
       >
         {t('leaves.all')}

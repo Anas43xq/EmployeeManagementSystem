@@ -98,7 +98,7 @@ export default function PhotoUpload({
   return (
     <div className="flex items-center space-x-4">
       <div className="relative">
-        <div className="w-24 h-24 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center">
+        <div className="w-24 h-24 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -106,9 +106,9 @@ export default function PhotoUpload({
               className="w-full h-full object-cover"
             />
           ) : initials ? (
-            <span className="text-2xl font-bold text-blue-900">{initials}</span>
+            <span className="text-2xl font-bold text-primary-900">{initials}</span>
           ) : (
-            <User className="w-12 h-12 text-blue-900" />
+            <User className="w-12 h-12 text-primary-900" />
           )}
         </div>
         {previewUrl && (
@@ -143,7 +143,7 @@ export default function PhotoUpload({
           >
             {uploading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2" />
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-2" />
                 {t('employees.uploading')}
               </>
             ) : (

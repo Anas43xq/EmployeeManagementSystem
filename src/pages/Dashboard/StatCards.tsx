@@ -12,7 +12,7 @@ export default function StatCards({ stats, userRole }: StatCardsProps) {
   const { t } = useTranslation();
 
   const allStatCards = [
-    { id: 'totalEmployees', name: t('dashboard.totalEmployees'), value: stats.totalEmployees, icon: Users, color: 'bg-blue-500' },
+    { id: 'totalEmployees', name: t('dashboard.totalEmployees'), value: stats.totalEmployees, icon: Users, color: 'bg-primary-500' },
     { id: 'activeEmployees', name: t('dashboard.activeEmployees'), value: stats.activeEmployees, icon: CheckCircle, color: 'bg-green-500' },
     { id: 'departments', name: t('dashboard.departments'), value: stats.totalDepartments, icon: Building2, color: 'bg-teal-500' },
     { id: 'pendingLeaves', name: t('dashboard.pendingLeaves'), value: stats.pendingLeaves, icon: Calendar, color: 'bg-orange-500' },

@@ -131,7 +131,7 @@ export default function PasskeyManagement() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <Fingerprint className="w-6 h-6 text-blue-600" />
+              <Fingerprint className="w-6 h-6 text-primary-600" />
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   {t('passkeys.title', 'Passkey Management')}
@@ -153,14 +153,14 @@ export default function PasskeyManagement() {
           </div>
 
           {platformAuthAvailable && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
               <div className="flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-blue-600" />
-                <span className="text-blue-800 font-medium">
+                <Shield className="w-5 h-5 text-primary-600" />
+                <span className="text-primary-800 font-medium">
                   {t('passkeys.biometricAvailable', 'Biometric authentication available')}
                 </span>
               </div>
-              <p className="text-blue-700 text-sm mt-1">
+              <p className="text-primary-700 text-sm mt-1">
                 {t('passkeys.biometricDescription', 'You can use face recognition or fingerprint to secure your account.')}
               </p>
             </div>
@@ -168,7 +168,7 @@ export default function PasskeyManagement() {
 
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
               <p className="text-gray-600 mt-2">{t('passkeys.loading', 'Loading passkeys...')}</p>
             </div>
           ) : passkeys.length === 0 ? (
@@ -253,7 +253,7 @@ export default function PasskeyManagement() {
                 value={deviceName}
                 onChange={(e) => setDeviceName(e.target.value)}
                 placeholder={t('passkeys.deviceNamePlaceholder', 'e.g., iPhone, Work Computer, Personal Laptop')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 maxLength={50}
                 required
               />

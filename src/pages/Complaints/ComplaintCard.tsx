@@ -33,7 +33,7 @@ export default function ComplaintCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
+            <MessageSquare className="w-5 h-5 text-primary-600" />
             <h3 className="font-semibold text-gray-900">{complaint.subject}</h3>
             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${categoryColors[complaint.category]}`}>
               {t(`complaints.category.${complaint.category}`)}

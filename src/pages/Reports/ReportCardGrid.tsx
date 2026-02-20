@@ -16,7 +16,7 @@ export default function ReportCardGrid({ loading, onGenerate }: ReportCardGridPr
       name: t('reports.employeeReport'),
       description: t('reports.employeeReportDesc'),
       icon: Users,
-      color: 'bg-blue-500',
+      color: 'bg-primary-500',
     },
     {
       id: 'leave' as ReportType,
@@ -62,11 +62,11 @@ export default function ReportCardGrid({ loading, onGenerate }: ReportCardGridPr
               <button
                 onClick={() => onGenerate(report.id)}
                 disabled={loading}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 text-primary-600 hover:text-primary-900 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
                     <span className="text-sm">{t('reports.generatingReport')}</span>
                   </>
                 ) : (

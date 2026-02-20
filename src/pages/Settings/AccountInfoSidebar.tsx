@@ -31,9 +31,9 @@ export default function AccountInfoSidebar({ user }: AccountInfoSidebarProps) {
       </div>
 
       {(user?.role === 'admin' || user?.role === 'hr') && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-blue-900 mb-2">{t('settings.adminAccess')}</h3>
-          <p className="text-sm text-blue-800">
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
+          <h3 className="font-bold text-primary-900 mb-2">{t('settings.adminAccess')}</h3>
+          <p className="text-sm text-primary-800">
             {t('settings.adminAccessDesc')}
           </p>
         </div>

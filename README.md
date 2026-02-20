@@ -1,9 +1,9 @@
 <p align="center">
-  <h1 align="center">StaffHub</h1>
+  <h1 align="center">DevTeam Hub</h1>
   <p align="center">
-    <strong>Employee Management System</strong>
+    <strong>Modern Employee Management for IT Teams</strong>
     <br />
-    <em>Senior Project - Al-Mustaqbal Group</em>
+    <em>Streamline HR operations for software companies</em>
   </p>
 </p>
 
@@ -20,7 +20,7 @@
 
 ## What is this?
 
-StaffHub is a complete HR management system built for Al-Mustaqbal Group. It handles employee management, attendance tracking, payroll generation, and performance monitoring with biometric authentication support.
+DevTeam Hub is a comprehensive employee management platform built specifically for IT companies and software development teams. It handles team management, attendance tracking, payroll generation, and performance monitoring with modern biometric authentication support.
 
 **Stack**: React + TypeScript frontend, Supabase backend with bilingual support (English/Arabic) and three role-based access levels.
 
@@ -341,14 +341,8 @@ These are pre-seeded and ready to use after running the migration:
 
 Log in with any of these to explore the system from different permission levels.
 
----
 
-## License
-
-Built as a senior graduation project at **Al-Mustaqbal University** for Al-Mustaqbal Group.
-
----
 
 <p align="center">
-  <sub>React + TypeScript + Supabase</sub>
+  <sub>DevTeam Hub — React + TypeScript + Supabase</sub>
 </p>

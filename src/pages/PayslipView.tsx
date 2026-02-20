@@ -100,7 +100,7 @@ export default function PayslipView() {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                       <option key={year} value={year}>{year}</option>
@@ -113,7 +113,7 @@ export default function PayslipView() {
             <div className="p-4">
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
                   <p className="text-gray-600 mt-2 text-sm">{t('payslip.loading', 'Loading...')}</p>
                 </div>
               ) : payrolls.length === 0 ? (
@@ -130,7 +130,7 @@ export default function PayslipView() {
                       onClick={() => setSelectedPayroll(payroll)}
                       className={`w-full text-left p-3 rounded-lg border transition-colors ${
                         selectedPayroll?.id === payroll.id
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-primary-500 bg-primary-50'
                           : 'border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -191,7 +191,7 @@ export default function PayslipView() {
                 <div className="p-4">
                   {detailsLoading ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
                       <p className="text-gray-600 mt-2">{t('payslip.loadingDetails', 'Loading details...')}</p>
                     </div>
                   ) : (
@@ -215,9 +215,9 @@ export default function PayslipView() {
                             -{formatCurrency(selectedPayroll.total_deductions)}
                           </p>
                         </div>
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <p className="text-sm text-blue-700">{t('payslip.netSalary', 'Net Salary')}</p>
-                          <p className="text-xl font-bold text-blue-600">
+                        <div className="bg-primary-50 rounded-lg p-4">
+                          <p className="text-sm text-primary-700">{t('payslip.netSalary', 'Net Salary')}</p>
+                          <p className="text-xl font-bold text-primary-600">
                             {formatCurrency(selectedPayroll.net_salary)}
                           </p>
                         </div>

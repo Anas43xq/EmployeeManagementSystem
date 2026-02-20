@@ -34,7 +34,7 @@ export default function NotificationPrefsCard({
             type="checkbox"
             checked={notificationPrefs.leave_approvals}
             onChange={(e) => setNotificationPrefs(prev => ({ ...prev, leave_approvals: e.target.checked }))}
-            className="rounded text-blue-900 focus:ring-blue-500"
+            className="rounded text-primary-900 focus:ring-primary-500"
           />
           <span className="text-sm text-gray-700">{t('settings.leaveApprovals')}</span>
         </label>
@@ -43,14 +43,14 @@ export default function NotificationPrefsCard({
             type="checkbox"
             checked={notificationPrefs.attendance_reminders}
             onChange={(e) => setNotificationPrefs(prev => ({ ...prev, attendance_reminders: e.target.checked }))}
-            className="rounded text-blue-900 focus:ring-blue-500"
+            className="rounded text-primary-900 focus:ring-primary-500"
           />
           <span className="text-sm text-gray-700">{t('settings.attendanceReminders')}</span>
         </label>
         <button
           onClick={onSave}
           disabled={savingPrefs}
-          className="mt-6 bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50"
+          className="mt-6 bg-primary-900 text-white px-6 py-2 rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
         >
           {savingPrefs ? t('common.saving') : t('settings.savePreferences')}
         </button>

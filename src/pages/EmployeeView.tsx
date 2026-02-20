@@ -146,7 +146,7 @@ export default function EmployeeView() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.email')}</label>
                 <div className="flex items-center text-gray-900">
                   <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                  <a href={`mailto:${employee.email}`} className="hover:text-blue-600">
+                  <a href={`mailto:${employee.email}`} className="hover:text-primary-600">
                     {employee.email}
                   </a>
                 </div>
@@ -155,7 +155,7 @@ export default function EmployeeView() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.phone')}</label>
                 <div className="flex items-center text-gray-900">
                   <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                  <a href={`tel:${employee.phone}`} className="hover:text-blue-600">
+                  <a href={`tel:${employee.phone}`} className="hover:text-primary-600">
                     {employee.phone || t('common.na')}
                   </a>
                 </div>
@@ -204,7 +204,7 @@ export default function EmployeeView() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.employmentType')}</label>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 capitalize">
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize">
                   {employee.employment_type}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export default function EmployeeView() {
               </h2>
               <div className="space-y-3">
                 {employee.qualifications.map((qual, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                  <div key={index} className="border-l-4 border-primary-500 pl-4 py-2">
                     <p className="font-medium text-gray-900">{qual.degree}</p>
                     <p className="text-sm text-gray-600">{qual.institution}</p>
                   </div>
@@ -264,7 +264,7 @@ export default function EmployeeView() {
                 <div className="flex items-center text-gray-900">
                   <Phone className="w-4 h-4 mr-2 text-gray-400" />
                   {employee.emergency_contact_phone ? (
-                    <a href={`tel:${employee.emergency_contact_phone}`} className="hover:text-blue-600">
+                    <a href={`tel:${employee.emergency_contact_phone}`} className="hover:text-primary-600">
                       {employee.emergency_contact_phone}
                     </a>
                   ) : (
