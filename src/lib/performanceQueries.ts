@@ -383,7 +383,7 @@ export async function getTopPerformers(weekStart?: string) {
   }
 
   // Sort by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
-  const sortedData = (data || []).sort((a, b) => {
+  const sortedData = (data || []).sort((a: any, b: any) => {
     // First, sort by total_score descending
     if (b.total_score !== a.total_score) {
       return b.total_score - a.total_score;
