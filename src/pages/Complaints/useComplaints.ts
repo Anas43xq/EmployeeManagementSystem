@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../services/supabase';
+import { supabase, db } from '../../services/supabase';
 import {
   getComplaints,
   createComplaint,
@@ -10,6 +10,7 @@ import {
   deleteComplaint,
   createComplaintNotification,
 } from '../../services/performanceQueries';
+import { notifyHRAndAdmins, createNotification } from '../../services/dbNotifications';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
 import { initialComplaintFormData } from './types';
 
@@ -47,6 +48,30 @@ export function useComplaints() {
     loadComplaints();
   }, [loadComplaints]);
 
+  // Real-time subscription for employee_complaints table
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('complaints-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employee_complaints',
+        },
+        () => {
+          loadComplaints();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadComplaints]);
+
   const filteredComplaints = complaints.filter(complaint => {
     if (filter === 'all') return true;
     return complaint.status === filter;
@@ -70,6 +95,24 @@ export function useComplaints() {
     try {
       await createComplaint(formData, user.employeeId);
       await createComplaintNotification(user.id, 'submitted');
+
+      // Notify HR/Admin about new complaint with email
+      const { data: employeeData } = await db
+        .from('employees')
+        .select('first_name, last_name')
+        .eq('id', user.employeeId)
+        .single() as { data: { first_name: string; last_name: string } | null };
+
+      const employeeName = employeeData
+        ? `${employeeData.first_name} ${employeeData.last_name}`
+        : 'An employee';
+
+      await notifyHRAndAdmins(
+        'New Complaint Submitted',
+        `${employeeName} has submitted a ${formData.category} complaint.`,
+        'complaint',
+        true
+      );
 
       showNotification('success', t('complaints.createSuccess'));
       handleCloseModal();
@@ -119,7 +162,13 @@ export function useComplaints() {
         .maybeSingle() as { data: { id: string } | null; error: any };
 
       if (!userLookupError && employeeUser) {
-        await createComplaintNotification(employeeUser.id, 'status_change', resolveAction);
+        await createNotification(
+          employeeUser.id,
+          'Complaint Status Updated',
+          `Your complaint has been ${resolveAction}. ${resolutionNotes ? 'Notes: ' + resolutionNotes : ''}`,
+          'complaint',
+          true
+        );
       }
 
       showNotification('success', t(`complaints.${resolveAction}`));

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../services/supabase';
+import { supabase, db } from '../../services/supabase';
 import {
   getWarnings,
   createWarning,
@@ -65,6 +65,30 @@ export function useWarnings() {
     loadWarnings();
     loadEmployees();
   }, [loadWarnings, loadEmployees]);
+
+  // Real-time subscription for employee_warnings table
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('warnings-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employee_warnings',
+        },
+        () => {
+          loadWarnings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadWarnings]);
 
   const filteredWarnings = warnings.filter(warning => {
     if (filter === 'all') return true;

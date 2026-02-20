@@ -1229,12 +1229,21 @@ ALTER TABLE public.activity_logs REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.user_preferences REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.passkeys REPLICA IDENTITY DEFAULT;
 
--- Add notifications to realtime publication
+-- Add tables to realtime publication
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notifications') THEN
       ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'leaves') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.leaves;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_complaints') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_complaints;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_warnings') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_warnings;
     END IF;
   END IF;
 END $$;

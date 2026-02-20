@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
+import { supabase, db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createNotification, notifyHRAndAdmins } from '../../services/dbNotifications';
@@ -31,15 +31,27 @@ export function useLeaves() {
     loadLeaveBalance();
   }, [user]);
 
+  // Real-time subscription for leaves table
   useEffect(() => {
     if (!user) return;
 
-    const pollInterval = setInterval(() => {
-      loadLeaves();
-    }, 30000);
+    const channel = supabase
+      .channel('leaves-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leaves',
+        },
+        () => {
+          loadLeaves();
+        }
+      )
+      .subscribe();
 
     return () => {
-      clearInterval(pollInterval);
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
@@ -367,7 +379,7 @@ export function useLeaves() {
           'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
           'leave',
-          false
+          true
         );
       }
 
@@ -438,7 +450,7 @@ export function useLeaves() {
           'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
           'leave',
-          false
+          true
         );
       }
 
