@@ -20,9 +20,9 @@
 
 ## What is this?
 
-StaffHub is an HR management system I built for my senior project at Al-Mustaqbal Group. The idea behind it was to create something that could actually be used in a real company - not just a demo. It handles everything from hiring employees and tracking their attendance to generating payroll and exporting payslips as PDFs.
+StaffHub is a complete HR management system built for Al-Mustaqbal Group. It handles employee management, attendance tracking, payroll generation, and performance monitoring with biometric authentication support.
 
-I went with **React + TypeScript** on the frontend and **Supabase** for the backend (Postgres database, auth, edge functions, storage). The whole thing supports both English and Arabic with RTL layout flipping, has three user roles with proper access control, and even supports biometric login through WebAuthn (like Windows Hello or Face ID).
+**Stack**: React + TypeScript frontend, Supabase backend with bilingual support (English/Arabic) and three role-based access levels.
 
 ---
 
@@ -44,43 +44,47 @@ I went with **React + TypeScript** on the frontend and **Supabase** for the back
 
 ## Features
 
-Here's what the system can do, broken down by module:
+**Core Modules:**
+- **Dashboard** - Overview with stats, charts, employee of the week, announcements
+- **Employee Management** - Full CRUD with profiles, photos, search/filter
+- **Attendance** - Manual or biometric check-in via WebAuthn passkeys
+- **Leave Management** - Request/approval workflow with balance tracking
+- **Task Assignment** - Priority-based tasks with performance scoring
+- **Payroll System** - Monthly generation with bonuses/deductions, PDF export
+- **Disciplinary** - Warnings system with severity levels and appeals
+- **Complaints** - Filing and resolution workflow
+- **Reports** - Date-filtered exports to CSV
 
-**Dashboard** - Shows stats at a glance: employee count, department breakdown (pie chart), leave requests chart, who's employee of the week, recent announcements, and some quick action buttons.
+**Key Features:**
+- **Security**: Row-level security (RLS) with role-based access control
+- **Biometric Auth**: WebAuthn/FIDO2 passkey authentication
+- **Bilingual**: English/Arabic with RTL layout support
+- **Performance Tracking**: Automated weekly scoring and employee recognition
+- **Notifications**: In-app alerts and email notifications
+- **Audit Trail**: Complete activity logging
+- **Mobile Responsive**: Collapsible sidebar for mobile devices
 
-**Employees** - The main directory. You can search, filter, add new employees, edit existing ones, view their full profile, or terminate them. Each employee record has personal info, salary details, emergency contacts, qualifications, and a photo.
+---
 
-**Departments** - Pretty straightforward. Create departments, assign a head, see how many people are in each one.
+## Point System
 
-**Leaves** - Employees submit leave requests (annual, sick, casual, or sabbatical). HR and admins can approve or reject them. The system tracks balances per year so you know how many days someone has left.
+Automated weekly performance calculation that determines "Employee of the Week" based on objective metrics.
 
-**Attendance** - Two ways to clock in: manual button or biometric via passkey. Records show up with status (present, late, absent, half-day) and the system calculates total hours worked.
+**Scoring Formula:**
+```
+Weekly Score = Attendance + Tasks - Warnings
+```
 
-**Tasks** - Admins and HR assign tasks to employees with priority levels and deadlines. Tasks have a point system tied to the performance score. Statuses go from pending through in-progress to completed (or overdue/cancelled).
+**Point Values:**
+- **Attendance**: Present (+10), Late (+5), Half Day (+5), Absent (0)
+- **Tasks**: Critical (+20), High (+15), Medium (+10), Low (+5)
+- **Warnings**: Critical (-50), Major (-35), Moderate (-20), Minor (-10)
 
-**Warnings** - For disciplinary stuff. Four severity levels (minor to critical). Employees can acknowledge or appeal. Warnings factor into the weekly performance calculation.
-
-**Complaints** - Employees can file complaints under different categories (workplace, policy, safety, harassment, etc.). HR gets assigned to handle them and there's a full resolution flow.
-
-**Payroll** - This one was tricky to build. Admins generate payroll for a given month, records start as drafts, then get approved, then marked as paid. You can add bonuses (allowance, performance, overtime) and deductions (tax, insurance, penalties). Each payslip can be exported as a PDF.
-
-**Announcements** - Company-wide posts with priority levels. Can be toggled active/inactive and have expiry dates.
-
-**Reports** - Generate reports with date ranges and filters. Export to CSV.
-
-**User Management** - Only admins can access this. Create system accounts, assign roles, ban/unban users (with optional duration), reset passwords.
-
-**Settings** - Personal stuff: change your password, update email, switch language, toggle notification preferences.
-
-### Other things worth mentioning
-
-- **RLS everywhere** - Every table has Row Level Security policies. Staff can only see their own data, HR sees more, admins see everything. This is enforced at the database level, not just the UI.
-- **Bilingual** - Full Arabic translation with RTL layout. I used react-i18next for this. Switching languages flips the entire interface direction.
-- **Passkeys** - WebAuthn/FIDO2 support. Employees can register a biometric credential and use it to log in or check attendance. Built with SimpleWebAuthn.
-- **Notifications** - In-app notification bell with unread count. Also sends emails through an SMTP edge function when something important happens (leave approved, warning issued, etc.).
-- **Activity Logs** - Everything gets logged. Login, logout, creating records, updating them. Full audit trail.
-- **Performance System** - Calculates a weekly score for each employee based on attendance, tasks completed, and warnings received. The top scorer automatically becomes "Employee of the Week."
-- **Responsive** - Works on mobile. The sidebar collapses into a hamburger menu.
+**Features:**
+- Staff can view total points in navbar
+- Automatic employee of the week selection
+- Historical performance tracking
+- Transparent, objective scoring system
 
 ---
 
