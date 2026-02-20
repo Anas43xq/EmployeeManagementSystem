@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [totalPoints, setTotalPoints] = useState<number | null>(null);
   const { user, signOut } = useAuth();
   const location = useLocation();
