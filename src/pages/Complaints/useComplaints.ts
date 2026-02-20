@@ -118,14 +118,8 @@ export function useComplaints() {
         .eq('employee_id', selectedComplaint.employee_id)
         .maybeSingle() as { data: { id: string } | null; error: any };
 
-      if (userLookupError) {
-        console.error('[Complaint] Failed to look up target user:', userLookupError.message);
-      }
-
-      if (employeeUser) {
+      if (!userLookupError && employeeUser) {
         await createComplaintNotification(employeeUser.id, 'status_change', resolveAction);
-      } else {
-        console.warn('[Complaint] No user account found for employee_id:', selectedComplaint.employee_id);
       }
 
       showNotification('success', t(`complaints.${resolveAction}`));

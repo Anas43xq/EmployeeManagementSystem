@@ -31,12 +31,10 @@ async function sendNotificationEmail(
       .single();
 
     if (userError) {
-      console.error('[Email] Failed to look up user (possible RLS restriction):', userError.message);
       return false;
     }
 
     if (!userData?.employee_id) {
-      console.warn('[Email] No employee_id found for user:', userId);
       return false;
     }
 
@@ -47,12 +45,10 @@ async function sendNotificationEmail(
       .single();
 
     if (empError) {
-      console.error('[Email] Failed to look up employee email:', empError.message);
       return false;
     }
 
     if (!employee?.email) {
-      console.warn('[Email] No email found for employee:', userData.employee_id);
       return false;
     }
 
@@ -63,12 +59,8 @@ async function sendNotificationEmail(
       type,
     });
 
-    if (!sent) {
-      console.error('[Email] sendEmailNotification returned false for:', employee.email);
-    }
     return sent;
-  } catch (err) {
-    console.error('[Email] sendNotificationEmail error:', err);
+  } catch {
     return false;
   }
 }
@@ -92,15 +84,12 @@ export async function createNotification(
     const { error } = await (supabase
       .from('notifications') as any).insert(record);
 
-    if (error) {
-      console.error('[Notification] Insert error:', error);
-    } else {
+    if (!error) {
       notificationSaved = true;
     }
 
     emailSent = await sendNotificationEmail(userId, title, message, type);
-  } catch (err) {
-    console.error('[Notification] createNotification error:', err);
+  } catch {
   }
 
   return { notificationSaved, emailSent };
@@ -125,18 +114,12 @@ export async function createNotifications(
     const { error } = await (supabase
       .from('notifications') as any).insert(records);
 
-    if (error) {
-      console.error('[Notification] Bulk insert error:', error);
-    }
-
-    for (const n of notifications) {
-      const sent = await sendNotificationEmail(n.userId, n.title, n.message, n.type);
-      if (!sent) {
-        console.warn('[Notification] Email failed for user:', n.userId);
+    if (!error) {
+      for (const n of notifications) {
+        await sendNotificationEmail(n.userId, n.title, n.message, n.type);
       }
     }
-  } catch (err) {
-    console.error('[Notification] createNotifications error:', err);
+  } catch {
   }
 }
 

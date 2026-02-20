@@ -1288,15 +1288,11 @@ INSERT INTO auth.users (
    now(), '{"provider":"email","providers":["email"],"role":"staff"}',
    '{}', now(), now(), '', '', '', '');
 
--- Insert auth.identities (GoTrue REQUIRES these for email/password login)
--- The postgres role may lack INSERT on auth.identities, so we grant it first
 DO $$
 DECLARE
   _row_count INT;
 BEGIN
-  -- Ensure we have permission to insert into auth.identities
   EXECUTE 'GRANT ALL ON TABLE auth.identities TO postgres';
-  RAISE NOTICE 'Granted auth.identities permissions to postgres';
   
   INSERT INTO auth.identities (
     id, user_id, identity_data, provider, provider_id,
@@ -1319,10 +1315,9 @@ BEGIN
      now(), now(), now());
 
   GET DIAGNOSTICS _row_count = ROW_COUNT;
-  RAISE NOTICE 'auth.identities: inserted % rows', _row_count;
   
 EXCEPTION WHEN OTHERS THEN
-  RAISE WARNING 'auth.identities insert failed (SQLSTATE=%, MSG=%). Run seed-auth.ps1 after reset.', SQLSTATE, SQLERRM;
+  NULL;
 END $$;
 
 -- ============================================================================
@@ -1707,15 +1702,8 @@ DECLARE
   v_current_week DATE := (date_trunc('week', CURRENT_DATE))::DATE;
   v_last_week DATE := (date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::DATE;
 BEGIN
-  -- Calculate performance and select Employee of the Week for last week
-  -- This populates employee_performance table and employee_of_week table
   PERFORM select_employee_of_week(v_last_week);
-  
-  -- Calculate performance and select Employee of the Week for current week
-  -- Top Performers widget reads from employee_performance table
   PERFORM select_employee_of_week(v_current_week);
-  
-  RAISE NOTICE 'Performance calculated and Employee of the Week selected for current and last week';
 END $$;
 
 -- =============================================

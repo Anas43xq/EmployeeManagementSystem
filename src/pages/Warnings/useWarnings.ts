@@ -95,17 +95,8 @@ export function useWarnings() {
         .eq('employee_id', formData.employee_id)
         .maybeSingle() as { data: { id: string } | null; error: any };
 
-      if (userLookupError) {
-        console.error('[Warning] Failed to look up target user (RLS issue?):', userLookupError.message);
-      }
-
-      if (targetUser) {
-        const result = await createWarningNotification(targetUser.id, formData.severity);
-        if (result && !result.emailSent) {
-          console.warn('[Warning] Warning created but email notification failed to send');
-        }
-      } else {
-        console.warn('[Warning] No user account found for employee_id:', formData.employee_id, '- notification skipped');
+      if (!userLookupError && targetUser) {
+        await createWarningNotification(targetUser.id, formData.severity);
       }
 
       showNotification('success', t('warnings.createSuccess'));
