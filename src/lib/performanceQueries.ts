@@ -482,11 +482,11 @@ export async function createTaskNotification(
     overdue: `Task "${taskTitle}" is now overdue`,
   };
 
-  await createNotification(userId, titles[type], messages[type], 'task');
+  return await createNotification(userId, titles[type], messages[type], 'task');
 }
 
 export async function createWarningNotification(userId: string, severity: string) {
-  await createNotification(
+  return await createNotification(
     userId,
     'New Warning Issued',
     `You have received a ${severity} warning. Please review and acknowledge it.`,
@@ -504,5 +504,5 @@ export async function createComplaintNotification(
     ? 'Your complaint has been submitted and is under review.'
     : `Your complaint status has been updated to: ${status}`;
 
-  await createNotification(userId, title, message, 'complaint');
+  return await createNotification(userId, title, message, 'complaint');
 }

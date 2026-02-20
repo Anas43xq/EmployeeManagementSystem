@@ -670,7 +670,10 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, auth;
 
 -- USERS
 CREATE POLICY "users_select_policy" ON public.users FOR SELECT TO authenticated
-  USING ((select get_user_role()) = 'admin' OR id = (select auth.uid()));
+  USING (
+    (select get_user_role()) IN ('admin', 'hr')
+    OR id = (select auth.uid())
+  );
 CREATE POLICY "users_insert_admin" ON public.users FOR INSERT TO authenticated
   WITH CHECK ((select get_user_role()) = 'admin');
 CREATE POLICY "users_update_admin" ON public.users FOR UPDATE TO authenticated

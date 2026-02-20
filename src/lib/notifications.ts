@@ -16,7 +16,12 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     if (!apiUrl || apiUrl === 'undefined/functions/v1/send-notification-email') {
-      console.warn('[Email] Supabase URL not configured, skipping email');
+      console.warn('[Email] VITE_SUPABASE_URL not configured, skipping email');
+      return false;
+    }
+
+    if (!anonKey) {
+      console.warn('[Email] VITE_SUPABASE_ANON_KEY not configured, skipping email');
       return false;
     }
 

@@ -89,14 +89,23 @@ export function useWarnings() {
     try {
       await createWarning(formData, user.id);
       
-      const { data: targetUser } = await db
+      const { data: targetUser, error: userLookupError } = await db
         .from('users')
         .select('id')
         .eq('employee_id', formData.employee_id)
-        .maybeSingle() as { data: { id: string } | null };
+        .maybeSingle() as { data: { id: string } | null; error: any };
+
+      if (userLookupError) {
+        console.error('[Warning] Failed to look up target user (RLS issue?):', userLookupError.message);
+      }
 
       if (targetUser) {
-        await createWarningNotification(targetUser.id, formData.severity);
+        const result = await createWarningNotification(targetUser.id, formData.severity);
+        if (result && !result.emailSent) {
+          console.warn('[Warning] Warning created but email notification failed to send');
+        }
+      } else {
+        console.warn('[Warning] No user account found for employee_id:', formData.employee_id, '- notification skipped');
       }
 
       showNotification('success', t('warnings.createSuccess'));

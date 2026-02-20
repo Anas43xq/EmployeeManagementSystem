@@ -278,20 +278,28 @@ export function useLeaves() {
         });
       }
 
-      const { data: employeeUser } = await db
+      const { data: employeeUser, error: userLookupError } = await db
         .from('users')
         .select('id')
         .eq('employee_id', leave.employee_id)
-        .single() as { data: { id: string } | null };
+        .single() as { data: { id: string } | null; error: any };
+
+      if (userLookupError) {
+        console.error('[Leave Approve] Failed to look up target user:', userLookupError.message);
+      }
 
       if (employeeUser) {
-        await createNotification(
+        const result = await createNotification(
           employeeUser.id,
           'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
           'leave'
         );
+        if (result && !result.emailSent) {
+          console.warn('[Leave Approve] Notification saved but email failed to send');
+        }
       } else {
+        console.warn('[Leave Approve] No user account found for employee_id:', leave.employee_id);
       }
 
       loadLeaves();
@@ -324,20 +332,28 @@ export function useLeaves() {
         });
       }
 
-      const { data: employeeUser } = await db
+      const { data: employeeUser, error: userLookupError } = await db
         .from('users')
         .select('id')
         .eq('employee_id', leave.employee_id)
-        .single() as { data: { id: string } | null };
+        .single() as { data: { id: string } | null; error: any };
+
+      if (userLookupError) {
+        console.error('[Leave Reject] Failed to look up target user:', userLookupError.message);
+      }
 
       if (employeeUser) {
-        await createNotification(
+        const result = await createNotification(
           employeeUser.id,
           'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
           'leave'
         );
+        if (result && !result.emailSent) {
+          console.warn('[Leave Reject] Notification saved but email failed to send');
+        }
       } else {
+        console.warn('[Leave Reject] No user account found for employee_id:', leave.employee_id);
       }
 
       loadLeaves();

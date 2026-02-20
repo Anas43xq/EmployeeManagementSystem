@@ -22,38 +22,54 @@ async function sendNotificationEmail(
   title: string,
   message: string,
   type: NotificationType
-): Promise<void> {
+): Promise<boolean> {
   try {
-    const { data: userData } = await db
+    const { data: userData, error: userError } = await db
       .from('users')
       .select('employee_id')
       .eq('id', userId)
       .single();
 
-    if (!userData?.employee_id) {
-      console.warn('[Email] No employee_id found for user:', userId);
-      return;
+    if (userError) {
+      console.error('[Email] Failed to look up user (possible RLS restriction):', userError.message);
+      return false;
     }
 
-    const { data: employee } = await db
+    if (!userData?.employee_id) {
+      console.warn('[Email] No employee_id found for user:', userId);
+      return false;
+    }
+
+    const { data: employee, error: empError } = await db
       .from('employees')
       .select('email')
       .eq('id', userData.employee_id)
       .single();
 
-    if (!employee?.email) {
-      console.warn('[Email] No email found for employee:', userData.employee_id);
-      return;
+    if (empError) {
+      console.error('[Email] Failed to look up employee email:', empError.message);
+      return false;
     }
 
-    await sendEmailNotification({
+    if (!employee?.email) {
+      console.warn('[Email] No email found for employee:', userData.employee_id);
+      return false;
+    }
+
+    const sent = await sendEmailNotification({
       to: employee.email,
       subject: title,
       body: message,
       type,
     });
+
+    if (!sent) {
+      console.error('[Email] sendEmailNotification returned false for:', employee.email);
+    }
+    return sent;
   } catch (err) {
     console.error('[Email] sendNotificationEmail error:', err);
+    return false;
   }
 }
 
@@ -62,7 +78,10 @@ export async function createNotification(
   title: string,
   message: string,
   type: NotificationType
-): Promise<void> {
+): Promise<{ notificationSaved: boolean; emailSent: boolean }> {
+  let notificationSaved = false;
+  let emailSent = false;
+
   try {
     const record: NotificationInsert = {
       user_id: userId,
@@ -75,12 +94,16 @@ export async function createNotification(
 
     if (error) {
       console.error('[Notification] Insert error:', error);
+    } else {
+      notificationSaved = true;
     }
 
-    await sendNotificationEmail(userId, title, message, type);
+    emailSent = await sendNotificationEmail(userId, title, message, type);
   } catch (err) {
     console.error('[Notification] createNotification error:', err);
   }
+
+  return { notificationSaved, emailSent };
 }
 
 export async function createNotifications(
@@ -107,7 +130,10 @@ export async function createNotifications(
     }
 
     for (const n of notifications) {
-      await sendNotificationEmail(n.userId, n.title, n.message, n.type);
+      const sent = await sendNotificationEmail(n.userId, n.title, n.message, n.type);
+      if (!sent) {
+        console.warn('[Notification] Email failed for user:', n.userId);
+      }
     }
   } catch (err) {
     console.error('[Notification] createNotifications error:', err);

@@ -114,14 +114,20 @@ export function useTasks() {
       } else {
         await createTask(formData, user.id);
         
-        const { data: targetUser } = await db
+        const { data: targetUser, error: userLookupError } = await db
           .from('users')
           .select('id')
           .eq('employee_id', formData.employee_id)
-          .maybeSingle() as { data: { id: string } | null };
+          .maybeSingle() as { data: { id: string } | null; error: any };
+
+        if (userLookupError) {
+          console.error('[Task] Failed to look up target user:', userLookupError.message);
+        }
 
         if (targetUser) {
           await createTaskNotification(targetUser.id, formData.title, 'assigned');
+        } else {
+          console.warn('[Task] No user account found for employee_id:', formData.employee_id);
         }
 
         showNotification('success', t('tasks.createSuccess'));
