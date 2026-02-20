@@ -188,7 +188,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-3 sm:p-6 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

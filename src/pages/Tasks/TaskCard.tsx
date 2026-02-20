@@ -27,17 +27,19 @@ export default function TaskCard({
     : 'Unknown';
 
   return (
-    <div className={`bg-white border rounded-lg p-4 ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-gray-900">{task.title}</h3>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[task.priority]}`}>
-              {t(`tasks.priority.${task.priority}`)}
-            </span>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[task.status]}`}>
-              {t(`tasks.status.${task.status}`)}
-            </span>
+    <div className={`bg-white border rounded-lg p-4 overflow-hidden ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="mb-2">
+            <h3 className="font-semibold text-gray-900 break-words">{task.title}</h3>
+            <div className="flex flex-wrap gap-1 mt-1">
+              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[task.priority]}`}>
+                {t(`tasks.priority.${task.priority}`)}
+              </span>
+              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[task.status]}`}>
+                {t(`tasks.status.${task.status}`)}
+              </span>
+            </div>
           </div>
 
           {task.description && (
@@ -71,13 +73,14 @@ export default function TaskCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* Employee actions */}
           {isStaff && task.status === 'pending' && (
             <Button
               variant="secondary"
               onClick={() => onStatusChange(task.id, 'in_progress')}
               icon={<Clock className="w-4 h-4" />}
+              className="text-sm"
             >
               {t('tasks.startTask')}
             </Button>
@@ -86,6 +89,7 @@ export default function TaskCard({
             <Button
               onClick={() => onStatusChange(task.id, 'completed')}
               icon={<CheckCircle className="w-4 h-4" />}
+              className="text-sm"
             >
               {t('tasks.markComplete')}
             </Button>

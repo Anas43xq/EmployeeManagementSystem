@@ -158,22 +158,23 @@ export default function PayslipView() {
           <Card>
             {selectedPayroll ? (
               <>
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
+                <div className="p-4 border-b border-gray-200 -m-6 mb-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">
                         {t('payslip.payslipFor', 'Payslip for')} {getMonthName(selectedPayroll.period_month)} {selectedPayroll.period_year}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 truncate">
                         {selectedPayroll.employees.first_name} {selectedPayroll.employees.last_name} • {selectedPayroll.employees.employee_number}
                       </p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2 shrink-0">
                       <Button
                         variant="secondary"
                         icon={<Eye className="w-4 h-4" />}
                         onClick={() => loadPayrollDetails(selectedPayroll)}
                         loading={detailsLoading}
+                        className="text-sm"
                       >
                         {t('payslip.refresh', 'Refresh')}
                       </Button>
@@ -181,8 +182,9 @@ export default function PayslipView() {
                         variant="primary"
                         icon={<Download className="w-4 h-4" />}
                         onClick={() => handleDownloadPDF(selectedPayroll)}
+                        className="text-sm"
                       >
-                        {t('payslip.downloadPDF', 'Download PDF')}
+                        {t('payslip.downloadPDF', 'Download')}
                       </Button>
                     </div>
                   </div>
@@ -195,55 +197,55 @@ export default function PayslipView() {
                       <p className="text-gray-600 mt-2">{t('payslip.loadingDetails', 'Loading details...')}</p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm text-gray-600">{t('payslip.baseSalary', 'Base Salary')}</p>
-                          <p className="text-xl font-bold text-gray-900">
+                    <div className="space-y-6 -mx-6 -mb-6">
+                      <div className="px-4 grid grid-cols-2 gap-2 sm:gap-3">
+                        <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
+                          <p className="text-xs text-gray-600 truncate">{t('payslip.baseSalary', 'Base Salary')}</p>
+                          <p className="text-sm sm:text-lg font-bold text-gray-900 truncate">
                             {formatCurrency(selectedPayroll.base_salary)}
                           </p>
                         </div>
-                        <div className="bg-green-50 rounded-lg p-4">
-                          <p className="text-sm text-green-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
-                          <p className="text-xl font-bold text-blue-600">
+                        <div className="bg-green-50 rounded-lg p-2 sm:p-3">
+                          <p className="text-xs text-green-700 truncate">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
+                          <p className="text-sm sm:text-lg font-bold text-blue-600 truncate">
                             +{formatCurrency(selectedPayroll.total_bonuses)}
                           </p>
                         </div>
-                        <div className="bg-red-50 rounded-lg p-4">
-                          <p className="text-sm text-red-700">{t('payslip.totalDeductions', 'Total Deductions')}</p>
-                          <p className="text-xl font-bold text-red-600">
+                        <div className="bg-red-50 rounded-lg p-2 sm:p-3">
+                          <p className="text-xs text-red-700 truncate">{t('payslip.totalDeductions', 'Deductions')}</p>
+                          <p className="text-sm sm:text-lg font-bold text-red-600 truncate">
                             -{formatCurrency(selectedPayroll.total_deductions)}
                           </p>
                         </div>
-                        <div className="bg-primary-50 rounded-lg p-4">
-                          <p className="text-sm text-primary-700">{t('payslip.netSalary', 'Net Salary')}</p>
-                          <p className="text-xl font-bold text-primary-600">
+                        <div className="bg-primary-50 rounded-lg p-2 sm:p-3">
+                          <p className="text-xs text-primary-700 truncate">{t('payslip.netSalary', 'Net Salary')}</p>
+                          <p className="text-sm sm:text-lg font-bold text-primary-600 truncate">
                             {formatCurrency(selectedPayroll.net_salary)}
                           </p>
                         </div>
                       </div>
 
                       {bonuses.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                            <TrendingUp className="w-5 h-5 text-green-500 mr-2" />
+                        <div className="px-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center text-sm">
+                            <TrendingUp className="w-4 h-4 text-green-500 mr-2 shrink-0" />
                             {t('payslip.bonuses', 'Bonuses')}
                           </h4>
-                          <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-                            <table className="w-full min-w-[400px]">
+                          <div className="-mx-4 overflow-x-auto">
+                            <table className="w-full min-w-[320px]">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.type', 'Type')}</th>
-                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
-                                  <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.amount', 'Amount')}</th>
+                                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.type', 'Type')}</th>
+                                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
+                                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.amount', 'Amount')}</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {bonuses.map((bonus) => (
                                   <tr key={bonus.id} className="border-t border-gray-100">
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-900 whitespace-nowrap">{bonus.type}</td>
-                                    <td className="py-2 px-3 text-sm text-gray-600">{bonus.description || '-'}</td>
-                                    <td className="py-2 px-3 text-sm font-medium text-blue-600 text-right whitespace-nowrap">
+                                    <td className="py-2 px-3 text-xs font-medium text-gray-900">{bonus.type}</td>
+                                    <td className="py-2 px-3 text-xs text-gray-600 max-w-[120px] truncate">{bonus.description || '-'}</td>
+                                    <td className="py-2 px-3 text-xs font-medium text-blue-600 text-right whitespace-nowrap">
                                       +{formatCurrency(bonus.amount)}
                                     </td>
                                   </tr>
@@ -255,26 +257,26 @@ export default function PayslipView() {
                       )}
 
                       {deductions.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                            <TrendingDown className="w-5 h-5 text-red-500 mr-2" />
+                        <div className="px-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center text-sm">
+                            <TrendingDown className="w-4 h-4 text-red-500 mr-2 shrink-0" />
                             {t('payslip.deductions', 'Deductions')}
                           </h4>
-                          <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-                            <table className="w-full min-w-[400px]">
+                          <div className="-mx-4 overflow-x-auto">
+                            <table className="w-full min-w-[320px]">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.type', 'Type')}</th>
-                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
-                                  <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.amount', 'Amount')}</th>
+                                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.type', 'Type')}</th>
+                                  <th className="text-left py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
+                                  <th className="text-right py-2 px-3 text-xs font-medium text-gray-700">{t('payslip.amount', 'Amount')}</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {deductions.map((deduction) => (
                                   <tr key={deduction.id} className="border-t border-gray-100">
-                                    <td className="py-2 px-3 text-sm font-medium text-gray-900 whitespace-nowrap">{deduction.type}</td>
-                                    <td className="py-2 px-3 text-sm text-gray-600">{deduction.description || '-'}</td>
-                                    <td className="py-2 px-3 text-sm font-medium text-red-600 text-right whitespace-nowrap">
+                                    <td className="py-2 px-3 text-xs font-medium text-gray-900">{deduction.type}</td>
+                                    <td className="py-2 px-3 text-xs text-gray-600 max-w-[120px] truncate">{deduction.description || '-'}</td>
+                                    <td className="py-2 px-3 text-xs font-medium text-red-600 text-right whitespace-nowrap">
                                       -{formatCurrency(deduction.amount)}
                                     </td>
                                   </tr>
@@ -286,9 +288,9 @@ export default function PayslipView() {
                       )}
 
                       {selectedPayroll.notes && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-yellow-800 mb-2">{t('payslip.notes', 'Notes')}</h4>
-                          <p className="text-yellow-700 text-sm">{selectedPayroll.notes}</p>
+                        <div className="mx-4 mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <h4 className="font-semibold text-yellow-800 mb-1 text-sm">{t('payslip.notes', 'Notes')}</h4>
+                          <p className="text-yellow-700 text-xs break-words">{selectedPayroll.notes}</p>
                         </div>
                       )}
                     </div>

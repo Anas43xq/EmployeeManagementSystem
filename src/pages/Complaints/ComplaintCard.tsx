@@ -29,24 +29,28 @@ export default function ComplaintCard({
     : null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-5 h-5 text-primary-600" />
-            <h3 className="font-semibold text-gray-900">{complaint.subject}</h3>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${categoryColors[complaint.category]}`}>
-              {t(`complaints.category.${complaint.category}`)}
-            </span>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[complaint.priority]}`}>
-              {t(`complaints.priority.${complaint.priority}`)}
-            </span>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[complaint.status]}`}>
-              {t(`complaints.status.${complaint.status}`)}
-            </span>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2 mb-2">
+            <MessageSquare className="w-5 h-5 text-primary-600 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-gray-900 break-words">{complaint.subject}</h3>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${categoryColors[complaint.category]}`}>
+                  {t(`complaints.category.${complaint.category}`)}
+                </span>
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[complaint.priority]}`}>
+                  {t(`complaints.priority.${complaint.priority}`)}
+                </span>
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColors[complaint.status]}`}>
+                  {t(`complaints.status.${complaint.status}`)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <p className="text-sm text-gray-600 mb-3">{complaint.description}</p>
+          <p className="text-sm text-gray-600 mb-3 break-words">{complaint.description}</p>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
             {!isStaff && (
@@ -80,47 +84,48 @@ export default function ComplaintCard({
           )}
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
-          {/* Admin/HR actions */}
-          {!isStaff && (
-            <>
-              {complaint.status === 'pending' && onTakeReview && (
+        {/* Admin/HR actions */}
+        {!isStaff && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {complaint.status === 'pending' && onTakeReview && (
+              <Button
+                variant="secondary"
+                onClick={() => onTakeReview(complaint.id)}
+                icon={<Eye className="w-4 h-4" />}
+                className="text-sm"
+              >
+                {t('complaints.takeReview')}
+              </Button>
+            )}
+            {complaint.status === 'under_review' && onResolve && (
+              <>
+                <Button
+                  onClick={() => onResolve(complaint, 'resolved')}
+                  icon={<CheckCircle className="w-4 h-4" />}
+                  className="text-sm"
+                >
+                  {t('complaints.resolve')}
+                </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => onTakeReview(complaint.id)}
-                  icon={<Eye className="w-4 h-4" />}
+                  onClick={() => onResolve(complaint, 'dismissed')}
+                  icon={<XCircle className="w-4 h-4" />}
+                  className="text-sm"
                 >
-                  {t('complaints.takeReview')}
+                  {t('complaints.dismiss')}
                 </Button>
-              )}
-              {complaint.status === 'under_review' && onResolve && (
-                <>
-                  <Button
-                    onClick={() => onResolve(complaint, 'resolved')}
-                    icon={<CheckCircle className="w-4 h-4" />}
-                  >
-                    {t('complaints.resolve')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => onResolve(complaint, 'dismissed')}
-                    icon={<XCircle className="w-4 h-4" />}
-                  >
-                    {t('complaints.dismiss')}
-                  </Button>
-                </>
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => onDelete(complaint.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </>
-          )}
-        </div>
+              </>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(complaint.id)}
+                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

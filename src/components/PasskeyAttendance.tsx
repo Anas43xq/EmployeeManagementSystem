@@ -91,14 +91,14 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
   }
 
   return (
-    <Card>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+    <Card className="!p-0">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div className="flex items-center space-x-3">
-            <div className="bg-primary-100 p-2 rounded-lg">
+            <div className="bg-primary-100 p-2 rounded-lg shrink-0">
               <Fingerprint className="w-6 h-6 text-primary-600" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-lg font-semibold text-gray-900">
                 {t('attendance.biometricAttendance')}
               </h3>
