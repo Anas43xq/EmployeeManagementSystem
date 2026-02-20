@@ -17,10 +17,6 @@ export interface DbNotification {
   created_at: string;
 }
 
-/**
- * Looks up the user's email and sends an email notification.
- * Runs as fire-and-forget so it doesn't block the caller.
- */
 async function sendNotificationEmail(
   userId: string,
   title: string,
@@ -28,7 +24,6 @@ async function sendNotificationEmail(
   type: NotificationType
 ): Promise<void> {
   try {
-    // Look up email: users -> employees -> email
     const { data: userData } = await db
       .from('users')
       .select('employee_id')
@@ -52,8 +47,6 @@ async function sendNotificationEmail(
       type,
     });
   } catch (err) {
-    // Don't let email failures affect the main notification flow
-    console.error('Error sending notification email:', err);
   }
 }
 
@@ -74,13 +67,10 @@ export async function createNotification(
       .from('notifications') as any).insert(record);
 
     if (error) {
-      console.error('Failed to create notification:', error);
     }
 
-    // Also send email notification (fire-and-forget)
     sendNotificationEmail(userId, title, message, type);
   } catch (err) {
-    console.error('Error creating notification:', err);
   }
 }
 
@@ -104,15 +94,12 @@ export async function createNotifications(
       .from('notifications') as any).insert(records);
 
     if (error) {
-      console.error('Failed to create notifications:', error);
     }
 
-    // Also send email for each notification (fire-and-forget)
     for (const n of notifications) {
       sendNotificationEmail(n.userId, n.title, n.message, n.type);
     }
   } catch (err) {
-    console.error('Error creating notifications:', err);
   }
 }
 
@@ -128,7 +115,6 @@ export async function notifyHRAndAdmins(
       .in('role', ['admin', 'hr']);
 
     if (fetchError) {
-      console.error('Failed to fetch HR/Admin users:', fetchError);
       return;
     }
 
@@ -143,7 +129,6 @@ export async function notifyHRAndAdmins(
 
     await createNotifications(notifications);
   } catch (err) {
-    console.error('Error notifying HR/Admins:', err);
   }
 }
 
@@ -159,13 +144,11 @@ export async function fetchUnreadNotifications(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch notifications:', error);
       return [];
     }
 
     return (data || []) as DbNotification[];
   } catch (err) {
-    console.error('Error fetching notifications:', err);
     return [];
   }
 }
@@ -183,13 +166,11 @@ export async function fetchNotifications(
       .limit(limit);
 
     if (error) {
-      console.error('Failed to fetch notifications:', error);
       return [];
     }
 
     return (data || []) as DbNotification[];
   } catch (err) {
-    console.error('Error fetching notifications:', err);
     return [];
   }
 }
@@ -203,10 +184,8 @@ export async function markNotificationRead(notificationId: string): Promise<void
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Failed to mark notification as read:', error);
     }
   } catch (err) {
-    console.error('Error marking notification as read:', err);
   }
 }
 
@@ -220,10 +199,8 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
       .eq('is_read', false);
 
     if (error) {
-      console.error('Failed to mark all notifications as read:', error);
     }
   } catch (err) {
-    console.error('Error marking all notifications as read:', err);
   }
 }
 
@@ -235,9 +212,7 @@ export async function deleteNotification(notificationId: string): Promise<void> 
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Failed to delete notification:', error);
     }
   } catch (err) {
-    console.error('Error deleting notification:', err);
   }
 }

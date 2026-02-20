@@ -29,12 +29,9 @@ export function useLeaves() {
     loadLeaveBalance();
   }, [user]);
 
-  // Use polling instead of realtime for leaves (reduces database load)
-  // Realtime for leaves caused heavy database overhead
   useEffect(() => {
     if (!user) return;
 
-    // Poll every 30 seconds for leave updates
     const pollInterval = setInterval(() => {
       loadLeaves();
     }, 30000);
@@ -57,7 +54,6 @@ export function useLeaves() {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading leave balance:', error);
         return;
       }
 
@@ -83,7 +79,6 @@ export function useLeaves() {
         }
       }
     } catch (error) {
-      console.error('Error loading leave balance:', error);
     }
   };
 
@@ -106,7 +101,6 @@ export function useLeaves() {
       let query = db
         .from('leaves')
         .select(`
-          *,
           employees (
             first_name,
             last_name,
@@ -125,7 +119,6 @@ export function useLeaves() {
       if (error) throw error;
       setLeaves(data || []);
     } catch (error) {
-      console.error('Error loading leaves:', error);
     } finally {
       setLoading(false);
     }
@@ -176,7 +169,6 @@ export function useLeaves() {
           .eq('year', currentYear);
       }
     } catch (error) {
-      console.error('Error updating leave balance:', error);
     }
   };
 
@@ -253,7 +245,6 @@ export function useLeaves() {
       setShowApplyModal(false);
       loadLeaves();
     } catch (error) {
-      console.error('Error submitting leave request:', error);
       showNotification('error', 'Failed to submit leave request');
     } finally {
       setSubmitting(false);
@@ -300,12 +291,10 @@ export function useLeaves() {
           'leave'
         );
       } else {
-        console.warn('No user linked to employee for leave approval notification, employee_id:', leave.employee_id);
       }
 
       loadLeaves();
     } catch (error) {
-      console.error('Error approving leave:', error);
       showNotification('error', 'Failed to approve leave request');
     }
   };
@@ -348,12 +337,10 @@ export function useLeaves() {
           'leave'
         );
       } else {
-        console.warn('No user linked to employee for leave rejection notification, employee_id:', leave.employee_id);
       }
 
       loadLeaves();
     } catch (error) {
-      console.error('Error rejecting leave:', error);
       showNotification('error', 'Failed to reject leave request');
     }
   };

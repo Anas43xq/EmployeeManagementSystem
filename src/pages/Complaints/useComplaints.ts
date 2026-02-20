@@ -37,7 +37,6 @@ export function useComplaints() {
       const data = await getComplaints(filters);
       setComplaints(data);
     } catch (error) {
-      console.error('Error loading complaints:', error);
       showNotification('error', t('complaints.loadFailed'));
     } finally {
       setLoading(false);
@@ -76,7 +75,6 @@ export function useComplaints() {
       handleCloseModal();
       loadComplaints();
     } catch (error: any) {
-      console.error('Error creating complaint:', error);
       showNotification('error', error.message || t('complaints.createFailed'));
     } finally {
       setSubmitting(false);
@@ -93,7 +91,6 @@ export function useComplaints() {
       showNotification('success', t('complaints.underReview'));
       loadComplaints();
     } catch (error: any) {
-      console.error('Error taking review:', error);
       showNotification('error', error.message || t('complaints.reviewFailed'));
     }
   };
@@ -115,7 +112,6 @@ export function useComplaints() {
         resolvedBy: user.id,
       });
 
-      // Notify the employee
       const { data: employeeUser } = await db
         .from('users')
         .select('id')
@@ -132,7 +128,6 @@ export function useComplaints() {
       setResolutionNotes('');
       loadComplaints();
     } catch (error: any) {
-      console.error('Error resolving complaint:', error);
       showNotification('error', error.message || t('complaints.resolveFailed'));
     } finally {
       setSubmitting(false);
@@ -145,7 +140,6 @@ export function useComplaints() {
       showNotification('success', t('complaints.deleteSuccess'));
       loadComplaints();
     } catch (error: any) {
-      console.error('Error deleting complaint:', error);
       showNotification('error', error.message || t('complaints.deleteFailed'));
     }
   };

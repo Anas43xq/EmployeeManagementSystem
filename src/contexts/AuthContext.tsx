@@ -3,7 +3,6 @@ import { User, AuthError } from '@supabase/supabase-js';
 import { supabase, db } from '../lib/supabase';
 import { logActivity } from '../lib/activityLog';
 import { 
-  validateAndRecoverSession, 
   clearAuthState, 
   recordAuthSuccess, 
   resetSessionHealth 
@@ -15,7 +14,6 @@ const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
   const message = error.message?.toLowerCase() || '';
   const name = error.name?.toLowerCase() || '';
   
-  // Ignore AbortError - it's usually a race condition, not a real error
   if (name === 'aborterror' || message.includes('aborterror') || message.includes('signal is aborted')) {
     return false;
   }
@@ -46,7 +44,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Cache user data to prevent redundant database calls
 const userDataCache = new Map<string, { data: AuthUser; timestamp: number }>();
 const USER_CACHE_TTL = 60000; // 1 minute
 
@@ -56,28 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initRef = useRef(false);
   const loadingUserRef = useRef<string | null>(null);
 
-  // Memoized loadUserData to prevent race conditions
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
-    // Prevent concurrent loads for the same user
-    if (loadingUserRef.current === authUser.id) {
-      console.log('[Auth] Already loading user data, skipping...');
-      return null;
-    }
-    
-    // Check cache first
     const cached = userDataCache.get(authUser.id);
     if (cached && Date.now() - cached.timestamp < USER_CACHE_TTL) {
-      console.log('[Auth] Using cached user data');
       return cached.data;
+    }
+
+    if (loadingUserRef.current === authUser.id) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const cachedAfterWait = userDataCache.get(authUser.id);
+      if (cachedAfterWait) return cachedAfterWait.data;
+      return null;
     }
     
     loadingUserRef.current = authUser.id;
     
     try {
-      // First try to get role from JWT metadata (fastest)
       const role = (authUser.app_metadata?.role || authUser.user_metadata?.role) as UserRole | undefined;
       
-      // Fetch employee_id from database
       const { data, error } = await db
         .from('users')
         .select('role, employee_id')
@@ -85,8 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.error('[Auth] Error loading user data:', error);
-        // Fall back to JWT role or default
         const userData: AuthUser = {
           id: authUser.id,
           email: authUser.email || '',
@@ -103,13 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         employeeId: data?.employee_id || null,
       };
       
-      // Update cache
       userDataCache.set(authUser.id, { data: userData, timestamp: Date.now() });
       recordAuthSuccess();
       
       return userData;
     } catch (error) {
-      console.error('[Auth] Unexpected error in loadUserData:', error);
       const userData: AuthUser = {
         id: authUser.id,
         email: authUser.email || '',
@@ -123,38 +112,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Prevent double initialization in React StrictMode
     if (initRef.current) return;
     initRef.current = true;
     
     let mounted = true;
     const initTimeout = setTimeout(() => {
-      // Safety timeout - if still loading after 10s, force complete
       if (mounted && loading) {
-        console.warn('[Auth] Initialization timeout - forcing completion');
         setLoading(false);
       }
-    }, 10000);
+    }, 8000);
 
     const initAuth = async () => {
       try {
-        // Validate session first using session manager
-        const isValid = await validateAndRecoverSession();
-        
-        if (!isValid) {
-          console.log('[Auth] No valid session found');
-          if (mounted) {
-            setUser(null);
-            setLoading(false);
-          }
-          return;
-        }
-        
-        // Get the session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error || !session?.user) {
-          console.log('[Auth] Session error or no user:', error?.message);
           if (mounted) {
             setUser(null);
             setLoading(false);
@@ -162,13 +134,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        // Load user data
         const userData = await loadUserData(session.user);
         if (mounted && userData) {
           setUser(userData);
         }
       } catch (error) {
-        console.error('[Auth] Init error:', error);
         if (isRefreshTokenError(error as Error)) {
           await clearAuthState();
         }
@@ -182,10 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     initAuth();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Auth] State change:', event);
-      
       if (event === 'SIGNED_OUT') {
         userDataCache.clear();
         clearAllCache();
@@ -196,8 +163,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (event === 'TOKEN_REFRESHED') {
-        // Token refreshed, no need to reload user data
-        console.log('[Auth] Token refreshed successfully');
         return;
       }
       
@@ -209,33 +174,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible' || !mounted) return;
+      
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!session || error) {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshData.session) {
+            if (mounted) {
+              userDataCache.clear();
+              setUser(null);
+            }
+          }
+          return;
+        }
+
+        const expiresAt = session.expires_at || 0;
+        const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
+        if (expiresIn < 120) {
+          await supabase.auth.refreshSession();
+        }
+      } catch {
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       mounted = false;
       clearTimeout(initTimeout);
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [loadUserData]);
 
   const resetSession = useCallback(async () => {
-    console.log('[Auth] Manual session reset requested');
     setLoading(true);
     
     try {
-      // Clear all caches
       userDataCache.clear();
       clearAllCache();
       resetSessionHealth();
       await clearAuthState();
       
-      // Wait for storage changes to settle
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Try to get fresh session
       const { data: { session }, error } = await supabase.auth.getSession();
       
-      // Ignore AbortError as it's usually a race condition
       if (error && (error.message?.includes('AbortError') || error.name === 'AbortError')) {
-        console.warn('[Auth] Ignoring AbortError during reset');
         setUser(null);
         return;
       }
@@ -247,10 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('[Auth] Reset error:', error);
-      // Ignore AbortError
       if (error instanceof Error && (error.message?.includes('AbortError') || error.name === 'AbortError')) {
-        console.warn('[Auth] Ignoring AbortError during reset');
       }
       setUser(null);
     } finally {
@@ -259,7 +244,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadUserData]);
 
   const signIn = async (email: string, password: string) => {
-    // Clear any stale state before signing in
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();
@@ -282,7 +266,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logActivity(user.id, 'user_logout', 'user', user.id);
     }
 
-    // Clear caches before signing out
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();

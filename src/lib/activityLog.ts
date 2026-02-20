@@ -67,10 +67,8 @@ export async function logActivity(
       .from('activity_logs') as any).insert(record);
 
     if (error) {
-      console.error('Failed to log activity:', error);
     }
   } catch (err) {
-    console.error('Error logging activity:', err);
   }
 }
 
@@ -96,9 +94,7 @@ export async function logActivities(
       .from('activity_logs') as any).insert(records);
 
     if (error) {
-      console.error('Failed to log activities:', error);
     }
   } catch (err) {
-    console.error('Error logging activities:', err);
   }
 }

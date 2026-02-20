@@ -38,7 +38,6 @@ export default function EmployeeView() {
       const { data, error } = await db
         .from('employees')
         .select(`
-          *,
           departments!department_id (name)
         `)
         .eq('id', id!)
@@ -54,7 +53,6 @@ export default function EmployeeView() {
 
       setEmployee(data as Employee);
     } catch (error) {
-      console.error('Error loading employee:', error);
       showNotification('error', t('employees.failedToLoadDetails'));
       navigate('/employees');
     } finally {
@@ -82,7 +80,6 @@ export default function EmployeeView() {
       setTerminateModal(false);
       loadEmployee(); // Reload employee data
     } catch (error: any) {
-      console.error('Error terminating employee:', error);
       showNotification('error', error.message || t('employees.failedToTerminate'));
     } finally {
       setTerminating(false);

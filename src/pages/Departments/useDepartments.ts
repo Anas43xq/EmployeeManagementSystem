@@ -34,7 +34,6 @@ export function useDepartments() {
       const { data, error } = await (db
         .from('departments') as any)
         .select(`
-          *,
           employees!employees_department_id_fkey (count)
         `)
         .order('name');
@@ -42,7 +41,6 @@ export function useDepartments() {
       if (error) throw error;
       setDepartments(data || []);
     } catch (error) {
-      console.error('Error loading departments:', error);
       showNotification('error', 'Failed to load departments');
     } finally {
       setLoading(false);
@@ -60,7 +58,6 @@ export function useDepartments() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
-      console.error('Error loading employees:', error);
     }
   };
 
@@ -133,7 +130,6 @@ export function useDepartments() {
       setShowModal(false);
       loadDepartments();
     } catch (error: any) {
-      console.error('Error saving department:', error);
       showNotification('error', error.message || 'Failed to save department');
     } finally {
       setSubmitting(false);
@@ -166,7 +162,6 @@ export function useDepartments() {
 
       loadDepartments();
     } catch (error: any) {
-      console.error('Error deleting department:', error);
       showNotification('error', error.message || 'Failed to delete department');
     }
   };

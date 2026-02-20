@@ -41,7 +41,6 @@ export default function AnnouncementsWidget() {
 
       setAnnouncements(data || []);
     } catch (err) {
-      console.error('Error loading announcements:', err);
     } finally {
       setLoading(false);
     }

@@ -72,7 +72,6 @@ export async function registerPasskey(deviceName: string): Promise<PasskeyRegist
     });
 
     if (!optionsResponse.ok) {
-      // Handle edge function not deployed or 404 error
       if (optionsResponse.status === 404) {
         return { 
           success: false, 
@@ -115,7 +114,6 @@ export async function registerPasskey(deviceName: string): Promise<PasskeyRegist
     };
 
   } catch (error) {
-    console.error('Passkey registration error:', error);
     const isAborted = error instanceof Error &&
       (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
     return {
@@ -138,7 +136,6 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     });
 
     if (error) {
-      // Handle edge function not deployed or 404 error
       if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
         return { 
           success: false, 
@@ -194,7 +191,6 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     };
 
   } catch (error) {
-    console.error('Passkey authentication error:', error);
     const isAborted = error instanceof Error &&
       (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
     return {
@@ -228,7 +224,6 @@ export async function verifyPasskeyAttendance(
     });
 
     if (error) {
-      // Handle edge function not deployed or 404 error
       if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
         return { 
           success: false, 
@@ -273,7 +268,6 @@ export async function verifyPasskeyAttendance(
     };
 
   } catch (error) {
-    console.error('Passkey attendance verification error:', error);
     const isAborted = error instanceof Error &&
       (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
     return {
@@ -298,7 +292,6 @@ export async function getUserPasskeys(): Promise<Passkey[]> {
 
     return (data || []) as Passkey[];
   } catch (error) {
-    console.error('Error fetching user passkeys:', error);
     return [];
   }
 }
@@ -316,7 +309,6 @@ export async function deletePasskey(passkeyId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error deleting passkey:', error);
     return false;
   }
 }

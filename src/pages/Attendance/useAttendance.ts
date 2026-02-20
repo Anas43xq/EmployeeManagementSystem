@@ -69,7 +69,6 @@ export function useAttendance() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (err) {
-      console.error('Error loading employees:', err);
     }
   };
 
@@ -78,7 +77,6 @@ export function useAttendance() {
       let query = db
         .from('attendance')
         .select(`
-          *,
           employees (
             first_name,
             last_name,
@@ -97,7 +95,6 @@ export function useAttendance() {
       if (error) throw error;
       setAttendanceRecords(data || []);
     } catch (error) {
-      console.error('Error loading attendance:', error);
     } finally {
       setLoading(false);
     }
@@ -144,7 +141,6 @@ export function useAttendance() {
         loadAttendance();
       }
     } catch (error) {
-      console.error('Error marking attendance:', error);
       showNotification('error', t('attendance.checkInFailed'));
     }
   };
@@ -174,7 +170,6 @@ export function useAttendance() {
 
       loadAttendance();
     } catch (error) {
-      console.error('Error checking out:', error);
       showNotification('error', t('attendance.checkOutFailed'));
     }
   };
@@ -241,7 +236,6 @@ export function useAttendance() {
         loadAttendance();
       }
     } catch (err: any) {
-      console.error('Error adding attendance:', err);
       setError(err.message || t('attendance.failedToAdd'));
     } finally {
       setSubmitting(false);

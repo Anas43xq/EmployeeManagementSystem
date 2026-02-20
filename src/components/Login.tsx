@@ -59,7 +59,6 @@ export default function Login() {
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      // Check if user is banned
       const errorMessage = err?.message?.toLowerCase() || '';
       if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
         setError(t('auth.accountBanned'));
@@ -114,7 +113,6 @@ export default function Login() {
         showNotification('success', t('auth.passkeyLoginSuccess', 'Signed in with passkey successfully!'));
         navigate('/dashboard', { replace: true });
       } else {
-        // Check if user is banned
         const errorMessage = result.error?.toLowerCase() || '';
         if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
           setError(t('auth.accountBanned'));

@@ -52,7 +52,6 @@ Deno.serve(async (req: Request) => {
     const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || smtpUser;
 
     if (!smtpUser || !smtpPass) {
-      console.error("SMTP credentials not configured");
       throw new Error("SMTP credentials not configured. Set SMTP_USER and SMTP_PASS (Gmail App Password).");
     }
 
@@ -75,10 +74,6 @@ Deno.serve(async (req: Request) => {
       html: htmlTemplate,
     });
 
-    console.log(`Email sent successfully to ${to}`);
-    console.log(`Message ID: ${info.messageId}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Type: ${type}`);
 
     return new Response(
       JSON.stringify({
@@ -101,7 +96,6 @@ Deno.serve(async (req: Request) => {
     );
 
   } catch (error) {
-    console.error("Error sending email via SMTP:", error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 

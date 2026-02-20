@@ -11,10 +11,6 @@ interface State {
   error: Error | null;
 }
 
-/**
- * Error Boundary component to catch and handle React errors
- * Prevents the entire app from crashing due to component errors
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -26,7 +22,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[ErrorBoundary] Caught error:', error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -39,7 +34,6 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleClearAndReload = () => {
-    // Clear auth-related localStorage entries
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -126,10 +120,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-/**
- * Lightweight error boundary for route-level errors
- * Shows less intrusive UI for navigation errors
- */
 export class RouteErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -141,7 +131,6 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[RouteErrorBoundary] Route error:', error);
     this.props.onError?.(error, errorInfo);
   }
 

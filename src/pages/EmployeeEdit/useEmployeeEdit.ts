@@ -59,7 +59,6 @@ export function useEmployeeEdit() {
       if (error) throw error;
       setDepartments(data || []);
     } catch (error) {
-      console.error('Error loading departments:', error);
       showNotification('error', t('employees.failedToLoadDepartments'));
     }
   };
@@ -103,7 +102,6 @@ export function useEmployeeEdit() {
         photo_url: data.photo_url || '',
       });
     } catch (error) {
-      console.error('Error loading employee:', error);
       showNotification('error', t('employees.failedToLoadDetails'));
       navigate('/employees');
     } finally {
@@ -171,7 +169,6 @@ export function useEmployeeEdit() {
 
       navigate(`/employees/${newEmployeeId || id}`);
     } catch (error: any) {
-      console.error('Error saving employee:', error);
       showNotification('error', error.message || t('employees.failedToSave'));
     } finally {
       setSaving(false);

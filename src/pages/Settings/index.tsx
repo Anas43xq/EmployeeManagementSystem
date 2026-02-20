@@ -75,7 +75,6 @@ export default function Settings() {
       if (error) throw error;
       showNotification('success', t('settings.prefsSaved'));
     } catch (err) {
-      console.error('Error saving preferences:', err);
       showNotification('error', 'Failed to save preferences');
     } finally {
       setSavingPrefs(false);
@@ -115,7 +114,6 @@ export default function Settings() {
       await db.auth.signOut();
       navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
     } catch (error: any) {
-      console.error('Error updating email:', error);
       if (error?.message?.includes('same')) {
         showNotification('info', 'New email is the same as current email');
       } else {

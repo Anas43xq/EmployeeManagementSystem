@@ -47,7 +47,6 @@ export default function PayrollDashboard() {
 
   const [selectedPayrolls, setSelectedPayrolls] = useState<string[]>([]);
 
-  // Payslip view modal state
   const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
   const [viewingPayroll, setViewingPayroll] = useState<PayrollData | null>(null);
   const [bonuses, setBonuses] = useState<BonusData[]>([]);
@@ -159,7 +158,6 @@ export default function PayrollDashboard() {
 
   const selectAllDraftPayrolls = () => {
     const draftPayrolls = payrolls.filter(p => p.status === 'draft').map(p => p.id);
-    // Toggle: if all drafts are already selected, deselect all; otherwise select all
     if (selectedPayrolls.length === draftPayrolls.length && draftPayrolls.length > 0) {
       setSelectedPayrolls([]);
     } else {

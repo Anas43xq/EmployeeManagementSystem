@@ -26,7 +26,7 @@ export interface Leave {
   leave_type: string;
   start_date: string;
   end_date: string;
-  days: number;
+  days_count: number;
   status: string;
   reason: string | null;
 }
@@ -42,7 +42,6 @@ export interface Attendance {
   check_in: string | null;
   check_out: string | null;
   status: string;
-  hours_worked: number | null;
 }
 
 export interface DepartmentReport {

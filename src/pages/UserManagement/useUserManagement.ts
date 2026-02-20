@@ -52,7 +52,6 @@ export function useUserManagement() {
       const { data, error } = await db
         .from('users')
         .select(`
-          *,
           employees!inner (
             id,
             email,
@@ -71,7 +70,6 @@ export function useUserManagement() {
       if (error) throw error;
       setUsers((data || []) as User[]);
     } catch (error) {
-      console.error('Error loading users:', error);
       showNotification('error', t('userManagement.failedToLoad'));
     } finally {
       setLoading(false);
@@ -113,7 +111,6 @@ export function useUserManagement() {
       
       setEmployeesWithoutAccess(withoutAccess);
     } catch (error) {
-      console.error('Error loading employees:', error);
     }
   };
 
@@ -176,7 +173,6 @@ export function useUserManagement() {
       loadUsers();
       loadEmployeesWithoutAccess();
     } catch (error: any) {
-      console.error('Error granting access:', error);
       showNotification('error', error.message || t('userManagement.failedToGrantAccess'));
     } finally {
       setSubmitting(false);
@@ -212,7 +208,6 @@ export function useUserManagement() {
       setSelectedUser(null);
       loadUsers();
     } catch (error: any) {
-      console.error('Error updating user:', error);
       showNotification('error', error.message || t('userManagement.failedToUpdate'));
     } finally {
       setSubmitting(false);
@@ -250,7 +245,6 @@ export function useUserManagement() {
       loadUsers();
       loadEmployeesWithoutAccess();
     } catch (error: any) {
-      console.error('Error revoking access:', error);
       showNotification('error', error.message || t('userManagement.failedToRevokeAccess'));
     } finally {
       setSubmitting(false);
@@ -281,7 +275,6 @@ export function useUserManagement() {
       setShowResetPasswordModal(false);
       setSelectedUser(null);
     } catch (error: any) {
-      console.error('Error sending password reset:', error);
       showNotification('error', error.message || t('userManagement.failedToResetPassword'));
     } finally {
       setSubmitting(false);
@@ -345,7 +338,6 @@ export function useUserManagement() {
       setSelectedUser(null);
       loadUsers();
     } catch (error: any) {
-      console.error('Error banning user:', error);
       showNotification('error', error.message || t('userManagement.failedToBan'));
     } finally {
       setSubmitting(false);
@@ -375,7 +367,6 @@ export function useUserManagement() {
       setSelectedUser(null);
       loadUsers();
     } catch (error: any) {
-      console.error('Error unbanning user:', error);
       showNotification('error', error.message || t('userManagement.failedToUnban'));
     } finally {
       setSubmitting(false);
@@ -406,7 +397,6 @@ export function useUserManagement() {
 
       loadUsers();
     } catch (error: any) {
-      console.error('Error deactivating user:', error);
       showNotification('error', error.message || t('userManagement.failedToDeactivate'));
     } finally {
       setSubmitting(false);
@@ -432,7 +422,6 @@ export function useUserManagement() {
 
       loadUsers();
     } catch (error: any) {
-      console.error('Error activating user:', error);
       showNotification('error', error.message || t('userManagement.failedToActivate'));
     } finally {
       setSubmitting(false);

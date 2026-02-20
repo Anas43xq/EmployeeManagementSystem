@@ -29,7 +29,6 @@ export function useReports() {
       if (error) throw error;
       setDepartments(data || []);
     } catch (error) {
-      console.error('Error loading departments:', error);
     }
   };
 
@@ -97,7 +96,7 @@ export function useReports() {
         leave_type,
         start_date,
         end_date,
-        days,
+        days_count,
         status,
         reason
       `)
@@ -123,7 +122,7 @@ export function useReports() {
       'Leave Type': leave.leave_type,
       'Start Date': format(new Date(leave.start_date), 'yyyy-MM-dd'),
       'End Date': format(new Date(leave.end_date), 'yyyy-MM-dd'),
-      'Days': leave.days,
+      'Days': leave.days_count,
       'Status': leave.status,
       'Reason': leave.reason || 'N/A',
     }));
@@ -142,8 +141,7 @@ export function useReports() {
         date,
         check_in,
         check_out,
-        status,
-        hours_worked
+        status
       `)
       .order('date', { ascending: false });
 
@@ -168,7 +166,9 @@ export function useReports() {
       'Check In': att.check_in || 'N/A',
       'Check Out': att.check_out || 'N/A',
       'Status': att.status,
-      'Hours Worked': att.hours_worked || 0,
+      'Hours Worked': att.check_in && att.check_out
+        ? Math.round(((new Date(`1970-01-01T${att.check_out}`) as any) - (new Date(`1970-01-01T${att.check_in}`) as any)) / 3600000 * 100) / 100
+        : 0,
     }));
   };
 
@@ -318,7 +318,6 @@ export function useReports() {
         showNotification('warning', t('reports.noData'));
       }
     } catch (error) {
-      console.error('Error generating report:', error);
       showNotification('error', t('reports.reportFailed'));
     } finally {
       setLoading(false);

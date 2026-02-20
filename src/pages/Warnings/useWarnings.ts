@@ -39,7 +39,6 @@ export function useWarnings() {
       const data = await getWarnings(filters);
       setWarnings(data);
     } catch (error) {
-      console.error('Error loading warnings:', error);
       showNotification('error', t('warnings.loadFailed'));
     } finally {
       setLoading(false);
@@ -59,7 +58,6 @@ export function useWarnings() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
-      console.error('Error loading employees:', error);
     }
   }, [isStaff]);
 
@@ -91,7 +89,6 @@ export function useWarnings() {
     try {
       await createWarning(formData, user.id);
       
-      // Send notification to employee
       const { data: targetUser } = await db
         .from('users')
         .select('id')
@@ -106,7 +103,6 @@ export function useWarnings() {
       handleCloseModal();
       loadWarnings();
     } catch (error: any) {
-      console.error('Error creating warning:', error);
       showNotification('error', error.message || t('warnings.createFailed'));
     } finally {
       setSubmitting(false);
@@ -119,7 +115,6 @@ export function useWarnings() {
       showNotification('success', t('warnings.acknowledged'));
       loadWarnings();
     } catch (error: any) {
-      console.error('Error acknowledging warning:', error);
       showNotification('error', error.message || t('warnings.acknowledgeFailed'));
     }
   };
@@ -142,7 +137,6 @@ export function useWarnings() {
       setResolutionNotes('');
       loadWarnings();
     } catch (error: any) {
-      console.error('Error resolving warning:', error);
       showNotification('error', error.message || t('warnings.resolveFailed'));
     } finally {
       setSubmitting(false);
@@ -155,7 +149,6 @@ export function useWarnings() {
       showNotification('success', t('warnings.deleteSuccess'));
       loadWarnings();
     } catch (error: any) {
-      console.error('Error deleting warning:', error);
       showNotification('error', error.message || t('warnings.deleteFailed'));
     }
   };

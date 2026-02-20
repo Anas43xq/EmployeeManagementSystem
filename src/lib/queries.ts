@@ -10,7 +10,6 @@ export async function fetchActiveEmployees(includeNumber?: boolean): Promise<Emp
       .order('first_name');
 
     if (error) {
-      console.error('Error loading employees:', error);
       return [];
     }
     return (data || []) as EmployeeWithNumber[];
@@ -22,7 +21,6 @@ export async function fetchActiveEmployees(includeNumber?: boolean): Promise<Emp
       .order('first_name');
 
     if (error) {
-      console.error('Error loading employees:', error);
       return [];
     }
     return (data || []) as EmployeeBasic[];

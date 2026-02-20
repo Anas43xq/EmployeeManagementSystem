@@ -64,7 +64,6 @@ export default function PhotoUpload({
         });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
         if (uploadError.message.includes('bucket') || uploadError.message.includes('not found')) {
           alert(t('employees.photoBucketNotConfigured'));
           setPreviewUrl(currentPhotoUrl || null);
@@ -79,7 +78,6 @@ export default function PhotoUpload({
 
       onPhotoChange(publicUrl);
     } catch (error) {
-      console.error('Error uploading photo:', error);
       alert(t('employees.photoUploadFailed'));
       setPreviewUrl(currentPhotoUrl || null);
     } finally {

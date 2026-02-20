@@ -36,7 +36,6 @@ export default function ChangePasswordCard() {
 
     setLoading(true);
     try {
-      // Verify current password by attempting to sign in
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) throw new Error('User not found');
 
@@ -50,14 +49,12 @@ export default function ChangePasswordCard() {
         return;
       }
 
-      // Update to new password
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
       await supabase.auth.signOut();
       navigate('/login', { state: { successMessage: t('settings.passwordChanged', 'Password changed successfully!') } });
     } catch (error: any) {
-      console.error('Error changing password:', error);
       showNotification('error', error.message || t('resetPassword.failedToChange'));
     } finally {
       setLoading(false);

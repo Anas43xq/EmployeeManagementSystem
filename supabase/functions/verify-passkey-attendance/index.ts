@@ -307,7 +307,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in verify-passkey-attendance:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 

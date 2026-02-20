@@ -16,7 +16,6 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     if (!apiUrl || apiUrl === 'undefined/functions/v1/send-notification-email') {
-      console.error('Email notification failed: VITE_SUPABASE_URL is not configured');
       return false;
     }
 
@@ -31,14 +30,12 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Failed to send email notification (${response.status}):`, errorText);
       return false;
     }
 
     await response.json();
     return true;
   } catch (error) {
-    console.error('Error sending email notification:', error);
     return false;
   }
 }

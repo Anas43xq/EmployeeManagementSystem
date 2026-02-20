@@ -31,7 +31,6 @@ export async function banUser(
     });
 
     if (error) {
-      // Handle edge function not deployed
       if (error.message?.includes('non-2xx') || error.message?.includes('404')) {
         return {
           success: false,
@@ -43,7 +42,6 @@ export async function banUser(
 
     return data;
   } catch (error: any) {
-    console.error('Error banning user:', error);
     return {
       success: false,
       error: error.message || 'Failed to ban user',
@@ -80,7 +78,6 @@ export async function unbanUser(userId: string): Promise<ManageUserStatusResult>
 
     return data;
   } catch (error: any) {
-    console.error('Error unbanning user:', error);
     return {
       success: false,
       error: error.message || 'Failed to unban user',
@@ -117,7 +114,6 @@ export async function deactivateUser(userId: string): Promise<ManageUserStatusRe
 
     return data;
   } catch (error: any) {
-    console.error('Error deactivating user:', error);
     return {
       success: false,
       error: error.message || 'Failed to deactivate user',
@@ -154,7 +150,6 @@ export async function activateUser(userId: string): Promise<ManageUserStatusResu
 
     return data;
   } catch (error: any) {
-    console.error('Error activating user:', error);
     return {
       success: false,
       error: error.message || 'Failed to activate user',
@@ -191,7 +186,6 @@ export async function getUserStatus(userId: string): Promise<ManageUserStatusRes
 
     return data;
   } catch (error: any) {
-    console.error('Error getting user status:', error);
     return {
       success: false,
       error: error.message || 'Failed to get user status',

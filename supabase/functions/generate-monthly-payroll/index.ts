@@ -24,20 +24,9 @@ serve(async (req) => {
   }
 
   try {
-    // Get auth header (case-insensitive)
     let authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     
-    // Also check for apikey header as fallback
-    const apiKey = req.headers.get('apikey');
-    
-    console.log('Headers received:', {
-      hasAuth: !!authHeader,
-      hasApiKey: !!apiKey,
-      authPrefix: authHeader?.substring(0, 20)
-    });
-    
     if (!authHeader) {
-      console.error('No Authorization header provided');
       return new Response(
         JSON.stringify({ error: 'No authorization header', hint: 'Please ensure you are logged in' }),
         {
@@ -47,12 +36,10 @@ serve(async (req) => {
       );
     }
 
-    // Ensure Bearer prefix
     if (!authHeader.startsWith('Bearer ')) {
       authHeader = `Bearer ${authHeader}`;
     }
 
-    // Extract the raw JWT token from the Authorization header
     const token = authHeader.replace('Bearer ', '');
 
     const supabaseClient = createClient(
@@ -65,19 +52,9 @@ serve(async (req) => {
       }
     );
 
-    // IMPORTANT: Pass token explicitly to getUser() because Edge Functions
-    // have no persistent storage, so getUser() without a token would try
-    // getSession() → find no stored session → return null → 401
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     
-    console.log('Auth result:', { 
-      hasUser: !!user, 
-      userId: user?.id,
-      error: authError?.message 
-    });
-    
     if (authError || !user) {
-      console.error('Auth error:', authError?.message || 'No user found');
       return new Response(
         JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'Invalid or expired token' }),
         {
@@ -87,7 +64,6 @@ serve(async (req) => {
       );
     }
 
-    // Use service role for admin operations to bypass RLS
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -100,7 +76,10 @@ serve(async (req) => {
       .single();
 
     if (userError) {
-      console.error('Error fetching user role:', userError.message);
+      return new Response(
+        JSON.stringify({ error: 'Error fetching user role' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (!userData || !['admin', 'hr'].includes(userData.role)) {
@@ -326,7 +305,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in generate-monthly-payroll:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       {

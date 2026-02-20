@@ -54,18 +54,15 @@ export async function generateMonthlyPayroll(
   employeeIds?: string[]
 ): Promise<PayrollCalculationResult> {
   try {
-    // Use getFreshAccessToken for critical payroll operations to ensure valid token
     const accessToken = await getFreshAccessToken();
     
     if (!accessToken) {
-      console.error('[Payroll] No valid session - could not get access token');
       return {
         success: false,
         message: 'Session expired. Please log out and log in again to generate payroll.'
       };
     }
 
-    console.log('[Payroll] Calling payroll function with fresh token...');
 
     const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
       body: {
@@ -80,9 +77,7 @@ export async function generateMonthlyPayroll(
     });
 
     if (error) {
-      console.error('[Payroll] Error:', error);
       
-      // Check if it's an auth error
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         return {
           success: false,
@@ -93,11 +88,9 @@ export async function generateMonthlyPayroll(
       throw new Error(error.message || 'Failed to generate payroll');
     }
 
-    // Check if data contains an error (non-2xx responses may return error in data)
     if (data?.error) {
       const errorMsg = data.error + (data.details ? `: ${data.details}` : '');
       
-      // Provide user-friendly messages for common errors
       if (errorMsg.includes('Unauthorized') || errorMsg.includes('Invalid or expired token')) {
         return {
           success: false,
@@ -117,7 +110,6 @@ export async function generateMonthlyPayroll(
 
     return data;
   } catch (error) {
-    console.error('[Payroll] Error generating payroll:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to generate payroll'
@@ -151,7 +143,6 @@ export async function calculateEmployeePayroll(
 
     return data;
   } catch (error) {
-    console.error('[Payroll] Error calculating employee payroll:', error);
     throw error;
   }
 }
@@ -161,7 +152,6 @@ export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
     const accessToken = await getFreshAccessToken();
     
     if (!accessToken) {
-      console.error('[Payroll] No valid session for approval');
       return false;
     }
     
@@ -181,7 +171,6 @@ export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
 
     return data.success;
   } catch (error) {
-    console.error('[Payroll] Error approving payroll:', error);
     return false;
   }
 }
@@ -193,7 +182,6 @@ export async function getPayrollRecords(
   status?: string
 ): Promise<PayrollData[]> {
   try {
-    // Build query with all filters applied unconditionally using match
     const filters: Record<string, unknown> = {};
     if (month) filters.period_month = month;
     if (year) filters.period_year = year;
@@ -203,7 +191,6 @@ export async function getPayrollRecords(
     const { data, error } = await db
       .from('payrolls')
       .select(`
-        *,
         employees (
           first_name,
           last_name,
@@ -222,7 +209,6 @@ export async function getPayrollRecords(
 
     return (data || []) as unknown as PayrollData[];
   } catch (error) {
-    console.error('Error fetching payroll records:', error);
     return [];
   }
 }
@@ -241,7 +227,6 @@ export async function getBonuses(employeeId: string, month: number, year: number
 
     return data || [];
   } catch (error) {
-    console.error('Error fetching bonuses:', error);
     return [];
   }
 }
@@ -260,7 +245,6 @@ export async function getDeductions(employeeId: string, month: number, year: num
 
     return data || [];
   } catch (error) {
-    console.error('Error fetching deductions:', error);
     return [];
   }
 }
@@ -291,7 +275,6 @@ export async function addBonus(
 
     return true;
   } catch (error) {
-    console.error('Error adding bonus:', error);
     return false;
   }
 }
@@ -322,7 +305,6 @@ export async function addDeduction(
 
     return true;
   } catch (error) {
-    console.error('Error adding deduction:', error);
     return false;
   }
 }

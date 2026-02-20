@@ -13,7 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify the request is from an authenticated admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -27,7 +26,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify the caller is authenticated and is an admin
     const token = authHeader.replace('Bearer ', '');
     const { data: { user: callerUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
@@ -38,7 +36,6 @@ serve(async (req) => {
       );
     }
 
-    // Check if caller is admin
     const { data: callerData, error: callerError } = await supabaseAdmin
       .from('users')
       .select('role')
@@ -61,7 +58,6 @@ serve(async (req) => {
       );
     }
 
-    // Prevent self-modification
     if (userId === callerUser.id) {
       return new Response(
         JSON.stringify({ error: 'Cannot modify your own account status' }),
@@ -73,7 +69,6 @@ serve(async (req) => {
 
     switch (action) {
       case 'ban': {
-        // Ban duration in hours (e.g., 24 for 1 day, 720 for 30 days, 'none' for permanent)
         const duration = banDuration === 'permanent' ? '876000h' : `${banDuration}h`; // 100 years for permanent
         
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -82,7 +77,6 @@ serve(async (req) => {
 
         if (error) throw error;
 
-        // Update the users table with ban info
         await supabaseAdmin
           .from('users')
           .update({
@@ -98,14 +92,12 @@ serve(async (req) => {
       }
 
       case 'unban': {
-        // Remove ban by setting ban_duration to 'none'
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
           ban_duration: 'none',
         });
 
         if (error) throw error;
 
-        // Update the users table
         await supabaseAdmin
           .from('users')
           .update({
@@ -121,7 +113,6 @@ serve(async (req) => {
       }
 
       case 'deactivate': {
-        // Deactivate user without banning (just disable in our system)
         await supabaseAdmin
           .from('users')
           .update({
@@ -135,7 +126,6 @@ serve(async (req) => {
       }
 
       case 'activate': {
-        // Activate user
         await supabaseAdmin
           .from('users')
           .update({
@@ -149,7 +139,6 @@ serve(async (req) => {
       }
 
       case 'get-status': {
-        // Get user's current ban status from Supabase Auth
         const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
         
         if (error) throw error;
@@ -188,7 +177,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error managing user status:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Failed to manage user status' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

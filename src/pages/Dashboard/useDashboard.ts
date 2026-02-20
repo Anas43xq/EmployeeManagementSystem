@@ -110,7 +110,6 @@ export function useDashboard() {
       setLeaveStatusData(leaveData);
 
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }

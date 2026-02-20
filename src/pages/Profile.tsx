@@ -31,7 +31,6 @@ export default function Profile() {
         const { data, error } = await db
           .from('employees')
           .select(`
-            *,
             departments!department_id (name)
           `)
           .eq('id', user.employeeId)
@@ -59,7 +58,6 @@ export default function Profile() {
       const { data, error } = await db
         .from('employees')
         .select(`
-          *,
           departments!department_id (name)
         `)
         .eq('id', userRecord.employee_id)
@@ -68,7 +66,6 @@ export default function Profile() {
       if (error) throw error;
       setEmployee(data as Employee);
     } catch (error) {
-      console.error('Error loading profile:', error);
       showNotification('error', t('employees.failedToLoadDetails'));
     } finally {
       setLoading(false);

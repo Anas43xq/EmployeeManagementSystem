@@ -73,7 +73,6 @@ export default function ResetPassword() {
         setValidating(false);
         setTimeout(() => navigate('/login'), 3000);
       } catch (error) {
-        console.error('Token validation error:', error);
         showNotification('error', t('resetPassword.invalidLink'));
         setValidating(false);
         setTimeout(() => navigate('/login'), 3000);
@@ -158,7 +157,6 @@ export default function ResetPassword() {
       await supabase.auth.signOut();
       navigate('/login', { state: { successMessage: t('resetPassword.passwordChanged') } });
     } catch (error: any) {
-      console.error('Error changing password:', error);
 
       if (error.message?.includes('Invalid Refresh Token')) {
         showNotification('error', t('resetPassword.sessionExpired'));

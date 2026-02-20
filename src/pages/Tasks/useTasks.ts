@@ -37,7 +37,6 @@ export function useTasks() {
       const data = await getTasks(filters);
       setTasks(data);
     } catch (error) {
-      console.error('Error loading tasks:', error);
       showNotification('error', t('tasks.loadFailed'));
     } finally {
       setLoading(false);
@@ -57,7 +56,6 @@ export function useTasks() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
-      console.error('Error loading employees:', error);
     }
   }, [isStaff]);
 
@@ -103,7 +101,6 @@ export function useTasks() {
     setSubmitting(true);
     try {
       if (editingTask) {
-        // Update existing task
         await updateTask(editingTask.id, {
           title: formData.title,
           description: formData.description,
@@ -115,10 +112,8 @@ export function useTasks() {
 
         showNotification('success', t('tasks.updateSuccess'));
       } else {
-        // Create new task
         await createTask(formData, user.id);
         
-        // Send notification to employee
         const { data: targetUser } = await db
           .from('users')
           .select('id')
@@ -135,7 +130,6 @@ export function useTasks() {
       handleCloseModal();
       loadTasks();
     } catch (error: any) {
-      console.error('Error saving task:', error);
       showNotification('error', error.message || t('tasks.saveFailed'));
     } finally {
       setSubmitting(false);
@@ -148,7 +142,6 @@ export function useTasks() {
       showNotification('success', t('tasks.statusUpdated'));
       loadTasks();
     } catch (error: any) {
-      console.error('Error updating task status:', error);
       showNotification('error', error.message || t('tasks.statusUpdateFailed'));
     }
   };
@@ -159,7 +152,6 @@ export function useTasks() {
       showNotification('success', t('tasks.deleteSuccess'));
       loadTasks();
     } catch (error: any) {
-      console.error('Error deleting task:', error);
       showNotification('error', error.message || t('tasks.deleteFailed'));
     }
   };

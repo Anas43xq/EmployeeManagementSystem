@@ -47,9 +47,6 @@ export interface Department {
 
 export type DepartmentBasic = Pick<Department, 'id' | 'name'>;
 
-// =============================================
-// TASKS
-// =============================================
 export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
 
@@ -73,9 +70,6 @@ export interface EmployeeTask {
 
 export type EmployeeTaskCreate = Pick<EmployeeTask, 'employee_id' | 'title' | 'description' | 'priority' | 'deadline' | 'points' | 'penalty_points'>;
 
-// =============================================
-// WARNINGS
-// =============================================
 export type WarningSeverity = 'minor' | 'moderate' | 'major' | 'critical';
 export type WarningStatus = 'active' | 'acknowledged' | 'resolved' | 'appealed';
 
@@ -98,9 +92,6 @@ export interface EmployeeWarning {
 
 export type EmployeeWarningCreate = Pick<EmployeeWarning, 'employee_id' | 'reason' | 'description' | 'severity'>;
 
-// =============================================
-// COMPLAINTS
-// =============================================
 export type ComplaintCategory = 'general' | 'workplace' | 'harassment' | 'safety' | 'policy' | 'other';
 export type ComplaintStatus = 'pending' | 'under_review' | 'resolved' | 'dismissed';
 export type ComplaintPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -125,9 +116,6 @@ export interface EmployeeComplaint {
 
 export type EmployeeComplaintCreate = Pick<EmployeeComplaint, 'subject' | 'description' | 'category' | 'priority'>;
 
-// =============================================
-// PERFORMANCE
-// =============================================
 export interface EmployeePerformance {
   id: string;
   employee_id: string;
@@ -149,9 +137,6 @@ export interface EmployeePerformance {
   employees?: EmployeeBasic & { photo_url?: string | null; position?: string };
 }
 
-// =============================================
-// EMPLOYEE OF THE WEEK
-// =============================================
 export interface EmployeeOfWeek {
   id: string;
   employee_id: string;

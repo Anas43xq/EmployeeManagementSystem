@@ -44,7 +44,6 @@ export function useAnnouncements() {
       if (error) throw error;
       setAnnouncements(data || []);
     } catch (err) {
-      console.error('Error loading announcements:', err);
     } finally {
       setLoading(false);
     }
@@ -135,7 +134,6 @@ export function useAnnouncements() {
       setShowModal(false);
       loadAnnouncements();
     } catch (err: any) {
-      console.error('Error saving announcement:', err);
       setError(err.message || t('announcements.saveFailed'));
     } finally {
       setSubmitting(false);
@@ -159,7 +157,6 @@ export function useAnnouncements() {
 
       loadAnnouncements();
     } catch (err: any) {
-      console.error('Error deleting announcement:', err);
       alert(err.message || t('announcements.deleteFailed'));
     }
   };
@@ -181,7 +178,6 @@ export function useAnnouncements() {
 
       loadAnnouncements();
     } catch (err: any) {
-      console.error('Error toggling announcement:', err);
     }
   };
 

@@ -13,12 +13,8 @@ import type {
   ComplaintStatus,
 } from './types';
 
-// Use typed helper for tables not yet in generated types
 const db = supabase as any;
 
-// =============================================
-// TASKS
-// =============================================
 
 export async function getTasks(filters?: {
   employeeId?: string;
@@ -28,7 +24,6 @@ export async function getTasks(filters?: {
   let query = db
     .from('employee_tasks')
     .select(`
-      *,
       employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
@@ -55,7 +50,6 @@ export async function getTaskById(id: string) {
   const { data, error } = await db
     .from('employee_tasks')
     .select(`
-      *,
       employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
@@ -117,9 +111,6 @@ export async function deleteTask(id: string) {
   if (error) throw error;
 }
 
-// =============================================
-// WARNINGS
-// =============================================
 
 export async function getWarnings(filters?: {
   employeeId?: string;
@@ -129,7 +120,6 @@ export async function getWarnings(filters?: {
   let query = db
     .from('employee_warnings')
     .select(`
-      *,
       employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
@@ -156,7 +146,6 @@ export async function getWarningById(id: string) {
   const { data, error } = await db
     .from('employee_warnings')
     .select(`
-      *,
       employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
@@ -220,9 +209,6 @@ export async function deleteWarning(id: string) {
   if (error) throw error;
 }
 
-// =============================================
-// COMPLAINTS
-// =============================================
 
 export async function getComplaints(filters?: {
   employeeId?: string;
@@ -232,7 +218,6 @@ export async function getComplaints(filters?: {
   let query = db
     .from('employee_complaints')
     .select(`
-      *,
       employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
@@ -259,7 +244,6 @@ export async function getComplaintById(id: string) {
   const { data, error } = await db
     .from('employee_complaints')
     .select(`
-      *,
       employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
@@ -316,9 +300,6 @@ export async function deleteComplaint(id: string) {
   if (error) throw error;
 }
 
-// =============================================
-// PERFORMANCE
-// =============================================
 
 export async function getPerformanceRecords(filters?: {
   employeeId?: string;
@@ -328,7 +309,6 @@ export async function getPerformanceRecords(filters?: {
   let query = db
     .from('employee_performance')
     .select(`
-      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `)
     .order('period_start', { ascending: false });
@@ -352,7 +332,6 @@ export async function getLatestPerformance(limit: number = 10) {
   const { data, error } = await db
     .from('employee_performance')
     .select(`
-      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `)
     .order('period_start', { ascending: false })
@@ -364,19 +343,15 @@ export async function getLatestPerformance(limit: number = 10) {
 }
 
 export async function getTopPerformers(weekStart?: string) {
-  // If weekStart provided, use it; otherwise get most recent records
   let query = db
     .from('employee_performance')
     .select(`
-      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `);
 
   if (weekStart) {
     query = query.eq('period_start', weekStart);
   } else {
-    // Get the most recent period's data by ordering by period_start desc
-    // First, get the latest period_start date
     const { data: latestPeriod } = await db
       .from('employee_performance')
       .select('period_start')
@@ -394,21 +369,16 @@ export async function getTopPerformers(weekStart?: string) {
     .limit(10);
 
   if (error) {
-    console.error('Error fetching top performers:', error);
     return [];
   }
   return (data || []) as EmployeePerformance[];
 }
 
-// =============================================
-// EMPLOYEE OF THE WEEK
-// =============================================
 
 export async function getEmployeeOfWeek(weekStart?: string) {
   let query = db
     .from('employee_of_week')
     .select(`
-      *,
       employees (*)
     `);
 
@@ -420,7 +390,6 @@ export async function getEmployeeOfWeek(weekStart?: string) {
 
   const { data, error } = await query;
   if (error) {
-    console.error('Error fetching employee of week:', error);
     return null;
   }
   return data?.[0] as EmployeeOfWeek | null;
@@ -430,7 +399,6 @@ export async function getEmployeeOfWeekHistory(limit: number = 10) {
   const { data, error } = await db
     .from('employee_of_week')
     .select(`
-      *,
       employees (*)
     `)
     .order('week_start', { ascending: false })
@@ -461,7 +429,6 @@ export async function setEmployeeOfWeek(
       score: 0,
     }], { onConflict: 'week_start' })
     .select(`
-      *,
       employees (*)
     `)
     .single();
@@ -470,9 +437,6 @@ export async function setEmployeeOfWeek(
   return data as EmployeeOfWeek;
 }
 
-// =============================================
-// UTILITY FUNCTIONS
-// =============================================
 
 export function getWeekStart(date: Date): string {
   const d = new Date(date);
@@ -488,9 +452,6 @@ export function getWeekEnd(weekStart: string): string {
   return d.toISOString().split('T')[0];
 }
 
-// =============================================
-// NOTIFICATIONS FOR NEW FEATURES
-// =============================================
 
 export async function createTaskNotification(
   userId: string,
@@ -517,7 +478,6 @@ export async function createTaskNotification(
       type: 'task',
     }]);
 
-  if (error) console.error('Error creating task notification:', error);
 }
 
 export async function createWarningNotification(userId: string, severity: string) {
@@ -530,7 +490,6 @@ export async function createWarningNotification(userId: string, severity: string
       type: 'warning',
     }]);
 
-  if (error) console.error('Error creating warning notification:', error);
 }
 
 export async function createComplaintNotification(
@@ -552,5 +511,4 @@ export async function createComplaintNotification(
       type: 'complaint',
     }]);
 
-  if (error) console.error('Error creating complaint notification:', error);
 }

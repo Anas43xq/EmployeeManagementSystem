@@ -31,7 +31,6 @@ export default function Employees() {
       const { data, error } = await db
         .from('employees')
         .select(`
-          *,
           departments!employees_department_id_fkey (
             name
           )
@@ -41,7 +40,6 @@ export default function Employees() {
       if (error) throw error;
       setEmployees((data || []) as EmployeeListItem[]);
     } catch (error) {
-      console.error('Error loading employees:', error);
       showNotification('error', 'Failed to load employees');
     } finally {
       setLoading(false);
@@ -78,7 +76,6 @@ export default function Employees() {
       setDeleteModal({ open: false, employee: null, hasAccess: false });
       loadEmployees();
     } catch (error: any) {
-      console.error('Error deleting employee:', error);
       showNotification('error', error.message || t('employees.deleteFailed'));
     } finally {
       setDeleting(false);
