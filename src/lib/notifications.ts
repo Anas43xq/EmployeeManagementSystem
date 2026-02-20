@@ -66,3 +66,12 @@ export async function notifyLeavePending(hrEmail: string, employeeName: string, 
     type: 'leave_pending',
   });
 }
+
+export async function notifyWarningIssued(employeeEmail: string, severity: string) {
+  await sendEmailNotification({
+    to: employeeEmail,
+    subject: `${severity.charAt(0).toUpperCase() + severity.slice(1)} Warning Issued`,
+    body: `You have received a <strong>${severity}</strong> warning. Please log in to the system to review the details and acknowledge it.`,
+    type: 'warning',
+  });
+}

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { createNotification } from './dbNotifications';
 import type {
   EmployeeTask,
   EmployeeTaskCreate,
@@ -481,27 +482,16 @@ export async function createTaskNotification(
     overdue: `Task "${taskTitle}" is now overdue`,
   };
 
-  await db
-    .from('notifications')
-    .insert([{
-      user_id: userId,
-      title: titles[type],
-      message: messages[type],
-      type: 'task',
-    }]);
-
+  await createNotification(userId, titles[type], messages[type], 'task');
 }
 
 export async function createWarningNotification(userId: string, severity: string) {
-  await db
-    .from('notifications')
-    .insert([{
-      user_id: userId,
-      title: 'New Warning Issued',
-      message: `You have received a ${severity} warning. Please review and acknowledge it.`,
-      type: 'warning',
-    }]);
-
+  await createNotification(
+    userId,
+    'New Warning Issued',
+    `You have received a ${severity} warning. Please review and acknowledge it.`,
+    'warning'
+  );
 }
 
 export async function createComplaintNotification(
@@ -514,13 +504,5 @@ export async function createComplaintNotification(
     ? 'Your complaint has been submitted and is under review.'
     : `Your complaint status has been updated to: ${status}`;
 
-  await db
-    .from('notifications')
-    .insert([{
-      user_id: userId,
-      title,
-      message,
-      type: 'complaint',
-    }]);
-
+  await createNotification(userId, title, message, 'complaint');
 }
