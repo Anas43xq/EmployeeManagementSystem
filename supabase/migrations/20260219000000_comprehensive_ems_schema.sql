@@ -1659,41 +1659,26 @@ BEGIN
   END IF;
 END $$;
 
--- Performance data for current and last week
+-- ============================================================================
+-- PERFORMANCE & EMPLOYEE OF THE WEEK
+-- Automatically calculated based on attendance, tasks, and warnings
+-- ============================================================================
+
+-- Calculate weekly performance and select Employee of the Week automatically
 DO $$
 DECLARE
-  v_week_start DATE := date_trunc('week', CURRENT_DATE)::DATE;
-  v_week_end DATE := v_week_start + INTERVAL '6 days';
-  v_last_week_start DATE := v_week_start - INTERVAL '7 days';
-  v_last_week_end DATE := v_last_week_start + INTERVAL '6 days';
+  v_current_week DATE := (date_trunc('week', CURRENT_DATE))::DATE;
+  v_last_week DATE := (date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::DATE;
 BEGIN
-  -- Current week performance
-  INSERT INTO public.employee_performance (employee_id, period_start, period_end, attendance_score, task_score, warning_deduction, total_score, tasks_completed, tasks_overdue, attendance_days, absent_days, late_days)
-  SELECT e.id, v_week_start, v_week_end,
-    CASE WHEN e.email IN ('anas.essam.work@gmail.com', 'e.wilson@staffhub.com', 'j.lee@staffhub.com') THEN 50 ELSE 40 END,
-    CASE WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 30 ELSE 15 END,
-    CASE WHEN e.email = 'l.rodriguez@staffhub.com' THEN 10 WHEN e.email = 'w.taylor@staffhub.com' THEN 20 ELSE 0 END,
-    CASE WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 80 WHEN e.email IN ('e.wilson@staffhub.com', 'r.garcia@staffhub.com') THEN 70 ELSE 55 END,
-    CASE WHEN e.email IN ('anas.essam.work@gmail.com', 'j.lee@staffhub.com') THEN 3 ELSE 1 END,
-    0, 5, 0, 0
-  FROM public.employees e WHERE e.status = 'active'
-  ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
-
-  -- Last week performance
-  INSERT INTO public.employee_performance (employee_id, period_start, period_end, attendance_score, task_score, warning_deduction, total_score, tasks_completed, tasks_overdue, attendance_days, absent_days, late_days)
-  SELECT e.id, v_last_week_start, v_last_week_end, 45, 20, 0, 65, 2, 0, 4, 0, 0
-  FROM public.employees e WHERE e.status = 'active'
-  ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
-END $$;
-
--- Employee of the Week (automatically selected based on performance)
-DO $$
-BEGIN
-  -- Select employee of week for current week
-  PERFORM select_employee_of_week((date_trunc('week', CURRENT_DATE))::DATE);
+  -- Calculate performance and select Employee of the Week for last week
+  -- This populates employee_performance table and employee_of_week table
+  PERFORM select_employee_of_week(v_last_week);
   
-  -- Select employee of week for last week
-  PERFORM select_employee_of_week((date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::DATE);
+  -- Calculate performance and select Employee of the Week for current week
+  -- Top Performers widget reads from employee_performance table
+  PERFORM select_employee_of_week(v_current_week);
+  
+  RAISE NOTICE 'Performance calculated and Employee of the Week selected for current and last week';
 END $$;
 
 -- =============================================
