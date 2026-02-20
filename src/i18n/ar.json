@@ -97,7 +97,7 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
-    "welcome": "مرحباً بك في DevTeam Hub",
+    "welcome": "مرحباً بك في {{appName}}",
     "totalEmployees": "إجمالي الموظفين",
     "activeEmployees": "الموظفون النشطون",
     "departments": "الأقسام",

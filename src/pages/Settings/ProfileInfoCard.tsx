@@ -34,20 +34,20 @@ export default function ProfileInfoCard({
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.email')}</label>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             {isEditingEmail ? (
               <>
                 <input
                   type="email"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={t('settings.enterNewEmail')}
                 />
                 <button
                   onClick={onEmailUpdate}
                   disabled={updatingEmail}
-                  className="flex items-center space-x-1 px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                  className="flex items-center space-x-1 px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 shrink-0"
                 >
                   <Save className="w-4 h-4" />
                   <span className="text-sm">{updatingEmail ? t('common.saving') : t('common.save')}</span>
@@ -55,7 +55,7 @@ export default function ProfileInfoCard({
                 <button
                   onClick={onCancelEdit}
                   disabled={updatingEmail}
-                  className="flex items-center space-x-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
+                  className="flex items-center space-x-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -66,11 +66,11 @@ export default function ProfileInfoCard({
                   type="email"
                   value={user?.email}
                   disabled
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                 />
                 <button
                   onClick={() => setIsEditingEmail(true)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors"
+                  className="flex items-center space-x-1 px-3 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors shrink-0"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span className="text-sm">{t('common.edit')}</span>

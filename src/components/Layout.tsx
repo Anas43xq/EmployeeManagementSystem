@@ -89,7 +89,7 @@ export default function Layout() {
               </div>
               <div>
                 <h1 className="text-white font-bold text-lg tracking-tight">
-                  {t('auth.ems')} <span className="text-primary-300 font-normal">Hub</span>
+                  {t('auth.employeeManagementSystem')}
                 </h1>
                 <p className="text-primary-300 text-[10px] tracking-wide uppercase">
                   {user?.role === 'admin' && t('auth.adminPortal')}

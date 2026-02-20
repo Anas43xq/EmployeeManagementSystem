@@ -122,27 +122,27 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
               <Clock className="w-4 h-4 mr-2" />
               {t('attendance.todayStatus')}
             </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{t('attendance.checkIn')}:</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 shrink-0">{t('attendance.checkIn')}:</span>
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_in ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1" />
-                      {currentAttendance.check_in}
+                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1 shrink-0" />
+                      <span className="whitespace-nowrap">{currentAttendance.check_in}</span>
                     </>
                   ) : (
                     <span className="text-gray-400">{t('attendance.notCheckedIn')}</span>
                   )}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{t('attendance.checkOut')}:</span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 shrink-0">{t('attendance.checkOut')}:</span>
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_out ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1" />
-                      {currentAttendance.check_out}
+                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1 shrink-0" />
+                      <span className="whitespace-nowrap">{currentAttendance.check_out}</span>
                     </>
                   ) : (
                     <span className="text-gray-400">{t('attendance.notCheckedOut')}</span>

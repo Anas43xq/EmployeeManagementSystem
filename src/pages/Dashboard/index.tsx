@@ -22,7 +22,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('dashboard.title')} subtitle={t('dashboard.welcome')} />
+      <PageHeader title={t('dashboard.title')} subtitle={t('dashboard.welcome', { appName: t('auth.employeeManagementSystem') })} />
 
       <StatCards stats={stats} userRole={userRole} />
 

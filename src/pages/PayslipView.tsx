@@ -229,21 +229,21 @@ export default function PayslipView() {
                             <TrendingUp className="w-5 h-5 text-green-500 mr-2" />
                             {t('payslip.bonuses', 'Bonuses')}
                           </h4>
-                          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                            <table className="w-full">
+                          <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+                            <table className="w-full min-w-[400px]">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.type', 'Type')}</th>
-                                  <th className="text-left py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
-                                  <th className="text-right py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.amount', 'Amount')}</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.type', 'Type')}</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
+                                  <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.amount', 'Amount')}</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {bonuses.map((bonus) => (
                                   <tr key={bonus.id} className="border-t border-gray-100">
-                                    <td className="py-2 px-4 text-sm font-medium text-gray-900">{bonus.type}</td>
-                                    <td className="py-2 px-4 text-sm text-gray-600">{bonus.description || '-'}</td>
-                                    <td className="py-2 px-4 text-sm font-medium text-blue-600 text-right">
+                                    <td className="py-2 px-3 text-sm font-medium text-gray-900 whitespace-nowrap">{bonus.type}</td>
+                                    <td className="py-2 px-3 text-sm text-gray-600">{bonus.description || '-'}</td>
+                                    <td className="py-2 px-3 text-sm font-medium text-blue-600 text-right whitespace-nowrap">
                                       +{formatCurrency(bonus.amount)}
                                     </td>
                                   </tr>
@@ -260,21 +260,21 @@ export default function PayslipView() {
                             <TrendingDown className="w-5 h-5 text-red-500 mr-2" />
                             {t('payslip.deductions', 'Deductions')}
                           </h4>
-                          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                            <table className="w-full">
+                          <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
+                            <table className="w-full min-w-[400px]">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="text-left py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.type', 'Type')}</th>
-                                  <th className="text-left py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
-                                  <th className="text-right py-2 px-4 text-sm font-medium text-gray-700">{t('payslip.amount', 'Amount')}</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.type', 'Type')}</th>
+                                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-700">{t('payslip.description', 'Description')}</th>
+                                  <th className="text-right py-2 px-3 text-sm font-medium text-gray-700 whitespace-nowrap">{t('payslip.amount', 'Amount')}</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {deductions.map((deduction) => (
                                   <tr key={deduction.id} className="border-t border-gray-100">
-                                    <td className="py-2 px-4 text-sm font-medium text-gray-900">{deduction.type}</td>
-                                    <td className="py-2 px-4 text-sm text-gray-600">{deduction.description || '-'}</td>
-                                    <td className="py-2 px-4 text-sm font-medium text-red-600 text-right">
+                                    <td className="py-2 px-3 text-sm font-medium text-gray-900 whitespace-nowrap">{deduction.type}</td>
+                                    <td className="py-2 px-3 text-sm text-gray-600">{deduction.description || '-'}</td>
+                                    <td className="py-2 px-3 text-sm font-medium text-red-600 text-right whitespace-nowrap">
                                       -{formatCurrency(deduction.amount)}
                                     </td>
                                   </tr>

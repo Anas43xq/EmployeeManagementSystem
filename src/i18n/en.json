@@ -99,7 +99,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome to DevTeam Hub",
+    "welcome": "Welcome to {{appName}}",
     "totalEmployees": "Total Employees",
     "activeEmployees": "Active Employees",
     "departments": "Departments",
