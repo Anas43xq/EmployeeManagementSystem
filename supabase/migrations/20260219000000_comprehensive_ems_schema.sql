@@ -910,6 +910,8 @@ DECLARE
   p_week_end DATE;
   v_top_employee_id UUID;
   v_top_score INTEGER;
+  v_tied_count INTEGER;
+  v_reason TEXT;
 BEGIN
   p_week_end := p_week_start + INTERVAL '6 days';
   PERFORM calculate_weekly_performance(p_week_start);
@@ -921,8 +923,22 @@ BEGIN
   ORDER BY ep.total_score DESC, e.hire_date ASC LIMIT 1;
 
   IF v_top_employee_id IS NOT NULL THEN
+    -- Check if there are other employees with the same score
+    SELECT COUNT(*) INTO v_tied_count
+    FROM public.employee_performance ep
+    JOIN public.employees e ON e.id = ep.employee_id
+    WHERE ep.period_start = p_week_start AND ep.period_end = p_week_end 
+      AND e.status = 'active' AND ep.total_score = v_top_score;
+
+    -- Generate appropriate reason text
+    IF v_tied_count > 1 THEN
+      v_reason := 'Tied for highest score (' || v_top_score || ' points) with ' || (v_tied_count - 1) || ' other(s), selected based on earliest hire date';
+    ELSE
+      v_reason := 'Highest performance score (' || v_top_score || ' points) for the week';
+    END IF;
+
     INSERT INTO public.employee_of_week (employee_id, week_start, week_end, score, reason, is_auto_selected)
-    VALUES (v_top_employee_id, p_week_start, p_week_end, v_top_score, 'Highest performance score (' || v_top_score || ' points) for the week', true)
+    VALUES (v_top_employee_id, p_week_start, p_week_end, v_top_score, v_reason, true)
     ON CONFLICT (week_start) DO UPDATE SET
       employee_id = EXCLUDED.employee_id, week_end = EXCLUDED.week_end, score = EXCLUDED.score,
       reason = EXCLUDED.reason, is_auto_selected = EXCLUDED.is_auto_selected;
@@ -1670,18 +1686,15 @@ BEGIN
   ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
 END $$;
 
--- Employee of the Week
-INSERT INTO public.employee_of_week (employee_id, week_start, week_end, score, reason, is_auto_selected)
-SELECT e.id, date_trunc('week', CURRENT_DATE)::DATE, date_trunc('week', CURRENT_DATE)::DATE + INTERVAL '6 days',
-  80, 'Outstanding performance with perfect attendance. Highest score (80 points) for the week.', true
-FROM public.employees e WHERE e.email = 'anas.essam.work@gmail.com'
-ON CONFLICT (week_start) DO NOTHING;
-
-INSERT INTO public.employee_of_week (employee_id, week_start, week_end, score, reason, is_auto_selected)
-SELECT e.id, date_trunc('week', CURRENT_DATE)::DATE - INTERVAL '7 days', date_trunc('week', CURRENT_DATE)::DATE - INTERVAL '1 day',
-  75, 'Excellent engineering leadership. Highest score (75 points) for the week.', true
-FROM public.employees e WHERE e.email = 'j.lee@staffhub.com'
-ON CONFLICT (week_start) DO NOTHING;
+-- Employee of the Week (automatically selected based on performance)
+DO $$
+BEGIN
+  -- Select employee of week for current week
+  PERFORM select_employee_of_week((date_trunc('week', CURRENT_DATE))::DATE);
+  
+  -- Select employee of week for last week
+  PERFORM select_employee_of_week((date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::DATE);
+END $$;
 
 -- =============================================
 -- SCHEMA COMPLETE

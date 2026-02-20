@@ -356,7 +356,7 @@ export async function getTopPerformers(weekStart?: string) {
     .from('employee_performance')
     .select(`
       *,
-      employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
+      employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position, hire_date)
     `);
 
   if (weekStart) {
@@ -374,8 +374,10 @@ export async function getTopPerformers(weekStart?: string) {
     }
   }
 
+  // Order by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
   const { data, error } = await query
     .order('total_score', { ascending: false })
+    .order('employees.hire_date', { ascending: true })
     .limit(10);
 
   if (error) {
