@@ -374,16 +374,27 @@ export async function getTopPerformers(weekStart?: string) {
     }
   }
 
-  // Order by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
   const { data, error } = await query
     .order('total_score', { ascending: false })
-    .order('employees.hire_date', { ascending: true })
-    .limit(10);
+    .limit(50);
 
   if (error) {
     return [];
   }
-  return (data || []) as EmployeePerformance[];
+
+  // Sort by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
+  const sortedData = (data || []).sort((a, b) => {
+    // First, sort by total_score descending
+    if (b.total_score !== a.total_score) {
+      return b.total_score - a.total_score;
+    }
+    // If scores are equal, sort by hire_date ascending (earliest first)
+    const aHireDate = a.employees?.hire_date ? new Date(a.employees.hire_date).getTime() : Infinity;
+    const bHireDate = b.employees?.hire_date ? new Date(b.employees.hire_date).getTime() : Infinity;
+    return aHireDate - bHireDate;
+  });
+
+  return sortedData.slice(0, 10) as EmployeePerformance[];
 }
 
 
