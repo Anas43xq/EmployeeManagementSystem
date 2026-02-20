@@ -61,7 +61,7 @@ export default function LeaveCard({ leave, userRole, onApprove, onReject }: Leav
             <div className="flex space-x-2">
               <button
                 onClick={() => onApprove(leave.id)}
-                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 <CheckCircle className="w-5 h-5" />
               </button>

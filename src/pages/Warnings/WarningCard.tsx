@@ -71,8 +71,8 @@ export default function WarningCard({
           </div>
 
           {warning.resolution_notes && (
-            <div className="mt-3 p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-800">
+            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
                 <span className="font-medium">{t('warnings.resolutionNotes')}:</span> {warning.resolution_notes}
               </p>
             </div>

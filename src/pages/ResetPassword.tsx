@@ -305,7 +305,7 @@ export default function ResetPassword() {
           </div>
 
           {confirmPassword && password === confirmPassword && (
-            <div className="flex items-center text-green-600 text-sm bg-green-50 p-3 rounded-lg">
+            <div className="flex items-center text-blue-600 text-sm bg-blue-50 p-3 rounded-lg">
               <CheckCircle className="w-4 h-4 mr-2" />
               {t('resetPassword.passwordsMatch')}
             </div>

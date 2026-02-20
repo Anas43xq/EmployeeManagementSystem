@@ -111,7 +111,7 @@ export default function PerformanceChartWidget() {
                 {/* Stats */}
                 <div className="text-right text-xs text-gray-500 min-w-[80px]">
                   <div className="flex items-center justify-end gap-1">
-                    <span className="text-green-600">✓{performer.tasks_completed}</span>
+                    <span className="text-blue-600">✓{performer.tasks_completed}</span>
                     <span>/</span>
                     <span className="text-red-600">✗{performer.tasks_overdue}</span>
                   </div>

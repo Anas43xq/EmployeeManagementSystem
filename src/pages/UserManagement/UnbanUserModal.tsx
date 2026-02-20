@@ -33,13 +33,13 @@ export default function UnbanUserModal({
         {t('userManagement.unbanUser')}
       </Modal.Header>
       <Modal.Body>
-        <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg">
-          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+        <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg">
+          <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-green-800">
-              {t('userManagement.unbanConfirmTitle')}
+            <p className="text-sm font-medium text-blue-800">
+              {t('userManagement.unbanConfirmation')}
             </p>
-            <p className="text-sm text-green-700 mt-1">
+            <p className="text-sm text-blue-700 mt-1">
               {t('userManagement.unbanConfirmText')}
             </p>
           </div>

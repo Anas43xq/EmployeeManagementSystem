@@ -95,8 +95,8 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <Fingerprint className="w-6 h-6 text-purple-600" />
+            <div className="bg-primary-100 p-2 rounded-lg">
+              <Fingerprint className="w-6 h-6 text-primary-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -128,7 +128,7 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_in ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-green-600 mr-1" />
+                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1" />
                       {currentAttendance.check_in}
                     </>
                   ) : (
@@ -141,7 +141,7 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
                 <span className="font-medium flex items-center">
                   {currentAttendance.check_out ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-green-600 mr-1" />
+                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1" />
                       {currentAttendance.check_out}
                     </>
                   ) : (

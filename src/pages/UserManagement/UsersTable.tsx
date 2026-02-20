@@ -166,7 +166,7 @@ export default function UsersTable({
                           user.is_active === false ? (
                             <button
                               onClick={() => onActivate(user)}
-                              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title={t('userManagement.activateUser')}
                             >
                               <UserPlus2 className="w-4 h-4" />
@@ -185,7 +185,7 @@ export default function UsersTable({
                         {user.banned_at ? (
                           <button
                             onClick={() => onUnban(user)}
-                            className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title={t('userManagement.unbanUser')}
                           >
                             <UserCheck className="w-4 h-4" />

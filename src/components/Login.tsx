@@ -289,7 +289,7 @@ export default function Login() {
         </p>
 
         {successMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center space-x-2">
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center space-x-2">
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
             <span>{successMessage}</span>
           </div>
@@ -374,7 +374,7 @@ export default function Login() {
               <button
                 onClick={() => setShowPasskeyLogin(true)}
                 disabled={passkeyLoading}
-                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Fingerprint className="w-5 h-5" />
                 <span>{t('auth.passkeyLogin', 'Passkey Login')}</span>

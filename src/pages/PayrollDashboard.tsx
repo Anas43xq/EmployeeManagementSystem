@@ -219,9 +219,9 @@ export default function PayrollDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">{t('payroll.approved', 'Approved')}</p>
-                <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.approved}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </Card>
@@ -390,7 +390,7 @@ export default function PayrollDashboard() {
                       <td className="py-3 px-3 text-sm font-medium">
                         {formatCurrency(payroll.base_salary)}
                       </td>
-                      <td className="py-3 px-3 text-sm text-green-600 font-medium">
+                      <td className="py-3 px-3 text-sm text-blue-600 font-medium">
                         +{formatCurrency(payroll.total_bonuses)}
                       </td>
                       <td className="py-3 px-3 text-sm text-red-600 font-medium">
@@ -518,9 +518,9 @@ export default function PayrollDashboard() {
                         {formatCurrency(viewingPayroll.base_salary)}
                       </p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="text-sm text-green-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
-                      <p className="text-xl font-bold text-green-600">
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <p className="text-sm text-blue-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
+                      <p className="text-xl font-bold text-blue-600">
                         +{formatCurrency(viewingPayroll.total_bonuses)}
                       </p>
                     </div>
@@ -542,7 +542,7 @@ export default function PayrollDashboard() {
                   {bonuses.length > 0 && (
                     <div>
                       <h4 className="font-medium text-gray-900 flex items-center mb-3">
-                        <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
+                        <TrendingUp className="w-4 h-4 text-blue-600 mr-2" />
                         {t('payslip.bonuses', 'Bonuses')}
                       </h4>
                       <div className="space-y-2">
@@ -552,7 +552,7 @@ export default function PayrollDashboard() {
                               <p className="font-medium text-gray-900">{bonus.type}</p>
                               <p className="text-sm text-gray-600">{bonus.description}</p>
                             </div>
-                            <span className="font-bold text-green-600">+{formatCurrency(bonus.amount)}</span>
+                            <span className="font-bold text-blue-600">+{formatCurrency(bonus.amount)}</span>
                           </div>
                         ))}
                       </div>

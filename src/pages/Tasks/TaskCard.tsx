@@ -63,7 +63,7 @@ export default function TaskCard({
             </div>
             <div className="flex items-center gap-1">
               <span className="font-medium">{t('tasks.points')}:</span>
-              <span className="text-green-600">+{task.points}</span>
+              <span className="text-blue-600">+{task.points}</span>
               {task.penalty_points > 0 && (
                 <span className="text-red-600">/ -{task.penalty_points}</span>
               )}

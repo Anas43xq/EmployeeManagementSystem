@@ -205,7 +205,7 @@ export default function PayslipView() {
                         </div>
                         <div className="bg-green-50 rounded-lg p-4">
                           <p className="text-sm text-green-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
-                          <p className="text-xl font-bold text-green-600">
+                          <p className="text-xl font-bold text-blue-600">
                             +{formatCurrency(selectedPayroll.total_bonuses)}
                           </p>
                         </div>
@@ -243,7 +243,7 @@ export default function PayslipView() {
                                   <tr key={bonus.id} className="border-t border-gray-100">
                                     <td className="py-2 px-4 text-sm font-medium text-gray-900">{bonus.type}</td>
                                     <td className="py-2 px-4 text-sm text-gray-600">{bonus.description || '-'}</td>
-                                    <td className="py-2 px-4 text-sm font-medium text-green-600 text-right">
+                                    <td className="py-2 px-4 text-sm font-medium text-blue-600 text-right">
                                       +{formatCurrency(bonus.amount)}
                                     </td>
                                   </tr>
