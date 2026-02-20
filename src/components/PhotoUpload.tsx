@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Upload, X, User } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 
 interface PhotoUploadProps {
   currentPhotoUrl?: string;

@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
-import { supabase, db } from '../lib/supabase';
-import { logActivity } from '../lib/activityLog';
+import { supabase, db } from '../services/supabase';
+import { logActivity } from '../services/activityLog';
 import { 
   clearAuthState, 
   recordAuthSuccess, 
   resetSessionHealth 
-} from '../lib/sessionManager';
-import { clearAllCache } from '../lib/apiCache';
+} from '../services/sessionManager';
+import { clearAllCache } from '../services/apiCache';
 
 const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
   if (!error) return false;

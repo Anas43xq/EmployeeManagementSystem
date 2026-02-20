@@ -11,7 +11,7 @@ import {
   type PayrollData,
   type BonusData,
   type DeductionData
-} from '../lib/payroll';
+} from '../services/payroll';
 import { Card, Button, StatusBadge, PageHeader, EmptyState } from '../components/ui';
 import {
   FileText,

@@ -5,7 +5,7 @@ import {
   verifyPasskeyAttendance,
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable
-} from '../lib/passkeys';
+} from '../services/passkeys';
 import { Button, Card, StatusBadge } from './ui';
 import { Fingerprint, Eye, Clock, CheckCircle, LogIn, LogOut } from 'lucide-react';
 

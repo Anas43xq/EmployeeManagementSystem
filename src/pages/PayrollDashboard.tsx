@@ -13,7 +13,7 @@ import {
   type PayrollData,
   type BonusData,
   type DeductionData
-} from '../lib/payroll';
+} from '../services/payroll';
 import { Card, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../components/ui';
 import {
   Calculator,

@@ -3,7 +3,7 @@ import type {
   ComplaintCategory, 
   ComplaintStatus,
   ComplaintPriority 
-} from '../../lib/types';
+} from '../../types';
 
 export interface ComplaintFormData {
   subject: string;

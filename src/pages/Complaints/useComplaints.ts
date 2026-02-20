@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import {
   getComplaints,
   createComplaint,
   updateComplaintStatus,
   deleteComplaint,
   createComplaintNotification,
-} from '../../lib/performanceQueries';
+} from '../../services/performanceQueries';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
 import { initialComplaintFormData } from './types';
 

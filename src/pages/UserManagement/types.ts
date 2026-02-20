@@ -1,4 +1,4 @@
-import type { EmployeeSummary } from '../../lib/types';
+import type { EmployeeSummary } from '../../types';
 
 export interface User {
   id: string;

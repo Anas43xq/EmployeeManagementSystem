@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { logActivity } from '../../lib/activityLog';
+import { logActivity } from '../../services/activityLog';
 import { useTranslation } from 'react-i18next';
 import type { Department, DepartmentForm, Employee } from './types';
 

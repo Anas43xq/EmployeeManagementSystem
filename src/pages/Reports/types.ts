@@ -1,4 +1,4 @@
-import type { DepartmentBasic } from '../../lib/types';
+import type { DepartmentBasic } from '../../types';
 
 export type { DepartmentBasic as Department };
 

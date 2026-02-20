@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { format } from 'date-fns';
 import type { Department, ReportEmployee, Leave, Attendance, DepartmentReport, PayrollReport, ReportType } from './types';

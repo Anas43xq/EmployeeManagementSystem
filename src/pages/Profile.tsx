@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { db } from '../lib/supabase';
+import { db } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { Mail, Phone, Calendar, MapPin, Briefcase, User, Building2, Shield, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { PageSpinner, PageHeader, Card, Button } from '../components/ui';
 import PasskeyManagement from '../components/PasskeyManagement';
-import type { Employee } from '../lib/types';
+import type { Employee } from '../types';
 
 export default function Profile() {
   const { user } = useAuth();

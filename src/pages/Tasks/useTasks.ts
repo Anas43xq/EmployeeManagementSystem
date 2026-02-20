@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import {
   getTasks,
   createTask,
@@ -10,10 +10,10 @@ import {
   updateTaskStatus,
   deleteTask,
   createTaskNotification,
-} from '../../lib/performanceQueries';
+} from '../../services/performanceQueries';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';
-import type { EmployeeBasic } from '../../lib/types';
+import type { EmployeeBasic } from '../../types';
 
 export function useTasks() {
   const { t } = useTranslation();

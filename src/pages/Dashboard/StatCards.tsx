@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Users, Building2, Calendar, CheckCircle, UserCheck, XCircle } from 'lucide-react';
-import { isWidgetVisible } from '../../lib/dashboardConfig';
+import { isWidgetVisible } from '../../services/dashboardConfig';
 import type { Stats } from './types';
 
 interface StatCardsProps {

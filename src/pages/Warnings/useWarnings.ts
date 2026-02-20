@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import {
   getWarnings,
   createWarning,
@@ -10,10 +10,10 @@ import {
   resolveWarning,
   deleteWarning,
   createWarningNotification,
-} from '../../lib/performanceQueries';
+} from '../../services/performanceQueries';
 import type { EmployeeWarning, WarningStatus, WarningFormData } from './types';
 import { initialWarningFormData } from './types';
-import type { EmployeeBasic } from '../../lib/types';
+import type { EmployeeBasic } from '../../types';
 
 export function useWarnings() {
   const { t } = useTranslation();

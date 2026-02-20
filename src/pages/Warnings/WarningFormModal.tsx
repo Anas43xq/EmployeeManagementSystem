@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Modal, Button } from '../../components/ui';
 import type { WarningFormData, WarningSeverity } from './types';
-import type { EmployeeBasic } from '../../lib/types';
+import type { EmployeeBasic } from '../../types';
 
 interface WarningFormModalProps {
   show: boolean;

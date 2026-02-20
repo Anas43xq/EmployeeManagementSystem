@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { logActivity } from '../../lib/activityLog';
+import { logActivity } from '../../services/activityLog';
 import { AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react';
 import type { Announcement } from './types';
 

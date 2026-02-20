@@ -12,7 +12,7 @@ import type {
   TaskStatus,
   WarningStatus,
   ComplaintStatus,
-} from './types';
+} from '../types';
 
 const db = supabase as any;
 

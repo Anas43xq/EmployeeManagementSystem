@@ -1,5 +1,5 @@
 import { supabase, db } from './supabase';
-import type { Database } from './database.types';
+import type { Database } from '../types/database';
 import { sendEmailNotification } from './notifications';
 
 export type NotificationType = 'leave' | 'attendance' | 'system' | 'warning' | 'task' | 'complaint' | 'performance';

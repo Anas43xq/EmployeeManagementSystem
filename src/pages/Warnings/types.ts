@@ -2,7 +2,7 @@ import type {
   EmployeeWarning, 
   WarningSeverity, 
   WarningStatus 
-} from '../../lib/types';
+} from '../../types';
 
 export interface WarningFormData {
   employee_id: string;

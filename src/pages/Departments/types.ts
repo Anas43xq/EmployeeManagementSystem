@@ -1,4 +1,4 @@
-import type { EmployeeBasic } from '../../lib/types';
+import type { EmployeeBasic } from '../../types';
 
 export interface Department {
   id: string;

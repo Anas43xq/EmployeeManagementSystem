@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { db } from '../lib/supabase';
+import { db } from '../services/supabase';
 import { useNotification } from '../contexts/NotificationContext';
 import { ArrowLeft, Edit, Mail, Phone, Calendar, MapPin, Briefcase, User, FileText, UserX } from 'lucide-react';
 import { format } from 'date-fns';
 import { PageSpinner, Button, Modal } from '../components/ui';
-import type { Employee } from '../lib/types';
+import type { Employee } from '../types';
 
 export default function EmployeeView() {
   const { id } = useParams<{ id: string }>();

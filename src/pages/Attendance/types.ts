@@ -1,4 +1,4 @@
-import type { EmployeeWithNumber } from '../../lib/types';
+import type { EmployeeWithNumber } from '../../types';
 
 export interface AttendanceRecord {
   id: string;

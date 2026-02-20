@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { isWidgetVisible } from '../../lib/dashboardConfig';
+import { isWidgetVisible } from '../../services/dashboardConfig';
 import AnnouncementsWidget from '../../components/AnnouncementsWidget';
 import { PageSpinner, PageHeader } from '../../components/ui';
 import { useDashboard } from './useDashboard';

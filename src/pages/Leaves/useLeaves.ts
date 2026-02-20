@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { createNotification, notifyHRAndAdmins } from '../../lib/dbNotifications';
-import { logActivity } from '../../lib/activityLog';
+import { createNotification, notifyHRAndAdmins } from '../../services/dbNotifications';
+import { logActivity } from '../../services/activityLog';
 import type { Leave, LeaveFormData, LeaveBalance } from './types';
 
 export function useLeaves() {

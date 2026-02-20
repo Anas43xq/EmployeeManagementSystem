@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 import { Megaphone, AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react';
 
 interface Announcement {

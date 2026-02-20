@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Calendar, Clock, TrendingUp, ArrowRight } from 'lucide-react';
-import { getVisibleQuickActions } from '../../lib/dashboardConfig';
+import { getVisibleQuickActions } from '../../services/dashboardConfig';
 
 interface QuickActionsProps {
   userRole: string;

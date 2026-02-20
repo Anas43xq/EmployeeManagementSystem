@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { logActivity, type ActivityAction, type EntityType } from '../lib/activityLog';
+import { logActivity, type ActivityAction, type EntityType } from '../services/activityLog';
 
 export default function useActivityLogger() {
   const { user } = useAuth();

@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import type { EmployeeBasic, EmployeeWithNumber } from './types';
+import type { EmployeeBasic, EmployeeWithNumber } from '../types';
 
 export async function fetchActiveEmployees(includeNumber?: boolean): Promise<EmployeeBasic[] | EmployeeWithNumber[]> {
   if (includeNumber) {

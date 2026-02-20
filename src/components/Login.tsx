@@ -3,11 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 import {
   authenticateWithPasskey,
   isWebAuthnSupported
-} from '../lib/passkeys';
+} from '../services/passkeys';
 import { Briefcase, ArrowLeft, Globe, Fingerprint, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {

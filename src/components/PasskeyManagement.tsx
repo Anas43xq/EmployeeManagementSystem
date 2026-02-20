@@ -8,7 +8,7 @@ import {
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable,
   type Passkey
-} from '../lib/passkeys';
+} from '../services/passkeys';
 import { Card, Button, Modal, FormField } from './ui';
 import { Fingerprint, Shield, Trash2, Plus, Smartphone, Monitor, Globe } from 'lucide-react';
 

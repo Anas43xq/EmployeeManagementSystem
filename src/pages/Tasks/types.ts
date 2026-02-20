@@ -2,7 +2,7 @@ import type {
   EmployeeTask, 
   TaskPriority, 
   TaskStatus 
-} from '../../lib/types';
+} from '../../types';
 
 export interface TaskFormData {
   employee_id: string;

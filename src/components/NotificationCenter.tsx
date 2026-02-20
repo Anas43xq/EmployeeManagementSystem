@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, X, Info, Calendar, Clock, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 import {
   DbNotification,
   fetchNotifications,
   markNotificationRead,
   markAllNotificationsRead,
   deleteNotification,
-} from '../lib/dbNotifications';
+} from '../services/dbNotifications';
 
 export default function NotificationCenter() {
   const { t } = useTranslation();

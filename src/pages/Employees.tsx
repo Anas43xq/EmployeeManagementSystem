@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { db } from '../lib/supabase';
+import { db } from '../services/supabase';
 import { useNotification } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageSpinner, PageHeader, Card, Button, Modal } from '../components/ui';
-import type { EmployeeListItem } from '../lib/types';
+import type { EmployeeListItem } from '../types';
 
 export default function Employees() {
   const [employees, setEmployees] = useState<EmployeeListItem[]>([]);

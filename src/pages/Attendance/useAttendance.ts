@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../lib/supabase';
+import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { logActivity } from '../../lib/activityLog';
+import { logActivity } from '../../services/activityLog';
 import type { AttendanceRecord, Employee } from './types';
 
 export function useAttendance() {
