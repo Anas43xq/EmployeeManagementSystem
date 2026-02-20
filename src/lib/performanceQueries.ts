@@ -24,6 +24,7 @@ export async function getTasks(filters?: {
   let query = db
     .from('employee_tasks')
     .select(`
+      *,
       employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
@@ -50,6 +51,7 @@ export async function getTaskById(id: string) {
   const { data, error } = await db
     .from('employee_tasks')
     .select(`
+      *,
       employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
@@ -120,6 +122,7 @@ export async function getWarnings(filters?: {
   let query = db
     .from('employee_warnings')
     .select(`
+      *,
       employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
@@ -146,6 +149,7 @@ export async function getWarningById(id: string) {
   const { data, error } = await db
     .from('employee_warnings')
     .select(`
+      *,
       employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
@@ -218,6 +222,7 @@ export async function getComplaints(filters?: {
   let query = db
     .from('employee_complaints')
     .select(`
+      *,
       employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
@@ -244,6 +249,7 @@ export async function getComplaintById(id: string) {
   const { data, error } = await db
     .from('employee_complaints')
     .select(`
+      *,
       employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
@@ -309,6 +315,7 @@ export async function getPerformanceRecords(filters?: {
   let query = db
     .from('employee_performance')
     .select(`
+      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `)
     .order('period_start', { ascending: false });
@@ -332,6 +339,7 @@ export async function getLatestPerformance(limit: number = 10) {
   const { data, error } = await db
     .from('employee_performance')
     .select(`
+      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `)
     .order('period_start', { ascending: false })
@@ -346,6 +354,7 @@ export async function getTopPerformers(weekStart?: string) {
   let query = db
     .from('employee_performance')
     .select(`
+      *,
       employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
     `);
 
@@ -379,6 +388,7 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   let query = db
     .from('employee_of_week')
     .select(`
+      *,
       employees (*)
     `);
 
@@ -399,6 +409,7 @@ export async function getEmployeeOfWeekHistory(limit: number = 10) {
   const { data, error } = await db
     .from('employee_of_week')
     .select(`
+      *,
       employees (*)
     `)
     .order('week_start', { ascending: false })
@@ -429,6 +440,7 @@ export async function setEmployeeOfWeek(
       score: 0,
     }], { onConflict: 'week_start' })
     .select(`
+      *,
       employees (*)
     `)
     .single();
