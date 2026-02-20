@@ -35,7 +35,8 @@ export type ActivityAction =
   | 'announcement_deleted'
   | 'announcement_toggled'
   | 'user_login'
-  | 'user_logout';
+  | 'user_logout'
+  | 'session_timeout';
 
 export type EntityType =
   | 'user'
