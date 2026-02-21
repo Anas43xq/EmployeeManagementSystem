@@ -54,21 +54,21 @@ function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></RouteErrorBoundary>} />
                 <Route path="profile" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Profile /></Suspense></RouteErrorBoundary>} />
-                <Route path="employees" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Employees /></Suspense></RouteErrorBoundary>} />
-                <Route path="employees/new" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary>} />
-                <Route path="employees/:id" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeView /></Suspense></RouteErrorBoundary>} />
-                <Route path="employees/:id/edit" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary>} />
+                <Route path="employees" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Employees /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="employees/new" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="employees/:id" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeView /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="employees/:id/edit" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="departments" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Departments /></Suspense></RouteErrorBoundary>} />
                 <Route path="attendance" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Attendance /></Suspense></RouteErrorBoundary>} />
                 <Route path="leaves" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Leaves /></Suspense></RouteErrorBoundary>} />
                 <Route path="tasks" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Tasks /></Suspense></RouteErrorBoundary>} />
                 <Route path="warnings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Warnings /></Suspense></RouteErrorBoundary>} />
                 <Route path="complaints" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Complaints /></Suspense></RouteErrorBoundary>} />
-                <Route path="payroll" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayrollDashboard /></Suspense></RouteErrorBoundary>} />
+                <Route path="payroll" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayrollDashboard /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="payslips" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayslipView /></Suspense></RouteErrorBoundary>} />
-                <Route path="announcements" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Announcements /></Suspense></RouteErrorBoundary>} />
-                <Route path="reports" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Reports /></Suspense></RouteErrorBoundary>} />
-                <Route path="users" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><UserManagement /></Suspense></RouteErrorBoundary>} />
+                <Route path="announcements" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Announcements /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="reports" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Reports /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="users" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><UserManagement /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="settings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></RouteErrorBoundary>} />
               </Route>
             </Routes>

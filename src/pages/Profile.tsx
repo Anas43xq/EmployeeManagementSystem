@@ -132,7 +132,7 @@ export default function Profile() {
             </div>
             </div>
           </div>
-          {employee && (
+          {employee && (user?.role === 'admin' || user?.role === 'hr') && (
             <Link to={`/employees/${employee.id}/edit`} className="shrink-0">
               <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>
                 {t('common.edit')}
