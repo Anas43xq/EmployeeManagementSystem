@@ -55,6 +55,31 @@ export function useLeaves() {
     };
   }, [user]);
 
+  // Real-time subscription for leave_balances table
+  useEffect(() => {
+    if (!user?.employeeId) return;
+
+    const channel = supabase
+      .channel('leave-balances-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leave_balances',
+          filter: `employee_id=eq.${user.employeeId}`,
+        },
+        () => {
+          loadLeaveBalance();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.employeeId]);
+
   const loadLeaveBalance = async () => {
     if (!user?.employeeId) return;
 
