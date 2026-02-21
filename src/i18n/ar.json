@@ -36,7 +36,8 @@
     "required": "مطلوب",
     "days": "أيام",
     "back": "رجوع",
-    "points": "نقاط"
+    "points": "نقاط",
+    "saveChanges": "حفظ التغييرات"
   },
   "auth": {
     "ems": "ديف تيم",
@@ -93,7 +94,14 @@
   "profile": {
     "viewYourDetails": "عرض ملفك الشخصي ومعلوماتك الوظيفية",
     "noProfileLinked": "لا يوجد ملف موظف مرتبط",
-    "contactAdmin": "يرجى التواصل مع المسؤول لربط حسابك بملف موظف."
+    "contactAdmin": "يرجى التواصل مع المسؤول لربط حسابك بملف موظف.",
+    "editProfile": "تعديل الملف الشخصي",
+    "updateYourInfo": "تحديث معلومات الاتصال الخاصة بك",
+    "contactInfo": "معلومات الاتصال",
+    "addressInfo": "معلومات العنوان",
+    "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+    "updateFailed": "فشل تحديث الملف الشخصي",
+    "noEmployeeRecord": "لم يتم العثور على سجل موظف"
   },
   "dashboard": {
     "title": "لوحة التحكم",

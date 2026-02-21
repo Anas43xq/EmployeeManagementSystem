@@ -14,6 +14,7 @@ const Employees = lazy(() => import('./pages/Employees'));
 const EmployeeView = lazy(() => import('./pages/EmployeeView'));
 const EmployeeEdit = lazy(() => import('./pages/EmployeeEdit'));
 const Profile = lazy(() => import('./pages/Profile'));
+const ProfileEdit = lazy(() => import('./pages/ProfileEdit'));
 const Departments = lazy(() => import('./pages/Departments'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const Leaves = lazy(() => import('./pages/Leaves'));
@@ -54,6 +55,7 @@ function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></RouteErrorBoundary>} />
                 <Route path="profile" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Profile /></Suspense></RouteErrorBoundary>} />
+                <Route path="profile/edit" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><ProfileEdit /></Suspense></RouteErrorBoundary>} />
                 <Route path="employees" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Employees /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="employees/new" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeEdit /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="employees/:id" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><EmployeeView /></Suspense></RouteErrorBoundary></ProtectedRoute>} />

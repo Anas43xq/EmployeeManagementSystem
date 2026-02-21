@@ -132,8 +132,11 @@ export default function Profile() {
             </div>
             </div>
           </div>
-          {employee && (user?.role === 'admin' || user?.role === 'hr') && (
-            <Link to={`/employees/${employee.id}/edit`} className="shrink-0">
+          {employee && (
+            <Link 
+              to={user?.role === 'admin' || user?.role === 'hr' ? `/employees/${employee.id}/edit` : '/profile/edit'} 
+              className="shrink-0"
+            >
               <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>
                 {t('common.edit')}
               </Button>

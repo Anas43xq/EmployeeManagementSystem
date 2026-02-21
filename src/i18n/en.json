@@ -36,7 +36,8 @@
     "required": "Required",
     "days": "days",
     "back": "Back",
-    "points": "pts"
+    "points": "pts",
+    "saveChanges": "Save Changes"
   },
   "auth": {
     "ems": "DevTeam",
@@ -95,7 +96,14 @@
   "profile": {
     "viewYourDetails": "View your employee profile and information",
     "noProfileLinked": "No Employee Profile Linked",
-    "contactAdmin": "Please contact your administrator to link your account to an employee profile."
+    "contactAdmin": "Please contact your administrator to link your account to an employee profile.",
+    "editProfile": "Edit Profile",
+    "updateYourInfo": "Update your contact information",
+    "contactInfo": "Contact Information",
+    "addressInfo": "Address Information",
+    "updateSuccess": "Profile updated successfully",
+    "updateFailed": "Failed to update profile",
+    "noEmployeeRecord": "No employee record found"
   },
   "dashboard": {
     "title": "Dashboard",
