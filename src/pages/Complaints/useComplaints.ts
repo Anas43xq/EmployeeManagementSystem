@@ -8,7 +8,6 @@ import {
   createComplaint,
   updateComplaintStatus,
   deleteComplaint,
-  createComplaintNotification,
 } from '../../services/performanceQueries';
 import { notifyHRAndAdmins, createNotification } from '../../services/dbNotifications';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
@@ -94,7 +93,6 @@ export function useComplaints() {
     setSubmitting(true);
     try {
       await createComplaint(formData, user.employeeId);
-      await createComplaintNotification(user.id, 'submitted');
 
       // Notify HR/Admin about new complaint with email
       const { data: employeeData } = await db
