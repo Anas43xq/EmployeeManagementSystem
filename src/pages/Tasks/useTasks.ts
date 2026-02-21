@@ -183,15 +183,6 @@ export function useTasks() {
           'task',
           false
         ).catch(() => {});
-
-        // Also notify the user who assigned the task
-        if (task.assigned_by) {
-          try {
-            await createTaskNotification(task.assigned_by, task.title, newStatus === 'completed' ? 'completed' : 'assigned');
-          } catch {
-            // best-effort
-          }
-        }
       }
 
       loadTasks();

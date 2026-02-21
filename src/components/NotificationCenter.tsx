@@ -41,7 +41,13 @@ export default function NotificationCenter() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as DbNotification, ...prev]);
+          const newNotif = payload.new as DbNotification;
+          setNotifications((prev) => {
+            // Guard: skip if not for this user (bulk-insert filter leak) or already exists
+            if (newNotif.user_id !== user.id) return prev;
+            if (prev.some(n => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev];
+          });
         }
       )
       .on(
