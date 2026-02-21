@@ -24,6 +24,9 @@ export default function Settings() {
   const [notificationPrefs, setNotificationPrefs] = useState({
     leave_approvals: true,
     attendance_reminders: true,
+    warnings: true,
+    tasks: true,
+    complaints: true,
   });
   const [savingPrefs, setSavingPrefs] = useState(false);
 
@@ -44,6 +47,9 @@ export default function Settings() {
         setNotificationPrefs({
           leave_approvals: prefs.email_leave_approvals ?? true,
           attendance_reminders: prefs.email_attendance_reminders ?? true,
+          warnings: prefs.email_warnings ?? true,
+          tasks: prefs.email_tasks ?? true,
+          complaints: prefs.email_complaints ?? true,
         });
       }
     } catch (err) {
@@ -69,6 +75,9 @@ export default function Settings() {
           user_id: user.id,
           email_leave_approvals: notificationPrefs.leave_approvals,
           email_attendance_reminders: notificationPrefs.attendance_reminders,
+          email_warnings: notificationPrefs.warnings,
+          email_tasks: notificationPrefs.tasks,
+          email_complaints: notificationPrefs.complaints,
         })
         .eq('user_id', user.id);
 

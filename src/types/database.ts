@@ -1010,7 +1010,10 @@ export type Database = {
         Row: {
           created_at: string | null
           email_attendance_reminders: boolean | null
+          email_complaints: boolean | null
           email_leave_approvals: boolean | null
+          email_tasks: boolean | null
+          email_warnings: boolean | null
           id: string
           updated_at: string | null
           user_id: string
@@ -1018,7 +1021,10 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email_attendance_reminders?: boolean | null
+          email_complaints?: boolean | null
           email_leave_approvals?: boolean | null
+          email_tasks?: boolean | null
+          email_warnings?: boolean | null
           id?: string
           updated_at?: string | null
           user_id: string
@@ -1026,7 +1032,10 @@ export type Database = {
         Update: {
           created_at?: string | null
           email_attendance_reminders?: boolean | null
+          email_complaints?: boolean | null
           email_leave_approvals?: boolean | null
+          email_tasks?: boolean | null
+          email_warnings?: boolean | null
           id?: string
           updated_at?: string | null
           user_id?: string

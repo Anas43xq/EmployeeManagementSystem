@@ -375,6 +375,9 @@ CREATE TABLE public.user_preferences (
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
   email_leave_approvals BOOLEAN DEFAULT true,
   email_attendance_reminders BOOLEAN DEFAULT true,
+  email_warnings BOOLEAN DEFAULT true,
+  email_tasks BOOLEAN DEFAULT true,
+  email_complaints BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

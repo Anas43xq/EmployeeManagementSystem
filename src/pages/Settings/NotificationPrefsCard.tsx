@@ -5,10 +5,16 @@ interface NotificationPrefsCardProps {
   notificationPrefs: {
     leave_approvals: boolean;
     attendance_reminders: boolean;
+    warnings: boolean;
+    tasks: boolean;
+    complaints: boolean;
   };
   setNotificationPrefs: React.Dispatch<React.SetStateAction<{
     leave_approvals: boolean;
     attendance_reminders: boolean;
+    warnings: boolean;
+    tasks: boolean;
+    complaints: boolean;
   }>>;
   savingPrefs: boolean;
   onSave: () => void;
@@ -46,6 +52,33 @@ export default function NotificationPrefsCard({
             className="rounded text-primary-900 focus:ring-primary-500"
           />
           <span className="text-sm text-gray-700">{t('settings.attendanceReminders')}</span>
+        </label>
+        <label className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={notificationPrefs.warnings}
+            onChange={(e) => setNotificationPrefs(prev => ({ ...prev, warnings: e.target.checked }))}
+            className="rounded text-primary-900 focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">{t('settings.emailWarnings')}</span>
+        </label>
+        <label className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={notificationPrefs.tasks}
+            onChange={(e) => setNotificationPrefs(prev => ({ ...prev, tasks: e.target.checked }))}
+            className="rounded text-primary-900 focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">{t('settings.emailTasks')}</span>
+        </label>
+        <label className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={notificationPrefs.complaints}
+            onChange={(e) => setNotificationPrefs(prev => ({ ...prev, complaints: e.target.checked }))}
+            className="rounded text-primary-900 focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-700">{t('settings.emailComplaints')}</span>
         </label>
         <button
           onClick={onSave}
