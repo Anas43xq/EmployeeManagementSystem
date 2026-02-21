@@ -138,31 +138,40 @@ export async function notifyHRAndAdmins(
   sendEmail: boolean = true
 ): Promise<void> {
   try {
-    const { data: users, error: fetchError } = await db
-      .from('users')
-      .select('id')
-      .in('role', ['admin', 'hr'])
-      .eq('is_active', true);
+    // Use SECURITY DEFINER RPC to bypass RLS — allows staff to notify admin/HR
+    const { error: rpcError } = await (supabase.rpc as any)('notify_role_users', {
+      p_title: title,
+      p_message: message,
+      p_type: type,
+      p_roles: ['admin', 'hr'],
+    });
 
-    if (fetchError) {
-      console.error('Error fetching HR/Admin users:', fetchError);
+    if (rpcError) {
+      console.error('Error notifying HR/Admin via RPC:', rpcError);
       return;
     }
 
-    if (!users || users.length === 0) {
-      console.warn('No active HR/Admin users found to notify');
-      return;
+    // Send emails if requested (uses a separate SECURITY DEFINER function to get emails)
+    if (sendEmail) {
+      try {
+        const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', {
+          p_roles: ['admin', 'hr'],
+        });
+
+        if (!emailError && emailData) {
+          for (const row of emailData as unknown as { user_id: string; email: string }[]) {
+            await sendEmailNotification({
+              to: row.email,
+              subject: title,
+              body: message,
+              type,
+            });
+          }
+        }
+      } catch {
+        // Email sending is best-effort — don't block on failure
+      }
     }
-
-    const notifications = (users as { id: string }[]).map((user) => ({
-      userId: user.id,
-      title,
-      message,
-      type,
-      sendEmail,
-    }));
-
-    await createNotifications(notifications);
   } catch (err) {
     console.error('Error in notifyHRAndAdmins:', err);
   }

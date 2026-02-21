@@ -22,6 +22,7 @@ export default function Tasks() {
     submitting,
     editingTask,
     isStaff,
+    processingTasks,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
@@ -75,6 +76,7 @@ export default function Tasks() {
               onStatusChange={handleStatusChange}
               onEdit={!isStaff ? handleOpenModal : undefined}
               onDelete={!isStaff ? handleDelete : undefined}
+              processingTasks={processingTasks}
             />
           ))}
         </div>

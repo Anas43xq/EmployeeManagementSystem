@@ -10,6 +10,7 @@ interface TaskCardProps {
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onEdit?: (task: EmployeeTask) => void;
   onDelete?: (taskId: string) => void;
+  processingTasks?: Set<string>;
 }
 
 export default function TaskCard({
@@ -18,8 +19,10 @@ export default function TaskCard({
   onStatusChange,
   onEdit,
   onDelete,
+  processingTasks,
 }: TaskCardProps) {
   const { t } = useTranslation();
+  const isProcessing = processingTasks?.has(task.id) || false;
   const isOverdue = isPast(parseISO(task.deadline)) && task.status !== 'completed' && task.status !== 'cancelled';
   const employeeName = task.employees
     ? `${task.employees.first_name} ${task.employees.last_name}`
@@ -77,9 +80,18 @@ export default function TaskCard({
           {isStaff && task.status === 'pending' && (
             <button
               onClick={() => onStatusChange(task.id, 'in_progress')}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+              disabled={isProcessing}
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg transition-colors ${
+                isProcessing
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              <Clock className="w-3 h-3" />
+              {isProcessing ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+              ) : (
+                <Clock className="w-3 h-3" />
+              )}
               <span className="hidden sm:inline">{t('tasks.startTask')}</span>
               <span className="sm:hidden">Start</span>
             </button>
@@ -87,9 +99,18 @@ export default function TaskCard({
           {isStaff && task.status === 'in_progress' && (
             <button
               onClick={() => onStatusChange(task.id, 'completed')}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-green-100 text-green-700 hover:bg-green-200"
+              disabled={isProcessing}
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg transition-colors ${
+                isProcessing
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+              }`}
             >
-              <CheckCircle className="w-3 h-3" />
+              {isProcessing ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-400"></div>
+              ) : (
+                <CheckCircle className="w-3 h-3" />
+              )}
               <span className="hidden sm:inline">{t('tasks.markComplete')}</span>
               <span className="sm:hidden">Done</span>
             </button>
@@ -101,7 +122,12 @@ export default function TaskCard({
               {onEdit && task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => onEdit(task)}
-                  className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                  disabled={isProcessing}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isProcessing
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-500 hover:text-primary-600 hover:bg-primary-50'
+                  }`}
                 >
                   <Edit className="w-4 h-4" />
                 </button>
@@ -109,9 +135,18 @@ export default function TaskCard({
               {onDelete && (
                 <button
                   onClick={() => onDelete(task.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  disabled={isProcessing}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isProcessing
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                  }`}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {isProcessing ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </button>
               )}
             </>

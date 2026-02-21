@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../services/supabase';
+import { supabase, db } from '../../services/supabase';
 import {
   getTasks,
   createTask,
@@ -11,6 +11,7 @@ import {
   deleteTask,
   createTaskNotification,
 } from '../../services/performanceQueries';
+import { notifyHRAndAdmins } from '../../services/dbNotifications';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';
 import type { EmployeeBasic } from '../../types';
@@ -28,6 +29,7 @@ export function useTasks() {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<TaskFormData>(initialTaskFormData);
   const [editingTask, setEditingTask] = useState<EmployeeTask | null>(null);
+  const [processingTasks, setProcessingTasks] = useState<Set<string>>(new Set());
 
   const isStaff = user?.role === 'staff';
 
@@ -63,6 +65,30 @@ export function useTasks() {
     loadTasks();
     loadEmployees();
   }, [loadTasks, loadEmployees]);
+
+  // Real-time subscription for employee_tasks table
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employee_tasks',
+        },
+        () => {
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadTasks]);
 
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
@@ -137,22 +163,56 @@ export function useTasks() {
   };
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    if (processingTasks.has(taskId)) return;
+    setProcessingTasks(prev => new Set(prev).add(taskId));
     try {
+      const task = tasks.find(t => t.id === taskId);
       await updateTaskStatus(taskId, newStatus);
       showNotification('success', t('tasks.statusUpdated'));
+
+      // Notify admin/HR when staff changes task status
+      if (isStaff && task) {
+        const statusLabel = newStatus === 'in_progress' ? 'started' : newStatus;
+        const employeeName = task.employees
+          ? `${task.employees.first_name} ${task.employees.last_name}`
+          : 'An employee';
+
+        await notifyHRAndAdmins(
+          newStatus === 'completed' ? 'Task Completed' : 'Task Status Updated',
+          `${employeeName} has ${statusLabel} the task: "${task.title}"`,
+          'task',
+          false
+        ).catch(() => {});
+
+        // Also notify the user who assigned the task
+        if (task.assigned_by) {
+          try {
+            await createTaskNotification(task.assigned_by, task.title, newStatus === 'completed' ? 'completed' : 'assigned');
+          } catch {
+            // best-effort
+          }
+        }
+      }
+
       loadTasks();
     } catch (error: any) {
       showNotification('error', error.message || t('tasks.statusUpdateFailed'));
+    } finally {
+      setProcessingTasks(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
   };
 
   const handleDelete = async (taskId: string) => {
+    if (processingTasks.has(taskId)) return;
+    setProcessingTasks(prev => new Set(prev).add(taskId));
     try {
       await deleteTask(taskId);
       showNotification('success', t('tasks.deleteSuccess'));
       loadTasks();
     } catch (error: any) {
       showNotification('error', error.message || t('tasks.deleteFailed'));
+    } finally {
+      setProcessingTasks(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
   };
 
@@ -170,6 +230,7 @@ export function useTasks() {
     editingTask,
     isStaff,
     user,
+    processingTasks,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,

@@ -81,6 +81,8 @@ DROP FUNCTION IF EXISTS select_employee_of_week(DATE) CASCADE;
 DROP FUNCTION IF EXISTS calculate_attendance_deductions(UUID, INTEGER, INTEGER) CASCADE;
 DROP FUNCTION IF EXISTS calculate_leave_deductions(UUID, INTEGER, INTEGER) CASCADE;
 DROP FUNCTION IF EXISTS check_leave_overlap() CASCADE;
+DROP FUNCTION IF EXISTS notify_role_users(TEXT, TEXT, TEXT, TEXT[]) CASCADE;
+DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[]) CASCADE;
 
 -- =============================================
 -- EXTENSIONS
@@ -112,6 +114,49 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
+
+-- Notify users with specific roles (bypasses RLS for staff→admin/HR notifications)
+CREATE OR REPLACE FUNCTION public.notify_role_users(
+  p_title TEXT,
+  p_message TEXT,
+  p_type TEXT DEFAULT 'system',
+  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr']
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.notifications (user_id, title, message, type)
+  SELECT u.id, p_title, p_message, p_type
+  FROM public.users u
+  WHERE u.role = ANY(p_roles) AND u.is_active = true;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.notify_role_users(TEXT, TEXT, TEXT, TEXT[]) TO authenticated;
+
+-- Get email addresses of users with specific roles (bypasses RLS for email notifications)
+CREATE OR REPLACE FUNCTION public.get_role_user_emails(
+  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr']
+)
+RETURNS TABLE(user_id UUID, email TEXT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT u.id, e.email
+  FROM public.users u
+  JOIN public.employees e ON u.employee_id = e.id
+  WHERE u.role = ANY(p_roles) AND u.is_active = true
+    AND e.email IS NOT NULL AND e.email != '';
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[]) TO authenticated;
 
 -- =============================================
 -- CORE TABLES
@@ -1244,6 +1289,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_warnings') THEN
       ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_warnings;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_tasks') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_tasks;
     END IF;
   END IF;
 END $$;
