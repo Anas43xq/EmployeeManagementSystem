@@ -95,7 +95,7 @@ serve(async (req) => {
       }
 
       const options = await generateRegistrationOptions({
-        rpName: 'StaffHub',
+        rpName: 'DevTeamHub',
         rpID: rpID,
         userID: userIdBytes,
         userName: user.email ?? '',
