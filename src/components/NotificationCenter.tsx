@@ -30,8 +30,10 @@ export default function NotificationCenter() {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Use unique channel name to prevent StrictMode ghost subscriptions
+    const channelName = `notifications-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

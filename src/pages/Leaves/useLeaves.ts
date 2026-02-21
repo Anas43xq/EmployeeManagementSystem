@@ -326,7 +326,8 @@ export function useLeaves() {
         'New Leave Request',
         `${employeeName} has submitted a ${formData.leave_type} leave request (${formData.start_date} to ${formData.end_date})`,
         'leave',
-        true
+        true,
+        user.id
       );
 
       setFormData({

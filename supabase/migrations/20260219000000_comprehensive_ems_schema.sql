@@ -82,7 +82,9 @@ DROP FUNCTION IF EXISTS calculate_attendance_deductions(UUID, INTEGER, INTEGER) 
 DROP FUNCTION IF EXISTS calculate_leave_deductions(UUID, INTEGER, INTEGER) CASCADE;
 DROP FUNCTION IF EXISTS check_leave_overlap() CASCADE;
 DROP FUNCTION IF EXISTS notify_role_users(TEXT, TEXT, TEXT, TEXT[]) CASCADE;
+DROP FUNCTION IF EXISTS notify_role_users(TEXT, TEXT, TEXT, TEXT[], UUID) CASCADE;
 DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[]) CASCADE;
+DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[], UUID) CASCADE;
 
 -- =============================================
 -- EXTENSIONS
@@ -116,11 +118,13 @@ END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
 -- Notify users with specific roles (bypasses RLS for staff→admin/HR notifications)
+-- p_exclude_user_id: skip this user so people are not notified about their own actions
 CREATE OR REPLACE FUNCTION public.notify_role_users(
   p_title TEXT,
   p_message TEXT,
   p_type TEXT DEFAULT 'system',
-  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr']
+  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr'],
+  p_exclude_user_id UUID DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -131,15 +135,19 @@ BEGIN
   INSERT INTO public.notifications (user_id, title, message, type)
   SELECT u.id, p_title, p_message, p_type
   FROM public.users u
-  WHERE u.role = ANY(p_roles) AND u.is_active = true;
+  WHERE u.role = ANY(p_roles)
+    AND u.is_active = true
+    AND (p_exclude_user_id IS NULL OR u.id != p_exclude_user_id);
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.notify_role_users(TEXT, TEXT, TEXT, TEXT[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.notify_role_users(TEXT, TEXT, TEXT, TEXT[], UUID) TO authenticated;
 
 -- Get email addresses of users with specific roles (bypasses RLS for email notifications)
+-- p_exclude_user_id: skip this user so they don't get emailed about their own actions
 CREATE OR REPLACE FUNCTION public.get_role_user_emails(
-  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr']
+  p_roles TEXT[] DEFAULT ARRAY['admin', 'hr'],
+  p_exclude_user_id UUID DEFAULT NULL
 )
 RETURNS TABLE(user_id UUID, email TEXT)
 LANGUAGE plpgsql
@@ -151,12 +159,14 @@ BEGIN
   SELECT u.id, e.email
   FROM public.users u
   JOIN public.employees e ON u.employee_id = e.id
-  WHERE u.role = ANY(p_roles) AND u.is_active = true
-    AND e.email IS NOT NULL AND e.email != '';
+  WHERE u.role = ANY(p_roles)
+    AND u.is_active = true
+    AND e.email IS NOT NULL AND e.email != ''
+    AND (p_exclude_user_id IS NULL OR u.id != p_exclude_user_id);
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[], UUID) TO authenticated;
 
 -- =============================================
 -- CORE TABLES

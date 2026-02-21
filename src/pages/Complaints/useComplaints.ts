@@ -111,7 +111,8 @@ export function useComplaints() {
         'New Complaint Submitted',
         `${employeeName} has submitted a ${formData.category} complaint.`,
         'complaint',
-        true
+        true,
+        user.id
       );
 
       showNotification('success', t('complaints.createSuccess'));

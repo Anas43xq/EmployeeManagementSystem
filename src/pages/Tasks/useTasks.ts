@@ -181,7 +181,8 @@ export function useTasks() {
           newStatus === 'completed' ? 'Task Completed' : 'Task Status Updated',
           `${employeeName} has ${statusLabel} the task: "${task.title}"`,
           'task',
-          false
+          false,
+          user?.id
         ).catch(() => {});
       }
 

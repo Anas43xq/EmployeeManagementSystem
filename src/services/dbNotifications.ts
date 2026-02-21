@@ -135,16 +135,23 @@ export async function notifyHRAndAdmins(
   title: string,
   message: string,
   type: NotificationType,
-  sendEmail: boolean = true
+  sendEmail: boolean = true,
+  excludeUserId?: string
 ): Promise<void> {
   try {
     // Use SECURITY DEFINER RPC to bypass RLS — allows staff to notify admin/HR
-    const { error: rpcError } = await (supabase.rpc as any)('notify_role_users', {
+    // excludeUserId prevents notifying the acting user about their own action
+    const rpcParams: Record<string, unknown> = {
       p_title: title,
       p_message: message,
       p_type: type,
       p_roles: ['admin', 'hr'],
-    });
+    };
+    if (excludeUserId) {
+      rpcParams.p_exclude_user_id = excludeUserId;
+    }
+
+    const { error: rpcError } = await (supabase.rpc as any)('notify_role_users', rpcParams);
 
     if (rpcError) {
       console.error('Error notifying HR/Admin via RPC:', rpcError);
@@ -154,9 +161,14 @@ export async function notifyHRAndAdmins(
     // Send emails if requested (uses a separate SECURITY DEFINER function to get emails)
     if (sendEmail) {
       try {
-        const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', {
+        const emailRpcParams: Record<string, unknown> = {
           p_roles: ['admin', 'hr'],
-        });
+        };
+        if (excludeUserId) {
+          emailRpcParams.p_exclude_user_id = excludeUserId;
+        }
+
+        const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', emailRpcParams);
 
         if (!emailError && emailData) {
           for (const row of emailData as unknown as { user_id: string; email: string }[]) {

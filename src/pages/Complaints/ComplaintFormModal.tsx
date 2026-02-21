@@ -107,12 +107,6 @@ export default function ComplaintFormModal({
               placeholder={t('complaints.descriptionPlaceholder')}
             />
           </div>
-
-          <div className="bg-primary-50 border-l-4 border-primary-400 p-4">
-            <p className="text-sm text-primary-700">
-              {t('complaints.confidentialNote')}
-            </p>
-          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button type="button" variant="secondary" onClick={onClose}>
