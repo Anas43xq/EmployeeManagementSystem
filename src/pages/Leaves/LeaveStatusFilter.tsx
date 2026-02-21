@@ -9,10 +9,10 @@ export default function LeaveStatusFilter({ filter, setFilter }: LeaveStatusFilt
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center space-x-4 mb-6">
+    <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
       <button
         onClick={() => setFilter('all')}
-        className={`px-4 py-2 rounded-lg font-medium ${
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium ${
           filter === 'all' ? 'bg-primary-900 text-white' : 'bg-gray-100 text-gray-700'
         }`}
       >
@@ -20,7 +20,7 @@ export default function LeaveStatusFilter({ filter, setFilter }: LeaveStatusFilt
       </button>
       <button
         onClick={() => setFilter('pending')}
-        className={`px-4 py-2 rounded-lg font-medium ${
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium ${
           filter === 'pending' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700'
         }`}
       >
@@ -28,7 +28,7 @@ export default function LeaveStatusFilter({ filter, setFilter }: LeaveStatusFilt
       </button>
       <button
         onClick={() => setFilter('approved')}
-        className={`px-4 py-2 rounded-lg font-medium ${
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium ${
           filter === 'approved' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'
         }`}
       >
@@ -36,7 +36,7 @@ export default function LeaveStatusFilter({ filter, setFilter }: LeaveStatusFilt
       </button>
       <button
         onClick={() => setFilter('rejected')}
-        className={`px-4 py-2 rounded-lg font-medium ${
+        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium ${
           filter === 'rejected' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'
         }`}
       >
