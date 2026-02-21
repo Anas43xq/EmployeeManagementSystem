@@ -97,9 +97,9 @@ export default function Profile() {
       <PageHeader title={t('nav.myProfile')} subtitle={t('profile.viewYourDetails')} />
 
       <Card>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 text-center sm:text-left">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden shrink-0">
             {employee?.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -107,18 +107,18 @@ export default function Profile() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-3xl font-bold text-primary-900">
+              <span className="text-2xl sm:text-3xl font-bold text-primary-900">
                 {employee ? `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}` : user?.email?.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
               {employee ? `${employee.first_name} ${employee.last_name}` : user?.email}
             </h2>
             {employee && <p className="text-gray-600">{employee.position}</p>}
             {employee && <p className="text-sm text-gray-500">{employee.employee_number}</p>}
-            <div className="flex items-center space-x-2 mt-2">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
               {getRoleBadge()}
               {employee && (
                 <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
@@ -133,7 +133,7 @@ export default function Profile() {
             </div>
           </div>
           {employee && (
-            <Link to={`/employees/${employee.id}/edit`}>
+            <Link to={`/employees/${employee.id}/edit`} className="shrink-0">
               <Button variant="secondary" icon={<Edit className="w-4 h-4" />}>
                 {t('common.edit')}
               </Button>
@@ -143,41 +143,41 @@ export default function Profile() {
       </Card>
 
       {employee && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <User className="w-5 h-5 text-primary-900" />
+              <User className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.personalInfo')}</span>
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Mail className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.email')}</p>
-                  <p className="font-medium">{employee.email}</p>
+                  <p className="font-medium break-all">{employee.email}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.phone')}</p>
                   <p className="font-medium">{employee.phone || t('common.na')}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Calendar className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.dateOfBirth')}</p>
                   <p className="font-medium">
                     {employee.date_of_birth ? format(new Date(employee.date_of_birth), 'PPP') : t('common.na')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.address')}</p>
-                  <p className="font-medium">
+                  <p className="font-medium break-words">
                     {employee.address ? `${employee.address}, ${employee.city}, ${employee.state} ${employee.postal_code}` : t('common.na')}
                   </p>
                 </div>
@@ -185,29 +185,29 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Briefcase className="w-5 h-5 text-primary-900" />
+              <Briefcase className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.employmentDetails')}</span>
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Building2 className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Building2 className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.department')}</p>
                   <p className="font-medium">{employee.departments?.name || t('common.na')}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Briefcase className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Briefcase className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.position')}</p>
                   <p className="font-medium">{employee.position}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Calendar className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.hireDate')}</p>
                   <p className="font-medium">
                     {employee.hire_date ? format(new Date(employee.hire_date), 'PPP') : t('common.na')}
@@ -221,9 +221,9 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Phone className="w-5 h-5 text-primary-900" />
+              <Phone className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.emergencyContact')}</span>
             </h3>
             <div className="space-y-4">
@@ -231,9 +231,9 @@ export default function Profile() {
                 <p className="text-sm text-gray-500">{t('common.name')}</p>
                 <p className="font-medium">{employee.emergency_contact_name || t('common.na')}</p>
               </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-gray-400" />
-                <div>
+              <div className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
                   <p className="text-sm text-gray-500">{t('employees.emergencyPhone')}</p>
                   <p className="font-medium">{employee.emergency_contact_phone || t('common.na')}</p>
                 </div>

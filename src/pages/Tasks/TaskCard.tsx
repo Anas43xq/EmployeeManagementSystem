@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { format, isPast, parseISO } from 'date-fns';
 import { Calendar, CheckCircle, Clock, Edit, Trash2, AlertTriangle } from 'lucide-react';
-import { Button } from '../../components/ui';
 import type { EmployeeTask, TaskStatus } from './types';
 import { priorityColors, statusColors } from './types';
 
@@ -73,26 +72,27 @@ export default function TaskCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-1 shrink-0">
           {/* Employee actions */}
           {isStaff && task.status === 'pending' && (
-            <Button
-              variant="secondary"
+            <button
               onClick={() => onStatusChange(task.id, 'in_progress')}
-              icon={<Clock className="w-4 h-4" />}
-              className="text-sm"
+              className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
             >
-              {t('tasks.startTask')}
-            </Button>
+              <Clock className="w-3 h-3" />
+              <span className="hidden sm:inline">{t('tasks.startTask')}</span>
+              <span className="sm:hidden">Start</span>
+            </button>
           )}
           {isStaff && task.status === 'in_progress' && (
-            <Button
+            <button
               onClick={() => onStatusChange(task.id, 'completed')}
-              icon={<CheckCircle className="w-4 h-4" />}
-              className="text-sm"
+              className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-green-100 text-green-700 hover:bg-green-200"
             >
-              {t('tasks.markComplete')}
-            </Button>
+              <CheckCircle className="w-3 h-3" />
+              <span className="hidden sm:inline">{t('tasks.markComplete')}</span>
+              <span className="sm:hidden">Done</span>
+            </button>
           )}
 
           {/* Admin/HR actions */}

@@ -189,81 +189,81 @@ export default function PayrollDashboard() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{t('payroll.totalRecords', 'Total Records')}</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+          <div className="p-2 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.totalRecords', 'Total Records')}</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <Users className="w-8 h-8 text-primary-600" />
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 shrink-0" />
             </div>
           </div>
         </Card>
 
         <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{t('payroll.draft', 'Draft')}</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.draft}</p>
+          <div className="p-2 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.draft', 'Draft')}</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.draft}</p>
               </div>
-              <FileText className="w-8 h-8 text-yellow-600" />
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 shrink-0" />
             </div>
           </div>
         </Card>
 
         <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{t('payroll.approved', 'Approved')}</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.approved}</p>
+          <div className="p-2 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.approved', 'Approved')}</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-600">{stats.approved}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-blue-600" />
+              <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 shrink-0" />
             </div>
           </div>
         </Card>
 
         <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{t('payroll.paid', 'Paid')}</p>
-                <p className="text-2xl font-bold text-primary-600">{stats.paid}</p>
+          <div className="p-2 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.paid', 'Paid')}</p>
+                <p className="text-lg sm:text-2xl font-bold text-primary-600">{stats.paid}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-primary-600" />
+              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 shrink-0" />
             </div>
           </div>
         </Card>
 
         <Card>
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">{t('payroll.totalAmount', 'Total Amount')}</p>
-                <p className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalAmount)}</p>
+          <div className="p-2 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.totalAmount', 'Total Amount')}</p>
+                <p className="text-sm sm:text-lg font-bold text-gray-900 truncate">{formatCurrency(stats.totalAmount)}</p>
               </div>
-              <Calculator className="w-8 h-8 text-purple-600" />
+              <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 shrink-0" />
             </div>
           </div>
         </Card>
       </div>
 
       <Card>
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">{t('common.filters', 'Filters')}:</span>
+        <div className="p-3 sm:p-4 border-b border-gray-200">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500 shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">{t('common.filters', 'Filters')}:</span>
               </div>
 
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="flex-1 min-w-[100px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
                   <option key={month} value={month}>{getMonthName(month)}</option>
@@ -273,7 +273,7 @@ export default function PayrollDashboard() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="flex-1 min-w-[80px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                   <option key={year} value={year}>{year}</option>
@@ -283,7 +283,7 @@ export default function PayrollDashboard() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="flex-1 min-w-[100px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">{t('payroll.allStatuses', 'All Statuses')}</option>
                 <option value="draft">{t('payroll.draft', 'Draft')}</option>
@@ -293,7 +293,7 @@ export default function PayrollDashboard() {
             </div>
 
             {selectedPayrolls.length > 0 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="primary"
                   onClick={handleApproveSelected}

@@ -41,10 +41,10 @@ interface HeaderProps {
 
 function Header({ children, onClose }: HeaderProps) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
-      <h2 className="text-xl font-bold text-gray-900">{children}</h2>
-      <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-        <X className="w-6 h-6" />
+    <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 shrink-0">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate pr-2">{children}</h2>
+      <button onClick={onClose} className="text-gray-500 hover:text-gray-700 shrink-0">
+        <X className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
     </div>
   );
@@ -57,7 +57,7 @@ interface BodyProps {
 
 function Body({ children, className = '' }: BodyProps) {
   return (
-    <div className={`p-6 space-y-4 overflow-y-auto ${className}`}>
+    <div className={`p-4 sm:p-6 space-y-3 sm:space-y-4 overflow-y-auto ${className}`}>
       {children}
     </div>
   );
@@ -69,7 +69,7 @@ interface FooterProps {
 
 function Footer({ children }: FooterProps) {
   return (
-    <div className="flex justify-end space-x-3 px-6 pb-6 pt-2">
+    <div className="flex flex-wrap justify-end gap-2 sm:gap-3 px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
       {children}
     </div>
   );

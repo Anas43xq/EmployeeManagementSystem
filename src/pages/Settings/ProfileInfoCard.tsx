@@ -68,14 +68,14 @@ export default function ProfileInfoCard({
                   type="email"
                   value={user?.email}
                   disabled
-                  className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 truncate"
+                  className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 truncate"
                 />
                 <button
                   onClick={() => setIsEditingEmail(true)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors shrink-0"
+                  className="flex items-center justify-center p-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors shrink-0"
+                  title={t('common.edit')}
                 >
                   <Edit2 className="w-4 h-4" />
-                  <span className="text-sm">{t('common.edit')}</span>
                 </button>
               </div>
             )}

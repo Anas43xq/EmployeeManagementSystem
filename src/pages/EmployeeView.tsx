@@ -97,34 +97,37 @@ export default function EmployeeView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/employees"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
           >
-            <ArrowLeft className="w-6 h-6 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">
               {employee.first_name} {employee.last_name}
             </h1>
-            <p className="text-gray-600 mt-1">{employee.position}</p>
+            <p className="text-gray-600 text-sm sm:text-base truncate">{employee.position}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <Link to={`/employees/${id}/edit`}>
-            <Button icon={<Edit className="w-5 h-5" />}>
-              {t('employees.editEmployee')}
+            <Button icon={<Edit className="w-4 h-4" />} className="text-sm">
+              <span className="hidden sm:inline">{t('employees.editEmployee')}</span>
+              <span className="sm:hidden">{t('common.edit')}</span>
             </Button>
           </Link>
           {!employee.termination_date && (
             <Button
               variant="danger"
-              icon={<UserX className="w-5 h-5" />}
+              icon={<UserX className="w-4 h-4" />}
               onClick={() => setTerminateModal(true)}
+              className="text-sm"
             >
-              {t('employees.terminateEmployee')}
+              <span className="hidden sm:inline">{t('employees.terminateEmployee')}</span>
+              <span className="sm:hidden">{t('employees.terminate')}</span>
             </Button>
           )}
         </div>

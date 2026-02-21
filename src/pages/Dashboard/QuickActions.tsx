@@ -14,9 +14,9 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
   const actions = getVisibleQuickActions(userRole as any);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">{t('dashboard.quickActions')}</h2>
-      <div className={`grid gap-4 ${actions.length <= 2 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('dashboard.quickActions')}</h2>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {actions.map((action) => {
           const iconMap: { [key: string]: any } = {
             Users,
@@ -36,13 +36,13 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
             <button
               key={action.id}
               onClick={() => navigate(action.to)}
-              className={`p-4 ${colorMap[action.color]} rounded-lg text-left transition-all duration-200 group`}
+              className={`p-3 sm:p-4 ${colorMap[action.color]} rounded-lg text-left transition-all duration-200 group`}
             >
               <div className="flex items-start justify-between">
-                <Icon className="w-6 h-6 mb-2" />
-                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2" />
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <p className="text-sm font-medium text-gray-900">{action.label}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{action.label}</p>
             </button>
           );
         })}

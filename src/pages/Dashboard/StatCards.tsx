@@ -24,16 +24,16 @@ export default function StatCards({ stats, userRole }: StatCardsProps) {
   const statCards = allStatCards.filter(card => isWidgetVisible(card.id, userRole as any));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
       {statCards.map((stat: any) => (
-        <div key={stat.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">{stat.name}</p>
-              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+        <div key={stat.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6 hover:shadow-md transition-shadow overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">{stat.name}</p>
+              <p className="text-xl sm:text-3xl font-bold text-gray-900">{stat.value}</p>
             </div>
-            <div className={`${stat.color} p-3 rounded-lg`}>
-              <stat.icon className="w-6 h-6 text-white" />
+            <div className={`${stat.color} p-2 sm:p-3 rounded-lg shrink-0`}>
+              <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
         </div>

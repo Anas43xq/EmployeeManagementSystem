@@ -117,35 +117,35 @@ export default function PasskeyAttendance({ onAttendanceUpdate, currentAttendanc
         </div>
 
         {currentAttendance && (
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-              <Clock className="w-4 h-4 mr-2" />
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-6">
+            <h4 className="font-medium text-gray-900 mb-3 flex items-center text-sm">
+              <Clock className="w-4 h-4 mr-2 shrink-0" />
               {t('attendance.todayStatus')}
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 shrink-0">{t('attendance.checkIn')}:</span>
-                <span className="font-medium flex items-center">
+            <div className="space-y-3">
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-1">{t('attendance.checkIn')}</span>
+                <span className="font-medium text-sm flex items-center">
                   {currentAttendance.check_in ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1 shrink-0" />
-                      <span className="whitespace-nowrap">{currentAttendance.check_in}</span>
+                      <CheckCircle className="w-4 h-4 text-green-600 mr-1.5 shrink-0" />
+                      <span>{currentAttendance.check_in}</span>
                     </>
                   ) : (
-                    <span className="text-gray-400">{t('attendance.notCheckedIn')}</span>
+                    <span className="text-gray-400">--:--:--</span>
                   )}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 shrink-0">{t('attendance.checkOut')}:</span>
-                <span className="font-medium flex items-center">
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 mb-1">{t('attendance.checkOut')}</span>
+                <span className="font-medium text-sm flex items-center">
                   {currentAttendance.check_out ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-blue-600 mr-1 shrink-0" />
-                      <span className="whitespace-nowrap">{currentAttendance.check_out}</span>
+                      <CheckCircle className="w-4 h-4 text-green-600 mr-1.5 shrink-0" />
+                      <span>{currentAttendance.check_out}</span>
                     </>
                   ) : (
-                    <span className="text-gray-400">{t('attendance.notCheckedOut')}</span>
+                    <span className="text-gray-400">--:--:--</span>
                   )}
                 </span>
               </div>

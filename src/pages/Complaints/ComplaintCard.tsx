@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 import { MessageSquare, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-react';
-import { Button } from '../../components/ui';
 import type { EmployeeComplaint } from './types';
 import { categoryColors, statusColors, priorityColors } from './types';
 
@@ -86,40 +85,39 @@ export default function ComplaintCard({
 
         {/* Admin/HR actions */}
         {!isStaff && (
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             {complaint.status === 'pending' && onTakeReview && (
-              <Button
-                variant="secondary"
+              <button
                 onClick={() => onTakeReview(complaint.id)}
-                icon={<Eye className="w-4 h-4" />}
-                className="text-sm"
+                className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                title={t('complaints.takeReview')}
               >
-                {t('complaints.takeReview')}
-              </Button>
+                <Eye className="w-4 h-4" />
+              </button>
             )}
             {complaint.status === 'under_review' && onResolve && (
               <>
-                <Button
+                <button
                   onClick={() => onResolve(complaint, 'resolved')}
-                  icon={<CheckCircle className="w-4 h-4" />}
-                  className="text-sm"
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  title={t('complaints.resolve')}
                 >
-                  {t('complaints.resolve')}
-                </Button>
-                <Button
-                  variant="secondary"
+                  <CheckCircle className="w-4 h-4" />
+                </button>
+                <button
                   onClick={() => onResolve(complaint, 'dismissed')}
-                  icon={<XCircle className="w-4 h-4" />}
-                  className="text-sm"
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={t('complaints.dismiss')}
                 >
-                  {t('complaints.dismiss')}
-                </Button>
+                  <XCircle className="w-4 h-4" />
+                </button>
               </>
             )}
             {onDelete && (
               <button
                 onClick={() => onDelete(complaint.id)}
                 className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title={t('common.delete')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>

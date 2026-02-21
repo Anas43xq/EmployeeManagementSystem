@@ -30,41 +30,41 @@ export default function AnnouncementCard({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden ${
         !announcement.is_active || isExpired ? 'opacity-60' : ''
       }`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">{announcement.title}</h3>
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${priorityConfig.color}`}>
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">{announcement.title}</h3>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${priorityConfig.color}`}>
               <PriorityIcon className="w-3 h-3 mr-1" />
               {priorityConfig.label}
             </span>
             {!announcement.is_active && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                 {t('announcements.inactive')}
               </span>
             )}
             {isExpired && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
                 {t('announcements.expired')}
               </span>
             )}
           </div>
-          <p className="text-gray-600 whitespace-pre-wrap">{announcement.content}</p>
-          <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
+          <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">{announcement.content}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-500">
             <span>{t('announcements.created')}: {new Date(announcement.created_at).toLocaleDateString()}</span>
             {announcement.expires_at && (
               <span>{t('announcements.expires')}: {new Date(announcement.expires_at).toLocaleDateString()}</span>
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-2 ml-4">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => onToggleActive(announcement)}
-            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
               announcement.is_active
                 ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                 : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -74,15 +74,17 @@ export default function AnnouncementCard({
           </button>
           <button
             onClick={() => onEdit(announcement)}
-            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+            className="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+            title={t('common.edit')}
           >
-            <Edit2 className="w-5 h-5" />
+            <Edit2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(announcement.id)}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            title={t('common.delete')}
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

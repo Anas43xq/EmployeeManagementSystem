@@ -37,7 +37,7 @@ export default function Button({
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors ${variantClasses[variant]} ${className}`}
+      className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg transition-colors whitespace-nowrap ${variantClasses[variant]} ${className}`}
     >
       {loading ? (
         <>
