@@ -1,5 +1,6 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { supabase, db } from './supabase';
+import { clearAuthState } from './sessionManager';
 
 export interface PasskeyRegistrationResult {
   success: boolean;
@@ -11,13 +12,6 @@ export interface PasskeyAuthenticationResult {
   success: boolean;
   user?: any;
   session?: any;
-  error?: string;
-}
-
-export interface PasskeyAttendanceResult {
-  success: boolean;
-  attendance?: any;
-  employee?: any;
   error?: string;
 }
 
@@ -131,19 +125,41 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke('webauthn-authenticate', {
-      body: { action: 'generate-options', email }
+    // Clear any stale auth state before attempting passkey login
+    // This prevents "Invalid Refresh Token" errors from stale sessions
+    await clearAuthState();
+
+    // Use fetch directly instead of supabase.functions.invoke for better error handling
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    const optionsResponse = await fetch(`${supabaseUrl}/functions/v1/webauthn-authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+      },
+      body: JSON.stringify({ action: 'generate-options', email }),
     });
 
-    if (error) {
-      if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
+    if (!optionsResponse.ok) {
+      if (optionsResponse.status === 404) {
         return { 
           success: false, 
           error: 'Passkey authentication service is not available. Please use email and password to sign in.' 
         };
       }
-      throw new Error(error.message);
+      const errorData = await optionsResponse.json().catch(() => ({}));
+      if (errorData.error?.includes('No passkeys registered') || errorData.error?.includes('User not found')) {
+        return { 
+          success: false, 
+          error: 'No passkey registered for this email. Please sign in with email and password first.' 
+        };
+      }
+      throw new Error(errorData.error || `HTTP ${optionsResponse.status}`);
     }
+
+    const data = await optionsResponse.json();
 
     if (!data) {
       return { 
@@ -156,18 +172,26 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
 
     const authenticationResponse = await startAuthentication(options);
 
-    const { data: verificationData, error: verificationError } = await supabase.functions.invoke('webauthn-authenticate', {
-      body: {
+    const verifyResponse = await fetch(`${supabaseUrl}/functions/v1/webauthn-authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+      },
+      body: JSON.stringify({
         action: 'verify-authentication',
         credential: authenticationResponse,
         expectedChallenge: challenge,
         userId
-      }
+      }),
     });
 
-    if (verificationError) {
-      throw new Error(verificationError.message);
+    if (!verifyResponse.ok) {
+      const errorData = await verifyResponse.json().catch(() => ({}));
+      throw new Error(errorData.error || `Verification failed: HTTP ${verifyResponse.status}`);
     }
+
+    const verificationData = await verifyResponse.json();
 
     if (verificationData.token_hash) {
       const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
@@ -191,91 +215,30 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     };
 
   } catch (error) {
-    const isAborted = error instanceof Error &&
-      (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
-    return {
-      success: false,
-      error: isAborted
-        ? 'Passkey authentication was cancelled or timed out. Please try again.'
-        : (error instanceof Error ? error.message : 'Authentication failed')
-    };
-  }
-}
-
-export async function verifyPasskeyAttendance(
-  attendanceType: 'check-in' | 'check-out',
-  verificationType?: 'face' | 'fingerprint' | 'device'
-): Promise<PasskeyAttendanceResult> {
-  if (!isWebAuthnSupported()) {
-    return { success: false, error: 'WebAuthn is not supported in this browser' };
-  }
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return { success: false, error: 'Not authenticated' };
-    }
-
-    const { data, error } = await supabase.functions.invoke('verify-passkey-attendance', {
-      body: { action: 'generate-options' },
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
-    });
-
-    if (error) {
-      if (error.message?.includes('non-2xx') || error.message?.includes('404') || error.message?.includes('not found')) {
-        return { 
-          success: false, 
-          error: 'Passkey attendance service is not available. Please contact your administrator.' 
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const name = error.name.toLowerCase();
+      
+      // User cancelled or timed out
+      if (name === 'notallowederror' || message.includes('timed out') || message.includes('not allowed') || message.includes('cancelled')) {
+        return {
+          success: false,
+          error: 'Passkey authentication was cancelled or timed out. Please try again.'
         };
       }
-      throw new Error(error.message);
-    }
-
-    if (!data) {
-      return { 
-        success: false, 
-        error: 'No passkey registered. Please set up a passkey in your profile settings first.' 
-      };
-    }
-
-    const { options, challenge } = data;
-
-    const authenticationResponse = await startAuthentication(options);
-
-    const { data: verificationData, error: verificationError } = await supabase.functions.invoke('verify-passkey-attendance', {
-      body: {
-        action: 'verify-attendance',
-        credential: authenticationResponse,
-        expectedChallenge: challenge,
-        attendanceType,
-        verificationType
-      },
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
+      
+      // Network errors
+      if (name === 'typeerror' || message.includes('failed to fetch') || message.includes('network')) {
+        return {
+          success: false,
+          error: 'Network error. Please check your connection and try again.'
+        };
       }
-    });
-
-    if (verificationError) {
-      throw new Error(verificationError.message);
+      
+      return { success: false, error: error.message };
     }
-
-    return {
-      success: true,
-      attendance: verificationData.attendance,
-      employee: verificationData.employee
-    };
-
-  } catch (error) {
-    const isAborted = error instanceof Error &&
-      (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
-    return {
-      success: false,
-      error: isAborted
-        ? 'Biometric verification was cancelled or timed out. Please try again.'
-        : (error instanceof Error ? error.message : 'Verification failed')
-    };
+    
+    return { success: false, error: 'Authentication failed. Please try again.' };
   }
 }
 

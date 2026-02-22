@@ -121,46 +121,37 @@ export type Database = {
       }
       attendance: {
         Row: {
-          attendance_method: string
           check_in: string | null
           check_out: string | null
           created_at: string | null
           date: string
-          device_info: Json | null
           employee_id: string
           id: string
           notes: string | null
           status: string
           updated_at: string | null
-          verification_type: string | null
         }
         Insert: {
-          attendance_method?: string
           check_in?: string | null
           check_out?: string | null
           created_at?: string | null
           date: string
-          device_info?: Json | null
           employee_id: string
           id?: string
           notes?: string | null
           status?: string
           updated_at?: string | null
-          verification_type?: string | null
         }
         Update: {
-          attendance_method?: string
           check_in?: string | null
           check_out?: string | null
           created_at?: string | null
           date?: string
-          device_info?: Json | null
           employee_id?: string
           id?: string
           notes?: string | null
           status?: string
           updated_at?: string | null
-          verification_type?: string | null
         }
         Relationships: [
           {

@@ -264,7 +264,7 @@ CREATE TABLE public.leave_balances (
 );
 
 -- =============================================
--- ATTENDANCE & PASSKEYS
+-- ATTENDANCE
 -- =============================================
 
 CREATE TABLE public.attendance (
@@ -275,13 +275,14 @@ CREATE TABLE public.attendance (
   check_out TIME,
   status TEXT NOT NULL DEFAULT 'present' CHECK (status IN ('present', 'absent', 'late', 'half-day')),
   notes TEXT DEFAULT '',
-  attendance_method TEXT NOT NULL DEFAULT 'manual' CHECK (attendance_method IN ('manual', 'passkey')),
-  verification_type TEXT CHECK (verification_type IN ('face', 'fingerprint', 'device')),
-  device_info JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(employee_id, date)
 );
+
+-- =============================================
+-- PASSKEYS (WebAuthn for login)
+-- =============================================
 
 CREATE TABLE public.passkeys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -512,7 +513,6 @@ CREATE INDEX idx_leave_balances_employee ON public.leave_balances(employee_id);
 -- Attendance indexes
 CREATE INDEX idx_attendance_employee ON public.attendance(employee_id);
 CREATE INDEX idx_attendance_date ON public.attendance(date);
-CREATE INDEX idx_attendance_method ON public.attendance(attendance_method);
 CREATE INDEX idx_attendance_employee_date ON public.attendance(employee_id, date DESC);
 
 -- Notification indexes
@@ -1446,12 +1446,12 @@ INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_c
 SELECT id, 'annual', '2026-02-14', '2026-02-14', 1, 'Valentine day off', 'rejected' FROM public.employees WHERE email = 'w.taylor@DevTeamHub.com';
 
 -- ============================================================================
--- ATTENDANCE - Mixed statuses including today, late, absent, half-day, passkey
+-- ATTENDANCE - Mixed statuses including today, late, absent, half-day
 -- ============================================================================
 
--- Past 7 days attendance for most employees (present/manual)
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, d::date, '09:00', '17:00', 'present', 'manual'
+-- Past 7 days attendance for most employees (present)
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '09:00', '17:00', 'present'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE - 1, '1 day') d
 WHERE e.status = 'active' AND e.email NOT IN (
@@ -1461,16 +1461,16 @@ WHERE e.status = 'active' AND e.email NOT IN (
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- Auth user attendance (past 5 days - present)
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, d::date, '08:45', '17:15', 'present', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '08:45', '17:15', 'present'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 5, CURRENT_DATE - 1, '1 day') d
 WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- Today's attendance for some employees (so dashboard shows > 0)
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, CURRENT_DATE, '08:55', '17:00', 'present', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, CURRENT_DATE, '08:55', '17:00', 'present'
 FROM public.employees e
 WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com',
   'e.wilson@DevTeamHub.com', 'j.lee@DevTeamHub.com', 'r.garcia@DevTeamHub.com',
@@ -1479,34 +1479,34 @@ WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- Late arrivals (multiple days)
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, d::date, '10:15', '17:30', 'late', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '10:15', '17:30', 'late'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE - 1, '1 day') d
 WHERE e.email = 'l.rodriguez@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 
--- Late + passkey method
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, d::date, '09:45', '17:00', 'late', 'passkey'
+-- Late arrivals for w.taylor
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '09:45', '17:00', 'late'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 4, CURRENT_DATE - 2, '1 day') d
 WHERE e.email = 'w.taylor@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- Absent records
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, (CURRENT_DATE - 3)::date, NULL, NULL, 'absent', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, (CURRENT_DATE - 3)::date, NULL, NULL, 'absent'
 FROM public.employees e WHERE e.email = 'k.walker@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, (CURRENT_DATE - 5)::date, NULL, NULL, 'absent', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, (CURRENT_DATE - 5)::date, NULL, NULL, 'absent'
 FROM public.employees e WHERE e.email = 'w.taylor@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 
 -- Half-day records
-INSERT INTO public.attendance (employee_id, date, check_in, check_out, status, attendance_method)
-SELECT e.id, (CURRENT_DATE - 2)::date, '09:00', '13:00', 'half-day', 'manual'
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, (CURRENT_DATE - 2)::date, '09:00', '13:00', 'half-day'
 FROM public.employees e WHERE e.email = 'k.walker@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 

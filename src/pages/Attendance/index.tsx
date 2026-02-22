@@ -4,7 +4,6 @@ import { PageSpinner, PageHeader, Card, EmptyState, Button } from '../../compone
 import { useAttendance } from './useAttendance';
 import AttendanceRecordCard from './AttendanceRecordCard';
 import AddAttendanceModal from './AddAttendanceModal';
-import PasskeyAttendance from '../../components/PasskeyAttendance';
 
 export default function Attendance() {
   const { t } = useTranslation();
@@ -54,15 +53,6 @@ export default function Attendance() {
           </div>
         }
       />
-
-      {isToday && (
-        <PasskeyAttendance
-          onAttendanceUpdate={() => {
-            window.location.reload();
-          }}
-          currentAttendance={attendanceRecords.find(r => r.date === selectedDate && r.employee_id === user?.employeeId) || null}
-        />
-      )}
 
       <Card>
         <div className="flex items-center space-x-4 mb-6">

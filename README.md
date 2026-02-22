@@ -41,7 +41,7 @@ Built with React and TypeScript on the frontend, Supabase handling the backend. 
 
 **Employee Management** - Standard CRUD operations but with photo uploads, advanced search, proper filtering. Nothing fancy, just works well.
 
-**Attendance Tracking** - Here's where it gets interesting. Regular manual check-in/out, but also supports biometric authentication through WebAuthn. Your devs can literally use their fingerprint or face to clock in. Pretty neat.
+**Attendance Tracking** - Manual check-in/out with date selection. Admins and HR can add attendance records for any employee.
 
 **Leave Management** - Complete workflow from request to approval. Tracks balances automatically. No more spreadsheet mess.
 
@@ -199,13 +199,12 @@ npx supabase db reset --linked
 npx supabase functions deploy --project-ref YOUR_PROJECT_REF --no-verify-jwt
 ```
 
-This pushes 6 functions:
+This pushes 5 functions:
 - `generate-monthly-payroll` - payroll calculations and approval
 - `manage-user-status` - user account management 
 - `send-notification-email` - SMTP email sending
 - `webauthn-register` - passkey registration
 - `webauthn-authenticate` - passkey login
-- `verify-passkey-attendance` - biometric attendance
 
 ### Fire it up
 
@@ -307,7 +306,6 @@ Each page module (like Attendance/ or Tasks/) follows the same pattern: an index
 | `send-notification-email` | POST | Internal/system | Sends an email notification via SMTP |
 | `webauthn-register` | POST | Any logged-in user | Registers a new biometric passkey |
 | `webauthn-authenticate` | POST | Anyone | Logs in using a registered passkey |
-| `verify-passkey-attendance` | POST | Anyone | Marks attendance using biometric verification |
 
 All functions are deployed with `--no-verify-jwt` because they handle their own auth internally (they pull the JWT from the Authorization header and verify it through Supabase's `getUser()`).
 
