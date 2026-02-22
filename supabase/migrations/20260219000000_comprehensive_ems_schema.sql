@@ -1,4 +1,4 @@
-﻿-- =============================================
+-- =============================================
 -- EMPLOYEE MANAGEMENT SYSTEM - COMPREHENSIVE SCHEMA
 -- Version: 3.2 | Date: February 20, 2026
 -- Optimized, error-free schema with all modules
