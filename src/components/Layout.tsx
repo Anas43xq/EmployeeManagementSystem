@@ -66,9 +66,8 @@ export default function Layout() {
   ];
 
   // Only show Dashboard if user is deactivated
-  // TODO: Replace with actual deactivation property from AuthUser
-  // Fallback: always false unless you add is_active or similar
-  const isDeactivated = false;
+  // Uses is_active property from database (must be added to AuthUser)
+  const isDeactivated = user && user.is_active === false;
   const filteredNavigation = isDeactivated
     ? navigation.filter(item => item.href === '/dashboard')
     : navigation.filter(item => item.roles.includes(user?.role || 'staff'));

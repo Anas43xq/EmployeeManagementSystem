@@ -51,6 +51,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   employeeId: string | null;
+  is_active: boolean;
 }
 
 interface AuthContextType {
@@ -96,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const { data, error } = await db
         .from('users')
-        .select('role, employee_id')
+        .select('role, employee_id, is_active')
         .eq('id', authUser.id)
         .maybeSingle();
 
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: authUser.email || '',
           role: role || 'staff',
           employeeId: null,
+          is_active: false,
         };
         return userData;
       }
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: authUser.email || '',
         role: data?.role || role || 'staff',
         employeeId: data?.employee_id || null,
+        is_active: data?.is_active ?? false,
       };
       
       userDataCache.set(authUser.id, { data: userData, timestamp: Date.now() });
@@ -127,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: authUser.email || '',
         role: 'staff',
         employeeId: null,
+        is_active: false,
       };
       return userData;
     } finally {
