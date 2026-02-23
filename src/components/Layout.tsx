@@ -64,9 +64,11 @@ export default function Layout() {
     { name: t('nav.settings'), href: '/settings', icon: Settings, roles: ['admin', 'hr', 'staff'] },
   ];
 
-  const filteredNavigation = navigation.filter(item =>
-    item.roles.includes(user?.role || 'staff')
-  );
+  // Only show Dashboard if user is deactivated
+  const isDeactivated = user && user.is_active === false;
+  const filteredNavigation = isDeactivated
+    ? navigation.filter(item => item.href === '/dashboard')
+    : navigation.filter(item => item.roles.includes(user?.role || 'staff'));
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,6 +79,26 @@ export default function Layout() {
     const newLang = i18n.language === 'ar' ? 'en' : 'ar';
     i18n.changeLanguage(newLang);
   };
+
+  if (isDeactivated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-full max-w-lg mx-auto">
+          <div className="bg-white rounded-xl shadow-lg border border-red-200 p-10 flex flex-col items-center">
+            <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
+            <h1 className="text-3xl font-bold text-red-600 mb-2">Your account is deactivated</h1>
+            <p className="text-lg text-gray-700 mb-6 text-center">
+              You no longer have access to the Employee Management System.<br />
+              If you believe this is a mistake or need assistance, please contact your administrator or HR department.
+            </p>
+            <Button variant="primary" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
