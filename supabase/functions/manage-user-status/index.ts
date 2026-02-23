@@ -179,7 +179,23 @@ serve(async (req) => {
 
         // Send ban notification email
         if (userEmail) {
-          await sendBanNotificationEmail(userEmail, reason || null, banDuration || 'permanent');
+          const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+          const smtpUser = Deno.env.get("SMTP_USER");
+          const smtpPass = Deno.env.get("SMTP_PASS");
+          const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
+          const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || smtpUser;
+          if (smtpUser && smtpPass) {
+            const banDurationText = banDuration === 'permanent' ? 'permanently' : `for ${banDuration} hours`;
+            const reasonText = reason ? `<p><strong>Reason:</strong> ${reason}</p>` : '';
+            const htmlTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; } .container { max-width: 600px; margin: 0 auto; padding: 20px; } .header { background: linear-gradient(135deg, #fee2e2 0%, #991b1b 100%); color: #991b1b; padding: 20px; border-radius: 8px 8px 0 0; } .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; } .footer { background: #374151; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; } .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b; }</style></head><body><div class="container"><div class="header"><h1 style="margin: 0; font-size: 24px;">DevTeam Hub</h1><p style="margin: 5px 0 0 0; opacity: 0.9;">Account Notification</p></div><div class="content"><span class="badge">Suspended</span><h2 style="margin-top: 20px; color: #1f2937;">Access Suspended</h2><div style="margin-top: 20px; line-height: 1.8;"><p>Your account has been suspended ${banDurationText}.</p>${reasonText}<p>You cannot access the system during this period.</p><p>If you have questions, contact HR.</p></div></div><div class="footer"><p style="margin: 0;">This is an automated notification from DevTeam Hub</p><p style="margin: 10px 0 0 0;">Please do not reply to this email</p></div></div></body></html>`;
+            try {
+              const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
+              await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been suspended', html: htmlTemplate });
+              console.log(`Ban notification email sent to ${userEmail}`);
+            } catch (error) {
+              console.error(`Failed to send ban notification email: ${error.message}`);
+            }
+          }
         }
 
         result = { success: true, message: 'User banned successfully', user: data.user };
@@ -187,6 +203,27 @@ serve(async (req) => {
       }
 
       case 'unban': {
+                // Send unban notification email
+                const { data: targetUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+                if (userError) throw userError;
+                const userEmail = targetUser.user.email;
+                if (userEmail) {
+                  const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+                  const smtpUser = Deno.env.get("SMTP_USER");
+                  const smtpPass = Deno.env.get("SMTP_PASS");
+                  const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
+                  const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || smtpUser;
+                  if (smtpUser && smtpPass) {
+                    const htmlTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; } .container { max-width: 600px; margin: 0 auto; padding: 20px; } .header { background: linear-gradient(135deg, #d1fae5 0%, #065f46 100%); color: #065f46; padding: 20px; border-radius: 8px 8px 0 0; } .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; } .footer { background: #374151; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; } .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #d1fae5; color: #065f46; }</style></head><body><div class="container"><div class="header"><h1 style="margin: 0; font-size: 24px;">DevTeam Hub</h1><p style="margin: 5px 0 0 0; opacity: 0.9;">Account Notification</p></div><div class="content"><span class="badge">Reactivated</span><h2 style="margin-top: 20px; color: #1f2937;">Access Restored</h2><div style="margin-top: 20px; line-height: 1.8;"><p>Your account is now active again. You may log in and use the system as usual.</p><p>If you have questions, contact HR.</p></div></div><div class="footer"><p style="margin: 0;">This is an automated notification from DevTeam Hub</p><p style="margin: 10px 0 0 0;">Please do not reply to this email</p></div></div></body></html>`;
+                    try {
+                      const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
+                      await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been reactivated', html: htmlTemplate });
+                      console.log(`Unban notification email sent to ${userEmail}`);
+                    } catch (error) {
+                      console.error(`Failed to send unban notification email: ${error.message}`);
+                    }
+                  }
+                }
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
           ban_duration: 'none',
         });
@@ -208,6 +245,27 @@ serve(async (req) => {
       }
 
       case 'deactivate': {
+                // Send deactivation notification email
+                const { data: targetUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+                if (userError) throw userError;
+                const userEmail = targetUser.user.email;
+                if (userEmail) {
+                  const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+                  const smtpUser = Deno.env.get("SMTP_USER");
+                  const smtpPass = Deno.env.get("SMTP_PASS");
+                  const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
+                  const fromEmail = Deno.env.get("SMTP_FROM_EMAIL") || smtpUser;
+                  if (smtpUser && smtpPass) {
+                    const htmlTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; } .container { max-width: 600px; margin: 0 auto; padding: 20px; } .header { background: linear-gradient(135deg, #fef3c7 0%, #92400e 100%); color: #92400e; padding: 20px; border-radius: 8px 8px 0 0; } .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; } .footer { background: #374151; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; } .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #92400e; }</style></head><body><div class="container"><div class="header"><h1 style="margin: 0; font-size: 24px;">DevTeam Hub</h1><p style="margin: 5px 0 0 0; opacity: 0.9;">Account Notification</p></div><div class="content"><span class="badge">Deactivated</span><h2 style="margin-top: 20px; color: #1f2937;">Account Deactivated</h2><div style="margin-top: 20px; line-height: 1.8;"><p>Your account has been deactivated. You no longer have access to the system.</p><p>If you believe this is a mistake, please contact HR.</p></div></div><div class="footer"><p style="margin: 0;">This is an automated notification from DevTeam Hub</p><p style="margin: 10px 0 0 0;">Please do not reply to this email</p></div></div></body></html>`;
+                    try {
+                      const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
+                      await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been deactivated', html: htmlTemplate });
+                      console.log(`Deactivation notification email sent to ${userEmail}`);
+                    } catch (error) {
+                      console.error(`Failed to send deactivation notification email: ${error.message}`);
+                    }
+                  }
+                }
         await supabaseAdmin
           .from('users')
           .update({
