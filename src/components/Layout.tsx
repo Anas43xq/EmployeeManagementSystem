@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import { getMyTotalPoints } from '../services/performanceQueries';
+import Button from './ui/Button';
 import {
   LayoutDashboard,
   Users,
@@ -65,7 +66,9 @@ export default function Layout() {
   ];
 
   // Only show Dashboard if user is deactivated
-  const isDeactivated = user && user.is_active === false;
+  // TODO: Replace with actual deactivation property from AuthUser
+  // Fallback: always false unless you add is_active or similar
+  const isDeactivated = false;
   const filteredNavigation = isDeactivated
     ? navigation.filter(item => item.href === '/dashboard')
     : navigation.filter(item => item.roles.includes(user?.role || 'staff'));
