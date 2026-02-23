@@ -145,11 +145,20 @@ export function useUserManagement() {
         options: {
           data: {
             role: grantAccessForm.role,
+            employee_id: selectedEmployee.id,
+            first_name: selectedEmployee.first_name,
+            last_name: selectedEmployee.last_name,
+            position: selectedEmployee.position,
+            department: selectedEmployee.departments?.name || '',
           },
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Show detailed error message
+        showNotification('error', `Sign up failed: ${authError.message}`);
+        throw authError;
+      }
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
