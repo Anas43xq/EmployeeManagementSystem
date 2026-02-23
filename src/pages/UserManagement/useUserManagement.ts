@@ -118,16 +118,6 @@ export function useUserManagement() {
   const handleGrantAccess = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!grantAccessForm.employee_id || !grantAccessForm.password) {
-      showNotification('error', t('userManagement.selectEmployeeAndPassword'));
-      return;
-    }
-
-    if (grantAccessForm.password.length < 6) {
-      showNotification('error', t('userManagement.passwordMinLength'));
-      return;
-    }
-
     const selectedEmployee = employeesWithoutAccess.find(
       emp => emp.id === grantAccessForm.employee_id
     );
@@ -139,39 +129,33 @@ export function useUserManagement() {
 
     setSubmitting(true);
     try {
-      const { data: authData, error: authError } = await db.auth.signUp({
-        email: selectedEmployee.email,
-        password: grantAccessForm.password,
-        options: {
-          data: {
-            role: grantAccessForm.role,
-            employee_id: selectedEmployee.id,
-            first_name: selectedEmployee.first_name,
-            last_name: selectedEmployee.last_name,
-            position: selectedEmployee.position,
-            department: selectedEmployee.departments?.name || '',
-          },
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+        showNotification('error', 'Not authenticated');
+        return;
+      }
+
+      // Call edge function to grant access (handles both auth.users and users table)
+      const { data, error } = await db.functions.invoke('grant-user-access', {
+        body: {
+          email: selectedEmployee.email,
+          password: grantAccessForm.password,
+          role: grantAccessForm.role,
+          employee_id: selectedEmployee.id,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (authError) {
-        // Show detailed error message
-        showNotification('error', `Sign up failed: ${authError.message}`);
-        throw authError;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      if (authData.user) {
-        await (db.from('users') as any)
-          .update({ role: grantAccessForm.role })
-          .eq('id', authData.user.id);
+      if (error || !data?.success) {
+        showNotification('error', `Failed to grant access: ${error?.message || data?.error}`);
+        throw new Error(error?.message || data?.error);
       }
 
       showNotification('success', t('userManagement.accessGrantedSuccess'));
-      
-      if (authData.user && currentUser) {
-        logActivity(currentUser.id, 'user_access_granted', 'user', authData.user.id, {
+      if (data.user && currentUser) {
+        logActivity(currentUser.id, 'user_access_granted', 'user', data.user.id, {
           employee_id: grantAccessForm.employee_id,
           employee_email: selectedEmployee.email,
           role: grantAccessForm.role,
