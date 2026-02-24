@@ -503,26 +503,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      // Check if another session is already active for this account.
-      const { data: userData } = await db
-        .from('users')
-        .select('current_session_token')
-        .eq('id', data.user.id)
-        .single();
+      // Use SECURITY DEFINER RPC to read current_session_token (bypasses RLS).
+      const { data: existingToken } = await supabase.rpc('get_own_session_token');
 
-      if (userData?.current_session_token) {
+      if (existingToken) {
         // Another device is logged in — abort and tell the user to log out there first.
         await supabase.auth.signOut();
         throw new Error('ACTIVE_SESSION');
       }
 
-      // No active session — claim it with a new unique token.
+      // No active session — claim it with a new unique token via SECURITY DEFINER RPC.
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
-      await db
-        .from('users')
-        .update({ current_session_token: sessionToken })
-        .eq('id', data.user.id);
+      await supabase.rpc('set_own_session_token', { p_token: sessionToken });
 
       logActivity(data.user.id, 'user_login', 'user', data.user.id, { email: data.user.email });
     }
@@ -531,8 +524,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     if (user) {
       logActivity(user.id, 'user_logout', 'user', user.id);
-      // Clear the session token so no other check tries to kick this session
-      await db.from('users').update({ current_session_token: null }).eq('id', user.id);
+      // Clear the session token via SECURITY DEFINER RPC (bypasses RLS)
+      await supabase.rpc('clear_own_session_token');
     }
 
     localStorage.removeItem('ems_session_token');

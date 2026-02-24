@@ -1103,6 +1103,9 @@ export type Database = {
       get_user_email: { Args: never; Returns: string }
       get_user_employee_id: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
+      get_own_session_token: { Args: Record<string, never>; Returns: string | null }
+      set_own_session_token: { Args: { p_token: string }; Returns: undefined }
+      clear_own_session_token: { Args: Record<string, never>; Returns: undefined }
       select_employee_of_week: {
         Args: { p_week_start?: string }
         Returns: undefined
