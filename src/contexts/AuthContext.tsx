@@ -503,9 +503,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      // Generate a unique session token and write it to the DB.
-      // Any previously open session for this user will detect the mismatch
-      // on its next periodic check and be forced out.
+      // Check if another session is already active for this account.
+      const { data: userData } = await db
+        .from('users')
+        .select('current_session_token')
+        .eq('id', data.user.id)
+        .single();
+
+      if (userData?.current_session_token) {
+        // Another device is logged in — abort and tell the user to log out there first.
+        await supabase.auth.signOut();
+        throw new Error('ACTIVE_SESSION');
+      }
+
+      // No active session — claim it with a new unique token.
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
       await db

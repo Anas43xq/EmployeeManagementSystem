@@ -63,11 +63,14 @@ export default function Login() {
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      const errorMessage = err?.message?.toLowerCase() || '';
-      if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
+      const errorMessage = err?.message || '';
+      if (errorMessage === 'ACTIVE_SESSION') {
+        setError(t('auth.activeSession'));
+        showNotification('error', t('auth.activeSession'));
+      } else if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
         setError(t('auth.accountBanned'));
         showNotification('error', t('auth.accountBanned'));
-      } else if (errorMessage.includes('email not confirmed')) {
+      } else if (errorMessage.toLowerCase().includes('email not confirmed')) {
         setError(t('auth.emailNotConfirmed'));
         showNotification('error', t('auth.emailNotConfirmed'));
       } else {
