@@ -150,19 +150,25 @@ function UserMenu({ onSignOut, isRTL }: { onSignOut: () => void; isRTL: boolean 
   const { user } = useAuth();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleEnter = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setOpen(true);
-  };
-  const handleLeave = () => {
-    timerRef.current = setTimeout(() => setOpen(false), 100);
-  };
+  // Close on outside click — works across all pages regardless of z-index
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [open]);
 
   return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+    <div ref={containerRef} className="relative">
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+      >
         <div className="w-7 h-7 bg-primary-700 rounded-full flex items-center justify-center">
           <span className="text-xs font-bold text-white">
             {user?.email.charAt(0).toUpperCase()}
@@ -176,7 +182,7 @@ function UserMenu({ onSignOut, isRTL }: { onSignOut: () => void; isRTL: boolean 
       </button>
 
       <div
-        className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50 transition-all duration-200 origin-top ${
+        className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-[100] transition-all duration-200 origin-top ${
           open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-1 pointer-events-none'
         }`}
       >
@@ -276,7 +282,7 @@ export default function Navbar({ onSignOut, totalPoints }: { onSignOut: () => vo
         </Link>
 
         {/* Categories */}
-        <div className={`flex items-center gap-0.5 flex-1 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'} overflow-hidden`}>
+        <div className={`flex items-center gap-0.5 flex-1 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
           {categories.map(cat => (
             <NavDropdown key={cat.label} category={cat} role={role} isRTL={isRTL} />
           ))}

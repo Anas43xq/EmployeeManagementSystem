@@ -92,6 +92,14 @@
     "settings": "الإعدادات",
     "activityLogs": "سجلات النشاط"
   },
+  "navCategory": {
+    "overview": "نظرة عامة",
+    "workforce": "القوى العاملة",
+    "operations": "العمليات",
+    "communication": "التواصل",
+    "system": "النظام",
+    "account": "الحساب"
+  },
   "profile": {
     "viewYourDetails": "عرض ملفك الشخصي ومعلوماتك الوظيفية",
     "noProfileLinked": "لا يوجد ملف موظف مرتبط",

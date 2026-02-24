@@ -94,6 +94,14 @@
     "settings": "Settings",
     "activityLogs": "Activity Logs"
   },
+  "navCategory": {
+    "overview": "OVERVIEW",
+    "workforce": "WORKFORCE",
+    "operations": "OPERATIONS",
+    "communication": "COMMUNICATION",
+    "system": "SYSTEM",
+    "account": "ACCOUNT"
+  },
   "profile": {
     "viewYourDetails": "View your employee profile and information",
     "noProfileLinked": "No Employee Profile Linked",
