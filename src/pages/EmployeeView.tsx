@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { db } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { ArrowLeft, Edit, Mail, Phone, Calendar, MapPin, Briefcase, User, FileText, UserX } from 'lucide-react';
 import { format } from 'date-fns';
@@ -12,6 +13,7 @@ export default function EmployeeView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [terminateModal, setTerminateModal] = useState(false);
@@ -119,7 +121,7 @@ export default function EmployeeView() {
               <span className="sm:hidden">{t('common.edit')}</span>
             </Button>
           </Link>
-          {!employee.termination_date && (
+          {!employee.termination_date && user?.employeeId !== employee.id && (
             <Button
               variant="danger"
               icon={<UserX className="w-4 h-4" />}

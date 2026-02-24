@@ -28,6 +28,8 @@ const Announcements = lazy(() => import('./pages/Announcements'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const PayrollDashboard = lazy(() => import('./pages/PayrollDashboard'));
 const PayslipView = lazy(() => import('./pages/PayslipView'));
+const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
+const Deactivated = lazy(() => import('./pages/Deactivated'));
 
 function PageLoader() {
   const { t } = useTranslation();
@@ -51,6 +53,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+              <Route path="/deactivated" element={<Suspense fallback={<PageLoader />}><Deactivated /></Suspense>} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Dashboard /></Suspense></RouteErrorBoundary>} />
@@ -71,6 +74,7 @@ function App() {
                 <Route path="announcements" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Announcements /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="reports" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Reports /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="users" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><UserManagement /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="activity-logs" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><ActivityLogs /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="settings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></RouteErrorBoundary>} />
               </Route>
             </Routes>

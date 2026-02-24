@@ -89,7 +89,8 @@
     "tasks": "المهام",
     "warnings": "الإنذارات",
     "complaints": "الشكاوى",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "activityLogs": "سجلات النشاط"
   },
   "profile": {
     "viewYourDetails": "عرض ملفك الشخصي ومعلوماتك الوظيفية",

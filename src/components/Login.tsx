@@ -41,7 +41,11 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard', { replace: true });
+      if (user.is_active === false) {
+        navigate('/deactivated', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [user, navigate]);
 

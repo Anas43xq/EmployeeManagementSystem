@@ -91,7 +91,8 @@
     "userManagement": "User Management",
     "payroll": "Payroll",
     "myPayslips": "My Payslips",
-    "settings": "Settings"
+    "settings": "Settings",
+    "activityLogs": "Activity Logs"
   },
   "profile": {
     "viewYourDetails": "View your employee profile and information",

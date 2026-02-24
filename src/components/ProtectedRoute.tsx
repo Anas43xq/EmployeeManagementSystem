@@ -66,6 +66,10 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     return <Navigate to="/login" replace />;
   }
 
+  if (user.is_active === false) {
+    return <Navigate to="/deactivated" replace />;
+  }
+
   if (roles && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }

@@ -112,12 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return userData;
       }
 
-      // Check if user is banned or deactivated — force sign out immediately
-      if (data?.is_active === false || (data?.banned_at !== null && data?.banned_at !== undefined)) {
-        console.log('User is banned or inactive, forcing sign out');
+      // Only force sign out for BANNED users.
+      // Deactivated (is_active === false) users are allowed to stay authenticated
+      // so they can see the "Account Deactivated" screen inside the app.
+      if (data?.banned_at !== null && data?.banned_at !== undefined) {
+        console.log('User is banned, forcing sign out');
         userDataCache.delete(authUser.id);
         await supabase.auth.signOut();
-        throw new Error('Your account has been deactivated');
+        throw new Error('Your account has been banned');
       }
 
       const userData: AuthUser = {
@@ -133,8 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return userData;
     } catch (error) {
-      // If the user is banned/deactivated, propagate so the caller can handle it
-      if ((error as Error).message === 'Your account has been deactivated') {
+      // If the user is banned, propagate so the caller can handle it
+      if ((error as Error).message === 'Your account has been banned') {
         throw error;
       }
       const userData: AuthUser = {
@@ -391,12 +393,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (error) return;
 
-        if (data?.is_active === false || (data?.banned_at !== null && data?.banned_at !== undefined)) {
-          console.log('User was banned/deactivated during session, forcing sign out');
+        // Only force sign out for BANNED users during an active session.
+        // Deactivated users keep their session and see the deactivated screen.
+        if (data?.banned_at !== null && data?.banned_at !== undefined) {
+          console.log('User was banned during session, forcing sign out');
           userDataCache.clear();
           clearAllCache();
           await supabase.auth.signOut();
           setUser(null);
+        } else if (data?.is_active === false) {
+          // Update the local user state to reflect deactivation without sign out
+          setUser(prev => prev ? { ...prev, is_active: false } : prev);
         }
       } catch (err) {
         console.error('Error checking user status:', err);
