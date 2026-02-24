@@ -3,9 +3,10 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from './Navbar';
+import NotificationCenter from './NotificationCenter';
 import { getMyTotalPoints } from '../services/performanceQueries';
 import {
-  Briefcase, LogOut, Menu, X,
+  Briefcase, LogOut, Menu, X, Globe, Star,
   LayoutDashboard, Users, Building2, Clock, Calendar,
   ListTodo, MessageSquare, Calculator, Receipt,
   Megaphone, FileText, UserCog, Settings, Activity,
@@ -240,21 +241,40 @@ export default function Layout() {
 
       {/* ─── MAIN CONTENT WRAPPER ──────────────────────────────────────────── */}
       <div className="flex flex-col min-h-screen">
-        {/* Mobile top bar — hamburger + logo, visible only < 1024px */}
+        {/* Mobile top bar — hamburger + logo + controls, visible only < 1024px */}
         <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
-          <div className={`flex items-center justify-between px-4 py-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center justify-between px-4 py-3 gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            {/* Hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Briefcase className="w-5 h-5 text-primary-900" />
-              <span className="font-bold text-primary-900 text-sm">{t('auth.employeeManagementSystem')}</span>
+
+            {/* Logo */}
+            <div className={`flex items-center gap-2 flex-1 min-w-0 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+              <Briefcase className="w-4 h-4 text-primary-900 shrink-0" />
+              <span className="font-bold text-primary-900 text-sm truncate hidden sm:block">{t('auth.employeeManagementSystem')}</span>
             </div>
-            {/* spacer to center the logo */}
-            <div className="w-9" />
+
+            {/* Right controls */}
+            <div className={`flex items-center gap-1.5 shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              {totalPoints !== null && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 rounded-lg border border-amber-200 text-xs font-semibold">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  {totalPoints}
+                </div>
+              )}
+              <button
+                onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
+                className="flex items-center gap-0.5 px-2 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="text-xs">{isRTL ? 'EN' : 'ع'}</span>
+              </button>
+              <NotificationCenter />
+            </div>
           </div>
         </header>
 

@@ -379,38 +379,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
-  // Periodic ban/deactivation check — safety net every 5 minutes
+  // Real-time single-session enforcement + ban/deactivation safety net
   useEffect(() => {
     if (!user) return;
 
-    const statusCheckInterval = setInterval(async () => {
+    const forceSignOut = async () => {
+      userDataCache.clear();
+      clearAllCache();
+      localStorage.removeItem('ems_session_token');
+      await supabase.auth.signOut();
+      setUser(null);
+    };
+
+    const checkStatus = async () => {
       try {
         const { data, error } = await db
           .from('users')
-          .select('is_active, banned_at')
+          .select('is_active, banned_at, current_session_token')
           .eq('id', user.id)
           .single();
 
         if (error) return;
 
-        // Only force sign out for BANNED users during an active session.
-        // Deactivated users keep their session and see the deactivated screen.
         if (data?.banned_at !== null && data?.banned_at !== undefined) {
-          console.log('User was banned during session, forcing sign out');
-          userDataCache.clear();
-          clearAllCache();
-          await supabase.auth.signOut();
-          setUser(null);
-        } else if (data?.is_active === false) {
-          // Update the local user state to reflect deactivation without sign out
+          console.log('User was banned — forcing sign out');
+          await forceSignOut();
+          return;
+        }
+
+        if (data?.is_active === false) {
           setUser(prev => prev ? { ...prev, is_active: false } : prev);
+        }
+
+        const localToken = localStorage.getItem('ems_session_token');
+        if (localToken && data?.current_session_token && data.current_session_token !== localToken) {
+          console.log('Another session signed in — signing out this session');
+          await forceSignOut();
         }
       } catch (err) {
         console.error('Error checking user status:', err);
       }
-    }, 5 * 60 * 1000); // every 5 minutes
+    };
 
-    return () => clearInterval(statusCheckInterval);
+    // ── Realtime subscription: fires immediately when the user row changes ──
+    const channel = supabase
+      .channel(`user-session:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` },
+        (payload) => {
+          const updated = payload.new as { current_session_token?: string; banned_at?: string | null; is_active?: boolean };
+
+          // Another session overwrote the token
+          const localToken = localStorage.getItem('ems_session_token');
+          if (localToken && updated.current_session_token && updated.current_session_token !== localToken) {
+            console.log('Realtime: another session signed in — signing out');
+            forceSignOut();
+            return;
+          }
+
+          if (updated.banned_at) {
+            console.log('Realtime: user was banned — signing out');
+            forceSignOut();
+            return;
+          }
+
+          if (updated.is_active === false) {
+            setUser(prev => prev ? { ...prev, is_active: false } : prev);
+          }
+        }
+      )
+      .subscribe();
+
+    // ── Fallback interval (1 min) in case realtime is unavailable ──
+    const fallbackInterval = setInterval(checkStatus, 60 * 1000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(fallbackInterval);
+    };
   }, [user?.id]);
 
   const resetSession = useCallback(async () => {
@@ -450,31 +497,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();
-    updateLastActivity(); // Reset activity timer on login
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    updateLastActivity();
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
     if (data.user) {
-      logActivity(data.user.id, 'user_login', 'user', data.user.id, {
-        email: data.user.email,
-      });
+      // Generate a unique session token and write it to the DB.
+      // Any previously open session for this user will detect the mismatch
+      // on its next periodic check and be forced out.
+      const sessionToken = crypto.randomUUID();
+      localStorage.setItem('ems_session_token', sessionToken);
+      await db
+        .from('users')
+        .update({ current_session_token: sessionToken })
+        .eq('id', data.user.id);
+
+      logActivity(data.user.id, 'user_login', 'user', data.user.id, { email: data.user.email });
     }
   };
 
   const signOut = async () => {
     if (user) {
       logActivity(user.id, 'user_logout', 'user', user.id);
+      // Clear the session token so no other check tries to kick this session
+      await db.from('users').update({ current_session_token: null }).eq('id', user.id);
     }
 
+    localStorage.removeItem('ems_session_token');
     userDataCache.clear();
     clearAllCache();
     resetSessionHealth();
     clearLastActivity();
-    
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
