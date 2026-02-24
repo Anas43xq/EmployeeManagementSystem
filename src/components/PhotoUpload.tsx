@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Upload, X, User } from 'lucide-react';
-import { supabase } from '../services/supabase';
+import { uploadEmployeePhoto, deleteEmployeePhoto } from '../utils/photoUtils';
 
 interface PhotoUploadProps {
   currentPhotoUrl?: string;
@@ -22,6 +22,9 @@ export default function PhotoUpload({
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentPhotoUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track the URL of the last photo uploaded THIS session so we delete it
+  // when the user uploads another photo before saving the form.
+  const lastUploadedUrlRef = useRef<string | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,6 +40,7 @@ export default function PhotoUpload({
       return;
     }
 
+    // Show a local preview immediately while upload happens
     const reader = new FileReader();
     reader.onload = () => {
       setPreviewUrl(reader.result as string);
@@ -45,47 +49,39 @@ export default function PhotoUpload({
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${employeeId || 'new'}-${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      // The photo to delete is either: a previously uploaded photo this session
+      // (lastUploadedUrlRef) OR the original DB photo passed via props.
+      const urlToDelete = lastUploadedUrlRef.current ?? currentPhotoUrl ?? null;
 
-      if (currentPhotoUrl) {
-        const oldPath = currentPhotoUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage.from('employee-photos').remove([oldPath]);
-        }
-      }
+      const publicUrl = await uploadEmployeePhoto(
+        employeeId || 'new',
+        file,
+        urlToDelete
+      );
 
-      const { error: uploadError } = await supabase.storage
-        .from('employee-photos')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        if (uploadError.message.includes('bucket') || uploadError.message.includes('not found')) {
-          alert(t('employees.photoBucketNotConfigured'));
-          setPreviewUrl(currentPhotoUrl || null);
-          return;
-        }
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('employee-photos')
-        .getPublicUrl(filePath);
-
+      // Remember this upload so the NEXT upload will delete it
+      lastUploadedUrlRef.current = publicUrl;
+      setPreviewUrl(publicUrl);
       onPhotoChange(publicUrl);
-    } catch (error) {
-      alert(t('employees.photoUploadFailed'));
-      setPreviewUrl(currentPhotoUrl || null);
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes('Storage not configured')) {
+        alert(t('employees.photoBucketNotConfigured', 'Storage not configured'));
+      } else {
+        alert(t('employees.photoUploadFailed'));
+      }
+      // Restore previous preview on failure
+      setPreviewUrl(lastUploadedUrlRef.current ?? currentPhotoUrl ?? null);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleRemovePhoto = () => {
+  const handleRemovePhoto = async () => {
+    // Delete whichever photo is currently showing
+    const urlToDelete = lastUploadedUrlRef.current ?? currentPhotoUrl ?? null;
+    await deleteEmployeePhoto(urlToDelete);
+    lastUploadedUrlRef.current = null;
     setPreviewUrl(null);
     onPhotoChange(null);
     if (fileInputRef.current) {
@@ -144,7 +140,7 @@ export default function PhotoUpload({
             {uploading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-2" />
-                {t('employees.uploading')}
+                {t('employees.uploadingPhoto')}
               </>
             ) : (
               <>

@@ -212,6 +212,7 @@
     "photoInvalidType": "Please select a JPG, PNG, or WebP image",
     "photoTooLarge": "Photo must be less than 5MB",
     "photoUploadFailed": "Failed to upload photo",
+    "photoBucketNotConfigured": "Storage not configured — please contact your administrator",
     "confirmDeleteTitle": "Delete Employee",
     "confirmDeleteMessage": "Are you sure you want to delete {{name}}?",
     "hasAccessWarningTitle": "Employee Has Login Access",
@@ -280,7 +281,8 @@
     "conflictMessage": "You already have a {{status}} {{type}} leave from {{startDate}} to {{endDate}} that overlaps with these dates.",
     "conflictsFound": "{{count}} conflicting leave(s) found",
     "checkingConflicts": "Checking for conflicts...",
-    "noConflicts": "No conflicts detected"
+    "noConflicts": "No conflicts detected",
+    "workingDaysCalculated": "Working days (Mon–Fri, excludes weekends)"
   },
   "attendance": {
     "title": "Attendance",

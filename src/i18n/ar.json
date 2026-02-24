@@ -210,6 +210,7 @@
     "photoInvalidType": "يرجى اختيار صورة بصيغة JPG أو PNG أو WebP",
     "photoTooLarge": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
     "photoUploadFailed": "فشل في رفع الصورة",
+    "photoBucketNotConfigured": "التخزين غير مهيأ — يرجى التواصل مع المسؤول",
     "confirmDeleteTitle": "حذف الموظف",
     "confirmDeleteMessage": "هل أنت متأكد من حذف {{name}}؟",
     "hasAccessWarningTitle": "الموظف لديه صلاحية دخول",
@@ -278,7 +279,8 @@
     "conflictMessage": "لديك بالفعل إجازة {{type}} {{status}} من {{startDate}} إلى {{endDate}} تتعارض مع هذه التواريخ.",
     "conflictsFound": "تم العثور على {{count}} إجازة(إجازات) متعارضة",
     "checkingConflicts": "جارٍ التحقق من التعارضات...",
-    "noConflicts": "لم يتم اكتشاف تعارضات"
+    "noConflicts": "لم يتم اكتشاف تعارضات",
+    "workingDaysCalculated": "أيام العمل (الإثنين–الجمعة، باستثناء عطل نهاية الأسبوع)"
   },
   "attendance": {
     "title": "الحضور",

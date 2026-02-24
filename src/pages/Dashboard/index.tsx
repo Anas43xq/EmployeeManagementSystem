@@ -10,6 +10,7 @@ import RecentActivities from './RecentActivities';
 import QuickActions from './QuickActions';
 import EmployeeOfWeekWidget from './EmployeeOfWeekWidget';
 import PerformanceChartWidget from './PerformanceChartWidget';
+import PerformanceCalculationStatus from './PerformanceCalculationStatus';
 
 export default function Dashboard() {
   const { stats, recentActivities, departmentData, leaveStatusData, loading, user } = useDashboard();
@@ -59,6 +60,13 @@ export default function Dashboard() {
         )}
         <QuickActions userRole={userRole} />
       </div>
+
+      {/* Admin-only: manual performance calculation trigger */}
+      {userRole === 'admin' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <PerformanceCalculationStatus />
+        </div>
+      )}
     </div>
   );
 }

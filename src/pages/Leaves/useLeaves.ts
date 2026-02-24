@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createNotification, notifyHRAndAdmins } from '../../services/dbNotifications';
 import { logActivity } from '../../services/activityLog';
+import { calculateWorkingDays } from '../../utils/dateUtils';
 import type { Leave, LeaveFormData, LeaveBalance, LeaveConflict } from './types';
 
 export function useLeaves() {
@@ -209,12 +210,10 @@ export function useLeaves() {
     }
   };
 
+  // Returns working days (Mon–Fri) — excludes weekends
   const calculateDays = (startDate: string, endDate: string): number => {
     if (!startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return diff > 0 ? diff : 0;
+    return calculateWorkingDays(startDate, endDate);
   };
 
   const updateLeaveBalance = async (employeeId: string, leaveType: string, days: number, action: 'add' | 'subtract') => {

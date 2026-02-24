@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const { data, error } = await db
         .from('users')
-        .select('role, employee_id, is_active')
+        .select('role, employee_id, is_active, banned_at')
         .eq('id', authUser.id)
         .maybeSingle();
 
@@ -110,6 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_active: false,
         };
         return userData;
+      }
+
+      // Check if user is banned or deactivated — force sign out immediately
+      if (data?.is_active === false || (data?.banned_at !== null && data?.banned_at !== undefined)) {
+        console.log('User is banned or inactive, forcing sign out');
+        userDataCache.delete(authUser.id);
+        await supabase.auth.signOut();
+        throw new Error('Your account has been deactivated');
       }
 
       const userData: AuthUser = {
@@ -125,6 +133,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return userData;
     } catch (error) {
+      // If the user is banned/deactivated, propagate so the caller can handle it
+      if ((error as Error).message === 'Your account has been deactivated') {
+        throw error;
+      }
       const userData: AuthUser = {
         id: authUser.id,
         email: authUser.email || '',
@@ -166,7 +178,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userData);
         }
       } catch (error) {
-        if (isRefreshTokenError(error as Error)) {
+        if ((error as Error).message === 'Your account has been deactivated') {
+          if (mounted) setUser(null);
+        } else if (isRefreshTokenError(error as Error)) {
           await clearAuthState();
         }
       } finally {
@@ -194,9 +208,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        const userData = await loadUserData(session.user);
-        if (mounted && userData) {
-          setUser(userData);
+        try {
+          const userData = await loadUserData(session.user);
+          if (mounted && userData) {
+            setUser(userData);
+          }
+        } catch (err) {
+          if ((err as Error).message === 'Your account has been deactivated') {
+            if (mounted) setUser(null);
+          }
         }
       }
     });
@@ -356,6 +376,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', handleVisibilityForInactivity);
     };
   }, [user]);
+
+  // Periodic ban/deactivation check — safety net every 5 minutes
+  useEffect(() => {
+    if (!user) return;
+
+    const statusCheckInterval = setInterval(async () => {
+      try {
+        const { data, error } = await db
+          .from('users')
+          .select('is_active, banned_at')
+          .eq('id', user.id)
+          .single();
+
+        if (error) return;
+
+        if (data?.is_active === false || (data?.banned_at !== null && data?.banned_at !== undefined)) {
+          console.log('User was banned/deactivated during session, forcing sign out');
+          userDataCache.clear();
+          clearAllCache();
+          await supabase.auth.signOut();
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Error checking user status:', err);
+      }
+    }, 5 * 60 * 1000); // every 5 minutes
+
+    return () => clearInterval(statusCheckInterval);
+  }, [user?.id]);
 
   const resetSession = useCallback(async () => {
     setLoading(true);

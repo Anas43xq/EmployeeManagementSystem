@@ -16,6 +16,9 @@ interface PayrollCalculation {
   leaveDeductions: number;
   grossSalary: number;
   netSalary: number;
+  absentDays: number;
+  lateDays: number;
+  deductableLateDays: number;
 }
 
 serve(async (req) => {
@@ -164,7 +167,7 @@ serve(async (req) => {
               gross_salary: calculation.grossSalary,
               net_salary: calculation.netSalary,
               status: 'draft',
-              notes: `Attendance deductions: $${calculation.attendanceDeductions}, Leave deductions: $${calculation.leaveDeductions}`
+              notes: `Attendance deductions: $${calculation.attendanceDeductions.toFixed(2)} (absent: ${calculation.absentDays} days, late: ${calculation.lateDays} occurrences [${calculation.lateDays - calculation.deductableLateDays} forgiven]), Leave deductions: $${calculation.leaveDeductions.toFixed(2)}`
             })
             .select()
             .single();
@@ -347,8 +350,12 @@ async function calculateEmployeePayroll(
   const absentDays = attendanceRecords?.filter(a => a.status === 'absent').length || 0;
   const lateDays = attendanceRecords?.filter(a => a.status === 'late').length || 0;
 
+  // First 3 late instances per month are forgiven; only the excess is deducted
+  const LATE_GRACE_INSTANCES = 3;
+  const deductableLateDays = Math.max(0, lateDays - LATE_GRACE_INSTANCES);
+
   attendanceDeductions += absentDays * dailySalary;
-  attendanceDeductions += lateDays * dailySalary * 0.1;
+  attendanceDeductions += deductableLateDays * dailySalary * 0.1;
 
   const { data: leaveRecords } = await supabaseClient
     .from('leaves')
@@ -415,6 +422,9 @@ async function calculateEmployeePayroll(
     attendanceDeductions,
     leaveDeductions,
     grossSalary,
-    netSalary: Math.max(0, netSalary)
+    netSalary: Math.max(0, netSalary),
+    absentDays,
+    lateDays,
+    deductableLateDays,
   };
 }

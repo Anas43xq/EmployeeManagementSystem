@@ -177,6 +177,15 @@ serve(async (req) => {
           })
           .eq('id', userId);
 
+        // Revoke all active sessions immediately so the ban takes effect without waiting
+        try {
+          await supabaseAdmin.auth.admin.signOut(userId, 'others');
+          console.log(`All sessions revoked for banned user ${userId}`);
+        } catch (signOutError) {
+          console.error(`Failed to revoke sessions for user ${userId}:`, (signOutError as Error).message);
+          // Non-fatal: user is still banned, they just won't be kicked until next request
+        }
+
         // Send ban notification email
         if (userEmail) {
           const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
@@ -273,6 +282,14 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq('id', userId);
+
+        // Revoke all active sessions so deactivation takes effect immediately
+        try {
+          await supabaseAdmin.auth.admin.signOut(userId, 'others');
+          console.log(`All sessions revoked for deactivated user ${userId}`);
+        } catch (signOutError) {
+          console.error(`Failed to revoke sessions for user ${userId}:`, (signOutError as Error).message);
+        }
 
         result = { success: true, message: 'User deactivated successfully' };
         break;
