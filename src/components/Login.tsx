@@ -64,10 +64,7 @@ export default function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       const errorMessage = err?.message || '';
-      if (errorMessage === 'ACTIVE_SESSION') {
-        setError(t('auth.activeSession'));
-        showNotification('error', t('auth.activeSession'));
-      } else if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
+      if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
         setError(t('auth.accountBanned'));
         showNotification('error', t('auth.accountBanned'));
       } else if (errorMessage.toLowerCase().includes('email not confirmed')) {

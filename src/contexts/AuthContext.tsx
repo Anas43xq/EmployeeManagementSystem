@@ -387,7 +387,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userDataCache.clear();
       clearAllCache();
       localStorage.removeItem('ems_session_token');
-      await supabase.auth.signOut();
+      // Skip the network signOut call — the server-side session token was already
+      // overwritten by the new login. Just wipe local auth state so nothing lingers
+      // in memory or localStorage, then redirect to login.
+      await clearAuthState();
       setUser(null);
     };
 
@@ -503,16 +506,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      // Use SECURITY DEFINER RPC to read current_session_token (bypasses RLS).
-      const { data: existingToken } = await supabase.rpc('get_own_session_token');
-
-      if (existingToken) {
-        // Another device is logged in — abort and tell the user to log out there first.
-        await supabase.auth.signOut();
-        throw new Error('ACTIVE_SESSION');
-      }
-
-      // No active session — claim it with a new unique token via SECURITY DEFINER RPC.
+      // Always claim the session with a new unique token via SECURITY DEFINER RPC.
+      // If another device was already signed in, the realtime channel will detect
+      // the token mismatch and force-sign it out automatically — no blocking needed.
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
       await supabase.rpc('set_own_session_token', { p_token: sessionToken });
