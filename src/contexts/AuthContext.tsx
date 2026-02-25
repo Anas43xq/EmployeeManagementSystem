@@ -4,7 +4,8 @@ import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
 import { 
   clearAuthState, 
-  recordAuthSuccess, 
+  recordAuthSuccess,
+  recordAuthFailure,
   resetSessionHealth,
   updateLastActivity,
   getLastActivity,
@@ -499,11 +500,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     userDataCache.clear();
     clearAllCache();
-    resetSessionHealth();
     updateLastActivity();
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+
+    if (error) {
+      // Count this failure; throw a lockout signal once the threshold is reached
+      if (recordAuthFailure()) {
+        throw new Error('TOO_MANY_ATTEMPTS');
+      }
+      throw error;
+    }
 
     if (data.user) {
       // Always claim the session with a new unique token via SECURITY DEFINER RPC.

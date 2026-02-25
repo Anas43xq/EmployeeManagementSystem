@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 const SESSION_HEALTH_KEY = 'ems_session_health';
 const LAST_ACTIVITY_KEY = 'ems_last_activity';
 const MAX_FAILED_ATTEMPTS = 3;
-const RECOVERY_COOLDOWN_MS = 5000;
+export const RECOVERY_COOLDOWN_MS = 5000;
 const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
 
 interface SessionHealth {

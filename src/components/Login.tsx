@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { supabase } from '../services/supabase';
+import { RECOVERY_COOLDOWN_MS, resetSessionHealth } from '../services/sessionManager';
 import {
   authenticateWithPasskey,
   isWebAuthnSupported
@@ -24,6 +25,8 @@ export default function Login() {
   const [showPasskeyLogin, setShowPasskeyLogin] = useState(false);
   const [passkeyEmail, setPasskeyEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [lockCountdown, setLockCountdown] = useState(0);
 
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
@@ -53,8 +56,33 @@ export default function Login() {
     setPasskeySupported(isWebAuthnSupported());
   }, []);
 
+  // Tick down the lockout countdown; reset health counter when it expires
+  useEffect(() => {
+    if (!lockedUntil) return;
+    setLockCountdown(Math.ceil((lockedUntil - Date.now()) / 1000));
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setLockedUntil(null);
+        setLockCountdown(0);
+        resetSessionHealth();
+      } else {
+        setLockCountdown(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockedUntil]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Still within lockout window — don't even attempt
+    if (lockedUntil !== null) {
+      setError(t('auth.tooManyAttempts'));
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -64,7 +92,11 @@ export default function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       const errorMessage = err?.message || '';
-      if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
+      if (errorMessage === 'TOO_MANY_ATTEMPTS') {
+        setLockedUntil(Date.now() + RECOVERY_COOLDOWN_MS);
+        setError(t('auth.tooManyAttempts'));
+        showNotification('error', t('auth.tooManyAttempts'));
+      } else if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
         setError(t('auth.accountBanned'));
         showNotification('error', t('auth.accountBanned'));
       } else if (errorMessage.toLowerCase().includes('email not confirmed')) {
@@ -354,10 +386,14 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || lockedUntil !== null}
             className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? t('auth.signingIn') : t('auth.signIn')}
+            {lockedUntil !== null
+              ? t('auth.tryAgainIn', { seconds: lockCountdown })
+              : loading
+              ? t('auth.signingIn')
+              : t('auth.signIn')}
           </button>
         </form>
 

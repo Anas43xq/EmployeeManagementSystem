@@ -58,6 +58,8 @@
     "invalidCredentials": "Invalid email or password",
     "accountBanned": "Your account has been banned. Please contact the administrator for assistance.",
     "emailNotConfirmed": "Please confirm your email address before signing in.",
+    "tooManyAttempts": "Too many failed attempts. Please wait before trying again.",
+    "tryAgainIn": "Try again in {{seconds}}s",
     "resetPassword": "Reset Password",
     "resetPasswordDesc": "Enter your email address and we'll send you a link to reset your password",
     "sendResetLink": "Send Reset Link",
