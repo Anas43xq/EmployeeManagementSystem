@@ -127,15 +127,10 @@ export async function getValidAccessToken(): Promise<string | null> {
   }
 }
 
-// =============================================
-// INACTIVITY TRACKING
-// =============================================
-
 export function updateLastActivity(): void {
   try {
     localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
   } catch {
-    // Ignore localStorage errors
   }
 }
 
@@ -161,7 +156,6 @@ export function clearLastActivity(): void {
   try {
     localStorage.removeItem(LAST_ACTIVITY_KEY);
   } catch {
-    // Ignore localStorage errors
   }
 }
 

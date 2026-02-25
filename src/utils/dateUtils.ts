@@ -1,7 +1,3 @@
-/**
- * Calculate working days (Monday–Friday) between two dates, inclusive.
- * Excludes Saturday (6) and Sunday (0).
- */
 export function calculateWorkingDays(
   startDate: Date | string,
   endDate: Date | string
@@ -29,9 +25,6 @@ export function calculateWorkingDays(
   return Math.max(1, workingDays); // minimum 1 working day
 }
 
-/**
- * Format a Date as YYYY-MM-DD for database operations.
- */
 export function formatDateForDB(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -39,9 +32,6 @@ export function formatDateForDB(date: Date | string): string {
   return `${d.getFullYear()}-${month}-${day}`;
 }
 
-/**
- * Calculate total calendar days between two dates (legacy helper).
- */
 export function calculateCalendarDays(
   startDate: Date | string,
   endDate: Date | string

@@ -92,8 +92,8 @@ export async function createNotification(
     if (sendEmail) {
       emailSent = await sendNotificationEmail(userId, title, message, type);
     }
-  } catch (err) {
-    console.error('Error creating notification:', err);
+  } catch {
+    // ignore
   }
 
   return { notificationSaved, emailSent };
@@ -126,8 +126,8 @@ export async function createNotifications(
         }
       }
     }
-  } catch (err) {
-    console.error('Error creating notifications:', err);
+  } catch {
+    // ignore
   }
 }
 
@@ -139,8 +139,6 @@ export async function notifyHRAndAdmins(
   excludeUserId?: string
 ): Promise<void> {
   try {
-    // Use SECURITY DEFINER RPC to bypass RLS — allows staff to notify admin/HR
-    // excludeUserId prevents notifying the acting user about their own action
     const rpcParams: Record<string, unknown> = {
       p_title: title,
       p_message: message,
@@ -153,12 +151,8 @@ export async function notifyHRAndAdmins(
 
     const { error: rpcError } = await (supabase.rpc as any)('notify_role_users', rpcParams);
 
-    if (rpcError) {
-      console.error('Error notifying HR/Admin via RPC:', rpcError);
-      return;
-    }
+    if (rpcError) return;
 
-    // Send emails if requested (uses a separate SECURITY DEFINER function to get emails)
     if (sendEmail) {
       try {
         const emailRpcParams: Record<string, unknown> = {
@@ -184,8 +178,8 @@ export async function notifyHRAndAdmins(
         // Email sending is best-effort — don't block on failure
       }
     }
-  } catch (err) {
-    console.error('Error in notifyHRAndAdmins:', err);
+  } catch {
+    // ignore
   }
 }
 

@@ -145,9 +145,6 @@ export function useLeaves() {
 
     setCheckingConflicts(true);
     try {
-      // Query for overlapping leaves (approved or pending) for the same employee
-      // Overlap condition: NOT (new_end < existing_start OR new_start > existing_end)
-      // Which simplifies to: new_start <= existing_end AND new_end >= existing_start
       const { data, error } = await db
         .from('leaves')
         .select('id, leave_type, start_date, end_date, status')
@@ -157,7 +154,6 @@ export function useLeaves() {
         .gte('end_date', startDate);
 
       if (error) {
-        console.error('Error checking leave conflicts:', error);
         setLeaveConflicts([]);
         return [];
       }
@@ -172,8 +168,7 @@ export function useLeaves() {
 
       setLeaveConflicts(conflicts);
       return conflicts;
-    } catch (error) {
-      console.error('Error checking leave conflicts:', error);
+    } catch {
       setLeaveConflicts([]);
       return [];
     } finally {

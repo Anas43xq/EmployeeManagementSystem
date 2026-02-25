@@ -4,15 +4,10 @@ const BUCKET = 'employee-photos';
 const MAX_SIZE_MB = 5;
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 
-/**
- * Extract the storage filename from a public Supabase storage URL.
- * The URL format is: .../storage/v1/object/public/<bucket>/<filename>
- */
 function extractFilename(publicUrl: string): string | null {
   try {
     const url = new URL(publicUrl);
     const parts = url.pathname.split('/');
-    // filename is the last segment
     const filename = parts[parts.length - 1];
     return filename || null;
   } catch {
@@ -20,10 +15,6 @@ function extractFilename(publicUrl: string): string | null {
   }
 }
 
-/**
- * Delete an employee photo from Supabase Storage.
- * Silently ignores errors so a failed delete never blocks an upload.
- */
 export async function deleteEmployeePhoto(photoUrl: string | null | undefined): Promise<void> {
   if (!photoUrl) return;
   const filename = extractFilename(photoUrl);
@@ -31,18 +22,12 @@ export async function deleteEmployeePhoto(photoUrl: string | null | undefined): 
 
   try {
     const { error } = await supabase.storage.from(BUCKET).remove([filename]);
-    if (error) {
-      console.warn('Failed to delete old employee photo:', error.message);
-    }
-  } catch (err) {
-    console.warn('Error deleting employee photo:', (err as Error).message);
+    if (error) return;
+  } catch {
+    // ignore
   }
 }
 
-/**
- * Upload a new employee photo, automatically deleting the previous one.
- * Returns the public URL of the uploaded photo.
- */
 export async function uploadEmployeePhoto(
   employeeId: string,
   file: File,
