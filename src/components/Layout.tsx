@@ -59,7 +59,7 @@ function useSideCategories(): SideCategory[] {
     },
     {
       label: t('navCategory.system', 'SYSTEM'),
-      adminOnly: true,
+      adminOnly: false,
       items: [
         { name: t('nav.userManagement'), href: '/users', icon: UserCog },
         { name: t('nav.activityLogs', 'Activity Logs'), href: '/activity-logs', icon: Activity },
@@ -72,8 +72,8 @@ function useSideCategories(): SideCategory[] {
 /* ─── Per-role allowed hrefs ───────────────────────────────────────────────── */
 const ALLOWED: Record<string, string[]> = {
   admin: ['/dashboard', '/profile', '/employees', '/departments', '/attendance', '/leaves', '/tasks', '/payroll', '/announcements', '/complaints', '/warnings', '/reports', '/users', '/activity-logs', '/settings'],
-  hr:    ['/dashboard', '/profile', '/employees', '/departments', '/attendance', '/leaves', '/tasks', '/payroll', '/announcements', '/complaints', '/warnings', '/reports'],
-  staff: ['/dashboard', '/profile', '/attendance', '/leaves', '/tasks', '/payslips', '/complaints', '/warnings'],
+  hr:    ['/dashboard', '/profile', '/employees', '/departments', '/attendance', '/leaves', '/tasks', '/payroll', '/announcements', '/complaints', '/warnings', '/reports', '/settings'],
+  staff: ['/dashboard', '/profile', '/attendance', '/leaves', '/tasks', '/payslips', '/complaints', '/warnings', '/settings'],
 };
 
 export default function Layout() {
@@ -188,31 +188,6 @@ export default function Layout() {
               );
             })}
 
-            {/* Settings for hr/staff — separate ACCOUNT section */}
-            {role !== 'admin' && (
-              <div>
-                <p className="px-3 mb-1.5 text-[10px] font-semibold text-primary-400 uppercase tracking-widest select-none">
-                  {t('navCategory.account', 'ACCOUNT')}
-                </p>
-                <ul className="space-y-0.5">
-                  <li>
-                    <Link
-                      to="/settings"
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${
-                        isRTL ? 'flex-row-reverse' : ''
-                      } ${
-                        location.pathname === '/settings'
-                          ? 'bg-primary-800 text-white'
-                          : 'text-primary-100 hover:bg-primary-800 hover:text-white'
-                      }`}
-                    >
-                      <Settings className="w-4 h-4 shrink-0" />
-                      {t('nav.settings')}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            )}
           </nav>
 
           {/* Drawer footer */}
