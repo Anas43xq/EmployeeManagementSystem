@@ -1,6 +1,6 @@
 -- ============================================================
 -- STAFFHUB - EMPLOYEE MANAGEMENT SYSTEM
--- Database Schema v3.3
+-- Database Schema v3.4
 -- Project: Senior Graduation Project - DevTeam Hub
 -- Date: February 2026
 -- ============================================================
@@ -31,29 +31,12 @@
 --   23. Storage              - employee-photos bucket + storage policies
 --   24. Seed Data            - moved to supabase/seed.sql (loaded by db reset)
 --   25. Cron Jobs            - automated weekly performance + employee of week
--- ============================================================
--- CHANGELOG:
---   v3.3 - Added calculate_working_days() (Mon-Fri only)
---           Updated check_leave_overlap() to recalculate days_count as working days
---           Added pg_cron automated weekly performance scoring (Monday 00:05 UTC)
---           Added get_last_performance_calculation_time() for admin UI
---   v3.2 - Added check_leave_overlap trigger (prevents overlapping leave dates)
---   v3.1 - Optimized RLS helpers to pure SQL functions
---           Fixed conflicting ALL+SELECT/UPDATE policies
---           Optimized calculate_weekly_performance() with single CTE
---           Added composite indexes for common query patterns
---           Fixed payroll date queries to use index-friendly BETWEEN
+--   26. Session Token Funcs  - get/set/clear_own_session_token (single-session enforcement)
 -- ============================================================
 
--- ============================================================
 -- 1. CLEANUP
---    Drop all existing objects before recreating.
---    Order: policies -> triggers -> tables -> functions -> sequences
---    All statements use IF EXISTS so this is safe on a fresh database.
--- ============================================================
 
--- Drop all RLS policies dynamically (handles any policy name without listing them)
--- Drop all RLS policies first
+-- Drop all RLS policies dynamically
 DO $$ 
 DECLARE
   r RECORD;
@@ -98,7 +81,7 @@ DROP TABLE IF EXISTS public.users CASCADE;
 DROP TABLE IF EXISTS public.employees CASCADE;
 DROP TABLE IF EXISTS public.departments CASCADE;
 
--- Drop tables in dependency order
+
 DROP TABLE IF EXISTS public.employee_of_week CASCADE;
 DROP TABLE IF EXISTS public.employee_performance CASCADE;
 DROP TABLE IF EXISTS public.employee_complaints CASCADE;
@@ -144,6 +127,9 @@ DROP FUNCTION IF EXISTS notify_role_users(TEXT, TEXT, TEXT, TEXT[]) CASCADE;
 DROP FUNCTION IF EXISTS notify_role_users(TEXT, TEXT, TEXT, TEXT[], UUID) CASCADE;
 DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[]) CASCADE;
 DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[], UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.get_own_session_token() CASCADE;
+DROP FUNCTION IF EXISTS public.set_own_session_token(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.clear_own_session_token() CASCADE;
 
 -- =============================================
 -- EXTENSIONS
@@ -230,6 +216,58 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[], UUID) TO authenticated;
 
 -- =============================================
+-- SESSION TOKEN FUNCTIONS
+--   SECURITY DEFINER so any authenticated user can read/write their own
+--   current_session_token regardless of their role (bypasses RLS).
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.get_own_session_token()
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_token TEXT;
+BEGIN
+  SELECT current_session_token INTO v_token
+  FROM public.users
+  WHERE id = auth.uid();
+  RETURN v_token;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_own_session_token(p_token TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.users
+  SET current_session_token = p_token
+  WHERE id = auth.uid();
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.clear_own_session_token()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.users
+  SET current_session_token = NULL
+  WHERE id = auth.uid();
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_own_session_token() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_own_session_token(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
+
+-- =============================================
 -- CORE TABLES
 -- =============================================
 
@@ -285,6 +323,7 @@ CREATE TABLE public.users (
   is_active BOOLEAN NOT NULL DEFAULT true,
   banned_at TIMESTAMPTZ DEFAULT NULL,
   ban_reason TEXT DEFAULT NULL,
+  current_session_token TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -1388,6 +1427,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_tasks') THEN
       ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_tasks;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'users') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
     END IF;
   END IF;
 END $$;
