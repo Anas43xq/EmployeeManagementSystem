@@ -60,7 +60,7 @@ BEGIN
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
--- Drop triggers safely
+-- Drop tables 1
 DROP TABLE IF EXISTS public.employee_of_week CASCADE;
 DROP TABLE IF EXISTS public.employee_performance CASCADE;
 DROP TABLE IF EXISTS public.employee_complaints CASCADE;
@@ -81,7 +81,7 @@ DROP TABLE IF EXISTS public.users CASCADE;
 DROP TABLE IF EXISTS public.employees CASCADE;
 DROP TABLE IF EXISTS public.departments CASCADE;
 
-
+-- Drop tables 2
 DROP TABLE IF EXISTS public.employee_of_week CASCADE;
 DROP TABLE IF EXISTS public.employee_performance CASCADE;
 DROP TABLE IF EXISTS public.employee_complaints CASCADE;
