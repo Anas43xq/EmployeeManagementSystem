@@ -120,6 +120,23 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+// Detects the "Failed to fetch dynamically imported module" / MIME-type error
+// that happens when the browser has a stale index.html cached after a new Vercel
+// deployment (old chunk hashes no longer exist → Vercel serves index.html as fallback
+// → browser receives text/html where it expected JavaScript).
+function isStaleChunkError(error: Error): boolean {
+  const msg = error?.message?.toLowerCase() ?? '';
+  return (
+    msg.includes('failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('importing a module script failed') ||
+    msg.includes('mime type') ||
+    (error.name === 'TypeError' && msg.includes('dynamically imported'))
+  );
+}
+
+const STALE_RELOAD_KEY = 'ems_stale_chunk_reload';
+
 export class RouteErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -132,9 +149,22 @@ export class RouteErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
+
+    // Auto-reload once when a stale deployment chunk error is detected.
+    // sessionStorage flag prevents an infinite reload loop if the chunk is
+    // genuinely broken (not just stale).
+    if (isStaleChunkError(error)) {
+      const alreadyReloaded = sessionStorage.getItem(STALE_RELOAD_KEY);
+      if (!alreadyReloaded) {
+        sessionStorage.setItem(STALE_RELOAD_KEY, '1');
+        window.location.reload();
+      }
+    }
   }
 
   handleRetry = () => {
+    // Clear the reload guard so a manual retry can attempt another reload if needed.
+    sessionStorage.removeItem(STALE_RELOAD_KEY);
     this.setState({ hasError: false, error: null });
   };
 
