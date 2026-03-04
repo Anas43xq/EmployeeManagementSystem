@@ -59,11 +59,11 @@ serve(async (req) => {
       );
     }
 
-    // Step 1: Create auth user
+    // Step 1: Create auth user (email_confirm: false → sends confirmation email)
     const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: {
         role,
       },

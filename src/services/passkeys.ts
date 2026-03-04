@@ -1,6 +1,5 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { supabase, db } from './supabase';
-import { clearAuthState } from './sessionManager';
 
 export interface PasskeyRegistrationResult {
   success: boolean;
@@ -125,11 +124,11 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
   }
 
   try {
-    // Clear any stale auth state before attempting passkey login
-    // This prevents "Invalid Refresh Token" errors from stale sessions
-    await clearAuthState();
+    // NOTE: Do NOT call clearAuthState() here — it removes Supabase localStorage keys
+    // which leaves the JS client's in-memory session detached and causes internal
+    // "Cannot read properties of undefined (reading 'payload')" crashes on the next
+    // background token operation.
 
-    // Use fetch directly instead of supabase.functions.invoke for better error handling
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -143,13 +142,32 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     });
 
     if (!optionsResponse.ok) {
+      // Always try to read the JSON body first so we can give a precise error message.
+      // The edge function returns 404 for both "user not found" and "no passkeys registered",
+      // and the Supabase platform itself also returns 404 when the function is not deployed.
+      const errorData = await optionsResponse.json().catch(() => ({}));
+
       if (optionsResponse.status === 404) {
+        const msg: string = errorData?.error || errorData?.msg || '';
+        if (msg.toLowerCase().includes('no passkeys')) {
+          return {
+            success: false,
+            error: 'No passkey is registered for this email. Please sign in with your email and password first, then add a passkey from your profile.',
+          };
+        }
+        if (msg.toLowerCase().includes('user not found')) {
+          return {
+            success: false,
+            error: 'No account found for this email address.',
+          };
+        }
+        // Platform-level 404 — function not deployed
         return { 
           success: false, 
           error: 'Passkey authentication service is not available. Please use email and password to sign in.' 
         };
       }
-      const errorData = await optionsResponse.json().catch(() => ({}));
+
       if (errorData.error?.includes('No passkeys registered') || errorData.error?.includes('User not found')) {
         return { 
           success: false, 
@@ -161,7 +179,7 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
 
     const data = await optionsResponse.json();
 
-    if (!data) {
+    if (!data || !data.options) {
       return { 
         success: false, 
         error: 'No passkey registered for this email. Please sign in with email and password first.' 
