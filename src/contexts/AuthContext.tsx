@@ -4,14 +4,17 @@ import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
 import { 
   clearAuthState, 
-  recordAuthSuccess,
-  recordAuthFailure,
   resetSessionHealth,
   updateLastActivity,
   getLastActivity,
   getInactivityTimeoutMs,
   clearLastActivity
 } from '../services/sessionManager';
+import {
+  checkLoginLockout,
+  recordFailedAttempt,
+  resetLoginAttempts,
+} from '../services/loginAttempts';
 import { clearAllCache } from '../services/apiCache';
 
 const isRefreshTokenError = (error: AuthError | Error | null): boolean => {
@@ -129,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       userDataCache.set(authUser.id, { data: userData, timestamp: Date.now() });
-      recordAuthSuccess();
       
       return userData;
     } catch (error) {
@@ -475,14 +477,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAllCache();
     updateLastActivity();
 
+    // ── Step 1: resolve the user_id from email (needed before auth) ──────────
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email' as any, email)
+      .maybeSingle() as any;
+
+    const resolvedUserId: string | null = userData?.id ?? null;
+
+    // ── Step 2: check server-side lockout (if user exists) ───────────────────
+    if (resolvedUserId) {
+      const lockout = await checkLoginLockout(resolvedUserId);
+
+      if (lockout.isDeactivated) {
+        throw new Error('ACCOUNT_DEACTIVATED_TOO_MANY_ATTEMPTS');
+      }
+
+      if (lockout.locked && lockout.remainingSeconds > 0) {
+        throw new Error(`LOCKED:${lockout.remainingSeconds}`);
+      }
+    }
+
+    // ── Step 3: attempt authentication ───────────────────────────────────────
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      if (recordAuthFailure()) throw new Error('TOO_MANY_ATTEMPTS');
+      // Record the failure server-side (if we know the user)
+      if (resolvedUserId) {
+        const status = await recordFailedAttempt(resolvedUserId, email);
+
+        if (status.isDeactivated) {
+          throw new Error('ACCOUNT_DEACTIVATED_TOO_MANY_ATTEMPTS');
+        }
+        if (status.locked && status.remainingSeconds > 0) {
+          throw new Error(`LOCKED:${status.remainingSeconds}`);
+        }
+        // Warn user how many attempts remain before next lockout
+        if (status.attemptsRemainingInPhase > 0) {
+          throw new Error(`WARN:${status.phase}:${status.attemptsRemainingInPhase}`);
+        }
+      }
       throw error;
     }
 
+    // ── Step 4: success — reset counter ──────────────────────────────────────
     if (data.user) {
+      await resetLoginAttempts(data.user.id).catch(() => {});
+
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
       await supabase.rpc('set_own_session_token', { p_token: sessionToken });

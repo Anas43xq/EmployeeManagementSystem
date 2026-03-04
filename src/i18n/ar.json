@@ -74,7 +74,14 @@
     "passkeyLoginDesc": "سجل دخولك باستخدام وجهك أو بصمتك أو أمان الجهاز",
     "authenticating": "جارٍ المصادقة...",
     "signInWithPasskey": "تسجيل الدخول بمفتاح المرور",
-    "orSignInWith": "أو سجل دخولك باستخدام"
+    "orSignInWith": "أو سجل دخولك باستخدام",
+    "accountLockedTooManyAttempts": "محاولات دخول فاشلة كثيرة جداً. يرجى الانتظار {{seconds}} ثانية قبل المحاولة مرة أخرى.",
+    "deactivatedTooManyAttempts": "تم تعطيل حسابك بسبب كثرة محاولات تسجيل الدخول الفاشلة.",
+    "autoReactivatesIn": "سيتم إعادة تفعيل حسابك تلقائياً خلال {{hours}} ساعة و{{minutes}} دقيقة.",
+    "contactAdminForEarlyReactivation": "تواصل مع المسؤول لإعادة التفعيل المبكرة.",
+    "phase1Warning": "تبقى {{attemptsRemaining}} محاولة قبل قفل لمدة 7 ثوانٍ.",
+    "phase2Warning": "تبقى {{attemptsRemaining}} محاولة قبل قفل لمدة 17 ثانية.",
+    "phase3Warning": "تحذير: محاولة فاشلة واحدة أخرى ستعطّل حسابك."
   },
   "nav": {
     "dashboard": "لوحة التحكم",

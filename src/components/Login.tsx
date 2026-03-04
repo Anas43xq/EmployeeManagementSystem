@@ -4,12 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { supabase } from '../services/supabase';
-import { RECOVERY_COOLDOWN_MS, resetSessionHealth } from '../services/sessionManager';
 import {
   authenticateWithPasskey,
   isWebAuthnSupported
 } from '../services/passkeys';
-import { Briefcase, ArrowLeft, Globe, Fingerprint, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Briefcase, ArrowLeft, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,6 +26,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [lockCountdown, setLockCountdown] = useState(0);
+  const [warnMessage, setWarnMessage] = useState('');
 
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
@@ -56,7 +56,7 @@ export default function Login() {
     setPasskeySupported(isWebAuthnSupported());
   }, []);
 
-  // Tick down the lockout countdown; reset health counter when it expires
+  // Tick down the lockout countdown
   useEffect(() => {
     if (!lockedUntil) return;
     setLockCountdown(Math.ceil((lockedUntil - Date.now()) / 1000));
@@ -66,7 +66,7 @@ export default function Login() {
         clearInterval(interval);
         setLockedUntil(null);
         setLockCountdown(0);
-        resetSessionHealth();
+        setError('');
       } else {
         setLockCountdown(remaining);
       }
@@ -79,11 +79,12 @@ export default function Login() {
 
     // Still within lockout window — don't even attempt
     if (lockedUntil !== null) {
-      setError(t('auth.tooManyAttempts'));
+      setError(t('auth.accountLockedTooManyAttempts', { seconds: lockCountdown }));
       return;
     }
 
     setError('');
+    setWarnMessage('');
     setLoading(true);
 
     try {
@@ -91,17 +92,45 @@ export default function Login() {
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      const errorMessage = err?.message || '';
-      if (errorMessage === 'TOO_MANY_ATTEMPTS') {
-        setLockedUntil(Date.now() + RECOVERY_COOLDOWN_MS);
-        setError(t('auth.tooManyAttempts'));
-        showNotification('error', t('auth.tooManyAttempts'));
+      const errorMessage: string = err?.message || '';
+
+      if (errorMessage.startsWith('LOCKED:')) {
+        // Server says: user is currently locked out
+        const seconds = parseInt(errorMessage.split(':')[1], 10) || 7;
+        setLockedUntil(Date.now() + seconds * 1000);
+        const msg = t('auth.accountLockedTooManyAttempts', { seconds });
+        setError(msg);
+        showNotification('error', msg);
+
+      } else if (errorMessage === 'ACCOUNT_DEACTIVATED_TOO_MANY_ATTEMPTS') {
+        // Account has been deactivated — go to deactivated page with reason
+        navigate('/deactivated', { replace: true, state: { reason: 'too_many_failed_attempts' } });
+
+      } else if (errorMessage.startsWith('WARN:')) {
+        // Still allowed to try — warn how many attempts remain
+        const parts = errorMessage.split(':');
+        const phase = parseInt(parts[1], 10);
+        const remaining = parseInt(parts[2], 10);
+        let msg = '';
+        if (phase === 3) {
+          msg = t('auth.phase3Warning');
+        } else if (phase === 2) {
+          msg = t('auth.phase2Warning', { attemptsRemaining: remaining });
+        } else {
+          msg = t('auth.phase1Warning', { attemptsRemaining: remaining });
+        }
+        setWarnMessage(msg);
+        setError(t('auth.invalidCredentials'));
+        showNotification('error', t('auth.invalidCredentials'));
+
       } else if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
         setError(t('auth.accountBanned'));
         showNotification('error', t('auth.accountBanned'));
+
       } else if (errorMessage.toLowerCase().includes('email not confirmed')) {
         setError(t('auth.emailNotConfirmed'));
         showNotification('error', t('auth.emailNotConfirmed'));
+
       } else {
         setError(t('auth.invalidCredentials'));
         showNotification('error', t('auth.invalidCredentials'));
@@ -332,8 +361,15 @@ export default function Login() {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-2">
             {error}
+          </div>
+        )}
+
+        {warnMessage && !error.startsWith('Too many') && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span className="text-sm">{warnMessage}</span>
           </div>
         )}
 

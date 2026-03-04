@@ -36,6 +36,7 @@ export type ActivityAction =
   | 'announcement_toggled'
   | 'user_login'
   | 'user_logout'
+  | 'user_login_failed'
   | 'session_timeout';
 
 export type EntityType =
@@ -44,7 +45,8 @@ export type EntityType =
   | 'leave'
   | 'department'
   | 'attendance'
-  | 'announcement';
+  | 'announcement'
+  | 'login_attempt';
 
 export async function logActivity(
   userId: string,

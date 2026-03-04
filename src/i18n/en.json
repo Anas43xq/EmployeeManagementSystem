@@ -76,7 +76,14 @@
     "passkeyLoginDesc": "Sign in using your face, fingerprint, or device security",
     "authenticating": "Authenticating...",
     "signInWithPasskey": "Sign in with Passkey",
-    "orSignInWith": "Or sign in with"
+    "orSignInWith": "Or sign in with",
+    "accountLockedTooManyAttempts": "Too many failed login attempts. Please wait {{seconds}} seconds before trying again.",
+    "deactivatedTooManyAttempts": "Your account has been deactivated due to too many failed login attempts.",
+    "autoReactivatesIn": "Your account will automatically reactivate in {{hours}}h {{minutes}}m.",
+    "contactAdminForEarlyReactivation": "Contact your administrator for early reactivation.",
+    "phase1Warning": "{{attemptsRemaining}} attempt(s) left before a 7-second lockout.",
+    "phase2Warning": "{{attemptsRemaining}} attempt(s) left before a 17-second lockout.",
+    "phase3Warning": "Warning: one more failed attempt will deactivate your account."
   },
   "nav": {
     "dashboard": "Dashboard",

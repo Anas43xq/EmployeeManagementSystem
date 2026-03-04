@@ -14,6 +14,7 @@
 --   6.  Leave Tables         - leaves, leave_balances
 --   7.  Attendance           - attendance
 --   8.  Passkeys             - WebAuthn credentials (passwordless login)
+--   8b. Login Attempts       - failed login tracking with escalating lockout
 --   9.  Payroll Tables       - payrolls, bonuses, deductions
 --   10. Communication        - notifications, activity_logs, user_preferences
 --   11. Announcements        - announcements
@@ -53,6 +54,7 @@ BEGIN
   DROP TRIGGER IF EXISTS update_employee_tasks_updated_at_trigger ON public.employee_tasks;
   DROP TRIGGER IF EXISTS update_employee_warnings_updated_at_trigger ON public.employee_warnings;
   DROP TRIGGER IF EXISTS update_employee_complaints_updated_at_trigger ON public.employee_complaints;
+  DROP TRIGGER IF EXISTS update_login_attempts_updated_at_trigger ON public.login_attempts;
   DROP TRIGGER IF EXISTS sync_auth_email_on_employee_update ON public.employees;
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
   DROP TRIGGER IF EXISTS on_auth_user_email_changed ON auth.users;
@@ -73,6 +75,7 @@ DROP TABLE IF EXISTS public.user_preferences CASCADE;
 DROP TABLE IF EXISTS public.deductions CASCADE;
 DROP TABLE IF EXISTS public.bonuses CASCADE;
 DROP TABLE IF EXISTS public.payrolls CASCADE;
+DROP TABLE IF EXISTS public.login_attempts CASCADE;
 DROP TABLE IF EXISTS public.passkeys CASCADE;
 DROP TABLE IF EXISTS public.attendance CASCADE;
 DROP TABLE IF EXISTS public.leave_balances CASCADE;
@@ -94,6 +97,7 @@ DROP TABLE IF EXISTS public.user_preferences CASCADE;
 DROP TABLE IF EXISTS public.deductions CASCADE;
 DROP TABLE IF EXISTS public.bonuses CASCADE;
 DROP TABLE IF EXISTS public.payrolls CASCADE;
+DROP TABLE IF EXISTS public.login_attempts CASCADE;
 DROP TABLE IF EXISTS public.passkeys CASCADE;
 DROP TABLE IF EXISTS public.attendance CASCADE;
 DROP TABLE IF EXISTS public.leave_balances CASCADE;
@@ -268,6 +272,49 @@ GRANT EXECUTE ON FUNCTION public.set_own_session_token(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
 
 -- =============================================
+-- AUTO-REACTIVATION FUNCTION
+--   Called on login to check if 2h has elapsed
+--   since deactivation and restore the account.
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.auto_reactivate_user_if_eligible(p_user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_deactivated_at TIMESTAMPTZ;
+BEGIN
+  SELECT deactivated_at INTO v_deactivated_at
+  FROM public.login_attempts
+  WHERE user_id = p_user_id;
+
+  IF v_deactivated_at IS NOT NULL AND now() >= v_deactivated_at + INTERVAL '2 hours' THEN
+    UPDATE public.users
+    SET is_active  = true,
+        updated_at = now()
+    WHERE id = p_user_id;
+
+    UPDATE public.login_attempts
+    SET failed_attempts     = 0,
+        login_phase         = 1,
+        locked_until        = NULL,
+        last_attempt_at     = NULL,
+        deactivated_at      = NULL,
+        deactivation_reason = NULL,
+        updated_at          = now()
+    WHERE user_id = p_user_id;
+
+    RETURN TRUE;
+  END IF;
+
+  RETURN FALSE;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.auto_reactivate_user_if_eligible(UUID) TO authenticated;
+
+-- =============================================
 -- CORE TABLES
 -- =============================================
 
@@ -393,6 +440,27 @@ CREATE TABLE public.passkeys (
   device_name TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   last_used_at TIMESTAMPTZ
+);
+
+-- =============================================
+-- LOGIN ATTEMPTS (escalating lockout)
+-- Phase 1: 3 fails  → 7s  lockout
+-- Phase 2: 2 fails  → 17s lockout
+-- Phase 3: 1 fail   → account deactivated for 2h
+-- =============================================
+
+CREATE TABLE public.login_attempts (
+  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id             UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  failed_attempts     INT         NOT NULL DEFAULT 0,
+  login_phase         INT         NOT NULL DEFAULT 1,   -- 1, 2, or 3
+  locked_until        TIMESTAMPTZ,                      -- current lockout expiry
+  last_attempt_at     TIMESTAMPTZ,                      -- timestamp of last failed attempt
+  deactivated_at      TIMESTAMPTZ,                      -- when auto-deactivation happened
+  deactivation_reason TEXT,                             -- 'too_many_failed_attempts'
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id)
 );
 
 -- =============================================
@@ -655,6 +723,12 @@ CREATE INDEX idx_employee_of_week_employee ON public.employee_of_week(employee_i
 CREATE INDEX idx_passkeys_user ON public.passkeys(user_id);
 CREATE INDEX idx_passkeys_credential ON public.passkeys(credential_id);
 
+-- Login attempts indexes
+CREATE INDEX idx_login_attempts_user_id      ON public.login_attempts(user_id);
+CREATE INDEX idx_login_attempts_locked_until  ON public.login_attempts(locked_until);
+CREATE INDEX idx_login_attempts_deactivated   ON public.login_attempts(deactivated_at)
+  WHERE deactivated_at IS NOT NULL;
+
 -- Payroll indexes
 CREATE INDEX idx_payrolls_employee ON public.payrolls(employee_id);
 CREATE INDEX idx_payrolls_period ON public.payrolls(period_year, period_month);
@@ -719,6 +793,10 @@ CREATE TRIGGER update_employee_warnings_updated_at_trigger
 
 CREATE TRIGGER update_employee_complaints_updated_at_trigger
   BEFORE UPDATE ON public.employee_complaints
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_login_attempts_updated_at_trigger
+  BEFORE UPDATE ON public.login_attempts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =============================================
@@ -829,6 +907,7 @@ ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.passkeys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.login_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payrolls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bonuses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deductions ENABLE ROW LEVEL SECURITY;
@@ -982,6 +1061,14 @@ CREATE POLICY "passkeys_select_own" ON public.passkeys FOR SELECT TO authenticat
 CREATE POLICY "passkeys_insert_own" ON public.passkeys FOR INSERT TO authenticated WITH CHECK (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_update_own" ON public.passkeys FOR UPDATE TO authenticated USING (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_delete_own" ON public.passkeys FOR DELETE TO authenticated USING (user_id = (select auth.uid()));
+
+-- LOGIN ATTEMPTS
+CREATE POLICY "login_attempts_select_own" ON public.login_attempts FOR SELECT TO authenticated
+  USING (user_id = (select auth.uid()));
+CREATE POLICY "login_attempts_upsert_own" ON public.login_attempts FOR ALL TO authenticated
+  USING (user_id = (select auth.uid())) WITH CHECK (user_id = (select auth.uid()));
+CREATE POLICY "login_attempts_select_admin_hr" ON public.login_attempts FOR SELECT TO authenticated
+  USING ((select get_user_role()) IN ('admin', 'hr'));
 
 -- PAYROLLS
 CREATE POLICY "payrolls_select_policy" ON public.payrolls FOR SELECT TO authenticated
@@ -1408,6 +1495,7 @@ ALTER TABLE public.employee_of_week REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.activity_logs REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.user_preferences REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.passkeys REPLICA IDENTITY DEFAULT;
+ALTER TABLE public.login_attempts REPLICA IDENTITY FULL;
 
 -- Add tables to realtime publication
 DO $$
