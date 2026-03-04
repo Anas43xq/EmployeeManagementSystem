@@ -113,10 +113,10 @@ export default function OtpScreen({ email, onBack }: OtpScreenProps) {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="000000"
+            placeholder="00000000"
             value={otpCode}
-            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            maxLength={6}
+            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+            maxLength={8}
             disabled={otpLoading}
             autoFocus
             className="w-full px-4 py-4 text-center text-3xl tracking-[0.5em] font-mono border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 disabled:bg-gray-100 transition-colors"
@@ -124,7 +124,7 @@ export default function OtpScreen({ email, onBack }: OtpScreenProps) {
 
           <button
             type="submit"
-            disabled={otpLoading || otpCode.length < 6}
+            disabled={otpLoading || otpCode.length < 8}
             className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-xl transition-colors disabled:cursor-not-allowed"
           >
             {otpLoading ? t('auth.verifying') : t('auth.verifyOtp')}
