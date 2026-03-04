@@ -271,48 +271,7 @@ GRANT EXECUTE ON FUNCTION public.get_own_session_token() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.set_own_session_token(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
 
--- =============================================
--- AUTO-REACTIVATION FUNCTION
---   Called on login to check if 2h has elapsed
---   since deactivation and restore the account.
--- =============================================
-
-CREATE OR REPLACE FUNCTION public.auto_reactivate_user_if_eligible(p_user_id UUID)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_deactivated_at TIMESTAMPTZ;
-BEGIN
-  SELECT deactivated_at INTO v_deactivated_at
-  FROM public.login_attempts
-  WHERE user_id = p_user_id;
-
-  IF v_deactivated_at IS NOT NULL AND now() >= v_deactivated_at + INTERVAL '2 hours' THEN
-    UPDATE public.users
-    SET is_active  = true,
-        updated_at = now()
-    WHERE id = p_user_id;
-
-    UPDATE public.login_attempts
-    SET failed_attempts     = 0,
-        login_phase         = 1,
-        locked_until        = NULL,
-        last_attempt_at     = NULL,
-        deactivated_at      = NULL,
-        deactivation_reason = NULL,
-        updated_at          = now()
-    WHERE user_id = p_user_id;
-
-    RETURN TRUE;
-  END IF;
-
-  RETURN FALSE;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.auto_reactivate_user_if_eligible(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated;
 
 -- =============================================
 -- CORE TABLES
@@ -443,21 +402,18 @@ CREATE TABLE public.passkeys (
 );
 
 -- =============================================
--- LOGIN ATTEMPTS (escalating lockout)
--- Phase 1: 3 fails  → 7s  lockout
--- Phase 2: 2 fails  → 17s lockout
--- Phase 3: 1 fail   → account deactivated for 2h
+-- LOGIN ATTEMPTS (OTP-based reauthentication)
+-- After 5 failed attempts → send OTP email
+-- OTP valid for 10 minutes
 -- =============================================
 
 CREATE TABLE public.login_attempts (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   failed_attempts     INT         NOT NULL DEFAULT 0,
-  login_phase         INT         NOT NULL DEFAULT 1,   -- 1, 2, or 3
-  locked_until        TIMESTAMPTZ,                      -- current lockout expiry
   last_attempt_at     TIMESTAMPTZ,                      -- timestamp of last failed attempt
-  deactivated_at      TIMESTAMPTZ,                      -- when auto-deactivation happened
-  deactivation_reason TEXT,                             -- 'too_many_failed_attempts'
+  otp_sent_at         TIMESTAMPTZ,                      -- when OTP was last sent
+  otp_expires_at      TIMESTAMPTZ,                      -- OTP expiry (10 min from send)
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id)
@@ -725,9 +681,7 @@ CREATE INDEX idx_passkeys_credential ON public.passkeys(credential_id);
 
 -- Login attempts indexes
 CREATE INDEX idx_login_attempts_user_id      ON public.login_attempts(user_id);
-CREATE INDEX idx_login_attempts_locked_until  ON public.login_attempts(locked_until);
-CREATE INDEX idx_login_attempts_deactivated   ON public.login_attempts(deactivated_at)
-  WHERE deactivated_at IS NOT NULL;
+CREATE INDEX idx_login_attempts_otp_expiry   ON public.login_attempts(user_id, otp_expires_at);
 
 -- Payroll indexes
 CREATE INDEX idx_payrolls_employee ON public.payrolls(employee_id);

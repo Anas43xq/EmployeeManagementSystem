@@ -11,7 +11,7 @@ import {
   clearLastActivity
 } from '../services/sessionManager';
 import {
-  checkLoginLockout,
+  getLoginAttemptStatus,
   recordFailedAttempt,
   resetLoginAttempts,
 } from '../services/loginAttempts';
@@ -486,16 +486,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const resolvedUserId: string | null = userData?.id ?? null;
 
-    // ── Step 2: check server-side lockout (if user exists) ───────────────────
+    // ── Step 2: check if OTP is already required (if user exists) ────────────
     if (resolvedUserId) {
-      const lockout = await checkLoginLockout(resolvedUserId);
+      const status = await getLoginAttemptStatus(resolvedUserId);
 
-      if (lockout.isDeactivated) {
-        throw new Error('ACCOUNT_DEACTIVATED_TOO_MANY_ATTEMPTS');
-      }
-
-      if (lockout.locked && lockout.remainingSeconds > 0) {
-        throw new Error(`LOCKED:${lockout.remainingSeconds}`);
+      if (status.requiresOtp && status.otpSecondsLeft > 0) {
+        throw new Error('REQUIRES_OTP');
       }
     }
 
@@ -507,15 +503,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (resolvedUserId) {
         const status = await recordFailedAttempt(resolvedUserId, email);
 
-        if (status.isDeactivated) {
-          throw new Error('ACCOUNT_DEACTIVATED_TOO_MANY_ATTEMPTS');
+        if (status.requiresOtp) {
+          throw new Error('REQUIRES_OTP');
         }
-        if (status.locked && status.remainingSeconds > 0) {
-          throw new Error(`LOCKED:${status.remainingSeconds}`);
-        }
-        // Warn user how many attempts remain before next lockout
-        if (status.attemptsRemainingInPhase > 0) {
-          throw new Error(`WARN:${status.phase}:${status.attemptsRemainingInPhase}`);
+        // Warn user how many attempts remain before OTP
+        if (status.attemptsRemaining > 0 && status.attemptsRemaining < 5) {
+          throw new Error(`ATTEMPTS_REMAINING:${status.attemptsRemaining}`);
         }
       }
       throw error;
