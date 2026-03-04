@@ -477,44 +477,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAllCache();
     updateLastActivity();
 
-    // ── Step 1: resolve the user_id from email (needed before auth) ──────────
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email' as any, email)
-      .maybeSingle() as any;
+    // ── Step 1: check if OTP is already required (pre-auth RPC) ──────────────
+    const status = await getLoginAttemptStatus(email);
 
-    const resolvedUserId: string | null = userData?.id ?? null;
-
-    // ── Step 2: check if OTP is already required (if user exists) ────────────
-    if (resolvedUserId) {
-      const status = await getLoginAttemptStatus(resolvedUserId);
-
-      if (status.requiresOtp && status.otpSecondsLeft > 0) {
-        throw new Error('REQUIRES_OTP');
-      }
+    if (status.requiresOtp && status.otpSecondsLeft > 0) {
+      throw new Error('REQUIRES_OTP');
     }
 
-    // ── Step 3: attempt authentication ───────────────────────────────────────
+    // ── Step 2: attempt authentication ───────────────────────────────────────
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      // Record the failure server-side (if we know the user)
-      if (resolvedUserId) {
-        const status = await recordFailedAttempt(resolvedUserId, email);
+      // Record the failure server-side (RPC, no session needed)
+      const updated = await recordFailedAttempt(email);
 
-        if (status.requiresOtp) {
-          throw new Error('REQUIRES_OTP');
-        }
-        // Warn user how many attempts remain before OTP
-        if (status.attemptsRemaining > 0 && status.attemptsRemaining < 5) {
-          throw new Error(`ATTEMPTS_REMAINING:${status.attemptsRemaining}`);
-        }
+      if (updated.requiresOtp) {
+        throw new Error('REQUIRES_OTP');
+      }
+      // Warn user how many attempts remain before OTP
+      if (updated.attemptsRemaining > 0 && updated.attemptsRemaining < 5) {
+        throw new Error(`ATTEMPTS_REMAINING:${updated.attemptsRemaining}`);
       }
       throw error;
     }
 
-    // ── Step 4: success — reset counter ──────────────────────────────────────
+    // ── Step 3: success — reset counter ──────────────────────────────────────
     if (data.user) {
       await resetLoginAttempts(data.user.id).catch(() => {});
 

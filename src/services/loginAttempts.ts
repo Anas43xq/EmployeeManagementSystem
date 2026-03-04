@@ -2,148 +2,96 @@
  * loginAttempts.ts
  * Server-side login attempt tracking with OTP trigger.
  *
- * - Track consecutive failed login attempts per user.
- * - After 5 failed attempts → automatically send OTP email.
- * - OTP valid for 10 minutes; after expiry the user must request a new one.
- * - Successful OTP verification or password login resets the counter.
+ * All pre-auth operations go through SECURITY DEFINER RPCs so they bypass RLS
+ * (the user has no session yet when these run).
+ *
+ * Flow:
+ *   1. pre_auth_login_check   — resolve email → status
+ *   2. record_failed_login    — increment counter, auto-set OTP window at 5
+ *   3. sendLoginOtp            — send OTP email via Supabase Auth
+ *   4. verifyLoginOtp          — verify OTP, reset counter on success
+ *   5. resetLoginAttempts      — zero-out (called post-auth)
  */
 
 import { supabase } from './supabase';
-import { logActivity } from './activityLog';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rpc = supabase as any;
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 export const OTP_TRIGGER_THRESHOLD = 5;
-const OTP_VALIDITY_MINUTES = 10;
-const OTP_VALIDITY_MS = OTP_VALIDITY_MINUTES * 60 * 1000;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
-export interface LoginAttemptRecord {
-  id: string;
-  user_id: string;
-  failed_attempts: number;
-  last_attempt_at: string | null;
-  otp_sent_at: string | null;
-  otp_expires_at: string | null;
-}
-
 export interface LoginAttemptStatus {
+  userId: string | null;
   failedAttempts: number;
   attemptsRemaining: number;
   requiresOtp: boolean;
   otpExpiresAt: string | null;
-  otpSecondsLeft: number; // > 0 = time left, <= 0 = expired / no OTP
+  otpSecondsLeft: number;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-async function getRecord(userId: string): Promise<LoginAttemptRecord | null> {
-  const { data, error } = await db
-    .from('login_attempts')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('[loginAttempts] getRecord error:', error.message);
+function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatus {
+  if (!data) {
+    return {
+      userId: null,
+      failedAttempts: 0,
+      attemptsRemaining: OTP_TRIGGER_THRESHOLD,
+      requiresOtp: false,
+      otpExpiresAt: null,
+      otpSecondsLeft: 0,
+    };
   }
-  return (data as LoginAttemptRecord) ?? null;
-}
-
-async function upsertRecord(
-  userId: string,
-  patch: Partial<Omit<LoginAttemptRecord, 'id' | 'user_id'>>
-): Promise<void> {
-  const { error } = await db
-    .from('login_attempts')
-    .upsert(
-      { user_id: userId, ...patch },
-      { onConflict: 'user_id' }
-    );
-
-  if (error) {
-    console.error('[loginAttempts] upsertRecord error:', error.message);
-  }
+  return {
+    userId: (data.user_id as string) ?? null,
+    failedAttempts: (data.failed_attempts as number) ?? 0,
+    attemptsRemaining: (data.attempts_remaining as number) ?? OTP_TRIGGER_THRESHOLD,
+    requiresOtp: (data.requires_otp as boolean) ?? false,
+    otpExpiresAt: (data.otp_expires_at as string) ?? null,
+    otpSecondsLeft: (data.otp_seconds_left as number) ?? 0,
+  };
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Get current attempt status for a user.
+ * Check current attempt status for an email (pre-auth, no session needed).
  */
-export async function getLoginAttemptStatus(userId: string): Promise<LoginAttemptStatus> {
-  const record = await getRecord(userId);
-  const failedAttempts = record?.failed_attempts ?? 0;
-  const attemptsRemaining = Math.max(0, OTP_TRIGGER_THRESHOLD - failedAttempts);
+export async function getLoginAttemptStatus(email: string): Promise<LoginAttemptStatus> {
+  const { data, error } = await rpc.rpc('pre_auth_login_check', {
+    p_email: email,
+  });
 
-  let requiresOtp = failedAttempts >= OTP_TRIGGER_THRESHOLD;
-  let otpSecondsLeft = 0;
-
-  if (requiresOtp && record?.otp_expires_at) {
-    const expiresAt = new Date(record.otp_expires_at).getTime();
-    otpSecondsLeft = Math.ceil((expiresAt - Date.now()) / 1000);
-
-    // OTP expired → user needs to request a fresh OTP
-    if (otpSecondsLeft <= 0) {
-      otpSecondsLeft = 0;
-    }
+  if (error) {
+    console.error('[loginAttempts] pre_auth_login_check error:', error.message);
+    return parseRpcResult(null);
   }
 
-  return {
-    failedAttempts,
-    attemptsRemaining,
-    requiresOtp,
-    otpExpiresAt: record?.otp_expires_at ?? null,
-    otpSecondsLeft,
-  };
+  return parseRpcResult(data);
 }
 
 /**
- * Record a failed login attempt and return updated status.
- * On the 5th failure the OTP expiry window is set.
+ * Record a failed login attempt (pre-auth RPC).
+ * On the 5th failure the OTP expiry window is automatically set server-side.
  */
-export async function recordFailedAttempt(
-  userId: string,
-  userEmail?: string
-): Promise<LoginAttemptStatus> {
-  const record = await getRecord(userId);
-  const newFails = (record?.failed_attempts ?? 0) + 1;
+export async function recordFailedAttempt(email: string): Promise<LoginAttemptStatus> {
+  const { data, error } = await rpc.rpc('record_failed_login', {
+    p_email: email,
+  });
 
-  const patch: Partial<Omit<LoginAttemptRecord, 'id' | 'user_id'>> = {
-    failed_attempts: newFails,
-    last_attempt_at: new Date().toISOString(),
-  };
-
-  // Set OTP window on the exact threshold hit
-  if (newFails === OTP_TRIGGER_THRESHOLD) {
-    const now = new Date();
-    patch.otp_sent_at = now.toISOString();
-    patch.otp_expires_at = new Date(now.getTime() + OTP_VALIDITY_MS).toISOString();
+  if (error) {
+    console.error('[loginAttempts] record_failed_login error:', error.message);
+    return parseRpcResult(null);
   }
 
-  await upsertRecord(userId, patch);
-
-  try {
-    await logActivity(userId, 'user_login_failed', 'user', userId, {
-      email: userEmail,
-      failed_attempts: newFails,
-      requires_otp: newFails >= OTP_TRIGGER_THRESHOLD,
-      reason: 'invalid_credentials',
-    });
-  } catch { /* non-critical */ }
-
-  return getLoginAttemptStatus(userId);
+  return parseRpcResult(data);
 }
 
 /**
- * Send an OTP email.
- * Updates the OTP expiry window in the DB.
+ * Send an OTP email and refresh the expiry window in the DB.
  */
-export async function sendLoginOtp(
-  email: string,
-  userId?: string
-): Promise<{ error?: string }> {
+export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
   try {
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -155,25 +103,20 @@ export async function sendLoginOtp(
       return { error: error.message };
     }
 
-    // Refresh OTP expiry window in the DB
-    if (userId) {
-      const now = new Date();
-      await upsertRecord(userId, {
-        otp_sent_at: now.toISOString(),
-        otp_expires_at: new Date(now.getTime() + OTP_VALIDITY_MS).toISOString(),
-      });
-    }
+    // Refresh OTP expiry window via RPC (no session needed)
+    await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
-  } catch (err: any) {
-    console.error('[loginAttempts] sendLoginOtp exception:', err.message);
-    return { error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[loginAttempts] sendLoginOtp exception:', message);
+    return { error: message };
   }
 }
 
 /**
  * Verify an OTP code.
- * On success the attempt counter is reset and a session is returned.
+ * On success the attempt counter is reset and a session is established.
  */
 export async function verifyLoginOtp(
   email: string,
@@ -196,19 +139,22 @@ export async function verifyLoginOtp(
     }
 
     return { success: false, error: 'OTP verification failed' };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return { success: false, error: message };
   }
 }
 
 /**
  * Reset the counter after a successful login or OTP verification.
+ * Called post-auth, so the user has a session (but the RPC also accepts anon).
  */
 export async function resetLoginAttempts(userId: string): Promise<void> {
-  await upsertRecord(userId, {
-    failed_attempts: 0,
-    last_attempt_at: null,
-    otp_sent_at: null,
-    otp_expires_at: null,
+  const { error } = await rpc.rpc('reset_login_attempts_rpc', {
+    p_user_id: userId,
   });
+
+  if (error) {
+    console.error('[loginAttempts] resetLoginAttempts error:', error.message);
+  }
 }
