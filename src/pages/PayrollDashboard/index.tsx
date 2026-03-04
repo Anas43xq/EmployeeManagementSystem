@@ -1,177 +1,49 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNotification } from '../contexts/NotificationContext';
-import {
-  generateMonthlyPayroll,
-  getPayrollRecords,
-  approvePayroll,
-  getBonuses,
-  getDeductions,
-  generatePayslipPDF,
-  formatCurrency,
-  getMonthName,
-  type PayrollData,
-  type BonusData,
-  type DeductionData
-} from '../services/payroll';
-import { Card, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../components/ui';
+import { usePayroll } from './usePayroll';
+import PayslipModal from './PayslipModal';
+import { Card, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../../components/ui';
+import { formatCurrency, getMonthName } from '../../services/payroll';
 import {
   Calculator,
   DollarSign,
   FileText,
-  Download,
   CheckCircle,
   Play,
   Filter,
   Users,
   Eye,
-  TrendingUp,
-  TrendingDown,
-  X
 } from 'lucide-react';
 
 export default function PayrollDashboard() {
   const { t } = useTranslation();
-  const { showNotification } = useNotification();
-
-  const [payrolls, setPayrolls] = useState<PayrollData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [approving, setApproving] = useState(false);
-
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [statusFilter, setStatusFilter] = useState<string>('');
-
-  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
-
-  const [selectedPayrolls, setSelectedPayrolls] = useState<string[]>([]);
-
-  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
-  const [viewingPayroll, setViewingPayroll] = useState<PayrollData | null>(null);
-  const [bonuses, setBonuses] = useState<BonusData[]>([]);
-  const [deductions, setDeductions] = useState<DeductionData[]>([]);
-  const [loadingPayslipDetails, setLoadingPayslipDetails] = useState(false);
-
-  useEffect(() => {
-    loadPayrollRecords();
-  }, [selectedMonth, selectedYear, statusFilter]);
-
-  const loadPayrollRecords = async () => {
-    setLoading(true);
-    try {
-      const data = await getPayrollRecords(selectedMonth, selectedYear, undefined, statusFilter || undefined);
-      setPayrolls(data);
-    } catch (error) {
-      showNotification('error', t('payroll.failedToLoad', 'Failed to load payroll records'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openPayslipModal = async (payroll: PayrollData) => {
-    setViewingPayroll(payroll);
-    setIsPayslipModalOpen(true);
-    setLoadingPayslipDetails(true);
-    
-    try {
-      const [bonusData, deductionData] = await Promise.all([
-        getBonuses(payroll.employee_id, payroll.period_month, payroll.period_year),
-        getDeductions(payroll.employee_id, payroll.period_month, payroll.period_year)
-      ]);
-      setBonuses(bonusData);
-      setDeductions(deductionData);
-    } catch (error) {
-      showNotification('error', t('payslip.failedToLoadDetails', 'Failed to load payslip details'));
-    } finally {
-      setLoadingPayslipDetails(false);
-    }
-  };
-
-  const handleDownloadPDF = () => {
-    if (!viewingPayroll) return;
-    try {
-      generatePayslipPDF(viewingPayroll, bonuses, deductions);
-      showNotification('success', t('payslip.downloadStarted', 'Payslip download started'));
-    } catch (error) {
-      showNotification('error', t('payslip.downloadFailed', 'Failed to generate payslip PDF'));
-    }
-  };
-
-  const handleGeneratePayroll = async () => {
-    if (selectedMonth < 1 || selectedMonth > 12 || selectedYear < 2020) {
-      showNotification('error', t('payroll.invalidPeriod', 'Please select a valid month and year'));
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      const result = await generateMonthlyPayroll(
-        selectedMonth,
-        selectedYear
-      );
-
-      if (result.success) {
-        showNotification('success', result.message || t('payroll.generatedSuccessfully', 'Payroll generated successfully'));
-        setIsGenerateModalOpen(false);
-        loadPayrollRecords();
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (error: any) {
-      showNotification('error', error.message || t('payroll.generationFailed', 'Failed to generate payroll'));
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleApproveSelected = async () => {
-    if (selectedPayrolls.length === 0) {
-      showNotification('error', t('payroll.selectPayrollsToApprove', 'Please select payroll records to approve'));
-      return;
-    }
-
-    setApproving(true);
-    try {
-      const success = await approvePayroll(selectedPayrolls);
-      if (success) {
-        showNotification('success', t('payroll.approvedSuccessfully', 'Payroll records approved successfully'));
-        setSelectedPayrolls([]);
-        loadPayrollRecords();
-      } else {
-        throw new Error('Failed to approve payrolls');
-      }
-    } catch (error: any) {
-      showNotification('error', error.message || t('payroll.approvalFailed', 'Failed to approve payroll records'));
-    } finally {
-      setApproving(false);
-    }
-  };
-
-  const togglePayrollSelection = (payrollId: string) => {
-    setSelectedPayrolls(prev =>
-      prev.includes(payrollId)
-        ? prev.filter(id => id !== payrollId)
-        : [...prev, payrollId]
-    );
-  };
-
-  const selectAllDraftPayrolls = () => {
-    const draftPayrolls = payrolls.filter(p => p.status === 'draft').map(p => p.id);
-    if (selectedPayrolls.length === draftPayrolls.length && draftPayrolls.length > 0) {
-      setSelectedPayrolls([]);
-    } else {
-      setSelectedPayrolls(draftPayrolls);
-    }
-  };
-
-  const stats = {
-    total: payrolls.length,
-    draft: payrolls.filter(p => p.status === 'draft').length,
-    approved: payrolls.filter(p => p.status === 'approved').length,
-    paid: payrolls.filter(p => p.status === 'paid').length,
-    totalAmount: payrolls.reduce((sum, p) => sum + Number(p.net_salary), 0)
-  };
+  const {
+    payrolls,
+    loading,
+    generating,
+    approving,
+    selectedMonth,
+    setSelectedMonth,
+    selectedYear,
+    setSelectedYear,
+    statusFilter,
+    setStatusFilter,
+    isGenerateModalOpen,
+    setIsGenerateModalOpen,
+    selectedPayrolls,
+    isPayslipModalOpen,
+    viewingPayroll,
+    bonuses,
+    deductions,
+    loadingPayslipDetails,
+    stats,
+    openPayslipModal,
+    closePayslipModal,
+    handleDownloadPDF,
+    handleGeneratePayroll,
+    handleApproveSelected,
+    togglePayrollSelection,
+    selectAllDraftPayrolls,
+  } = usePayroll();
 
   return (
     <div className="space-y-6">
@@ -189,6 +61,7 @@ export default function PayrollDashboard() {
         }
       />
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <Card>
           <div className="p-2 sm:p-4">
@@ -251,6 +124,7 @@ export default function PayrollDashboard() {
         </Card>
       </div>
 
+      {/* Payroll Table */}
       <Card>
         <div className="p-3 sm:p-4 border-b border-gray-200">
           <div className="flex flex-col gap-3">
@@ -310,10 +184,7 @@ export default function PayrollDashboard() {
         <div className="p-4">
           {selectedPayrolls.length === 0 && stats.draft > 0 && (
             <div className="mb-4">
-              <Button
-                variant="secondary"
-                onClick={selectAllDraftPayrolls}
-              >
+              <Button variant="secondary" onClick={selectAllDraftPayrolls}>
                 {t('payroll.selectAllDraft', 'Select All Draft Records')}
               </Button>
             </div>
@@ -420,10 +291,8 @@ export default function PayrollDashboard() {
         </div>
       </Card>
 
-      <Modal
-        show={isGenerateModalOpen}
-        onClose={() => setIsGenerateModalOpen(false)}
-      >
+      {/* Generate Modal */}
+      <Modal show={isGenerateModalOpen} onClose={() => setIsGenerateModalOpen(false)}>
         <Modal.Header onClose={() => setIsGenerateModalOpen(false)}>
           {t('payroll.generatePayrollTitle', 'Generate Monthly Payroll')}
         </Modal.Header>
@@ -440,7 +309,6 @@ export default function PayrollDashboard() {
                 {t('payroll.generateDescription', 'Generate payroll for all active employees. This will calculate salaries including bonuses, deductions, attendance, and leaves.')}
               </p>
             </div>
-
             <div className="flex space-x-3">
               <Button
                 type="button"
@@ -465,150 +333,16 @@ export default function PayrollDashboard() {
         </Modal.Body>
       </Modal>
 
-      {/* Payslip View Modal */}
-      <Modal
+      {/* Payslip Modal */}
+      <PayslipModal
         show={isPayslipModalOpen}
-        size="2xl"
-        onClose={() => {
-          setIsPayslipModalOpen(false);
-          setViewingPayroll(null);
-          setBonuses([]);
-          setDeductions([]);
-        }}
-      >
-        <Modal.Header onClose={() => setIsPayslipModalOpen(false)}>
-          <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-primary-600" />
-            <span>
-              {viewingPayroll 
-                ? `${t('payslip.payslipFor', 'Payslip for')} ${getMonthName(viewingPayroll.period_month)} ${viewingPayroll.period_year}`
-                : t('payslip.viewPayslip', 'View Payslip')}
-            </span>
-          </div>
-        </Modal.Header>
-        <Modal.Body>
-          {viewingPayroll && (
-            <div className="space-y-6">
-              {/* Employee Info */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {viewingPayroll.employees.first_name} {viewingPayroll.employees.last_name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {viewingPayroll.employees.employee_number} • {viewingPayroll.employees.position}
-                  </p>
-                  <p className="text-sm text-gray-500">{viewingPayroll.employees.email}</p>
-                </div>
-                <StatusBadge status={viewingPayroll.status} />
-              </div>
-
-              {loadingPayslipDetails ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="text-gray-600 mt-2">{t('payslip.loadingDetails', 'Loading details...')}</p>
-                </div>
-              ) : (
-                <>
-                  {/* Salary Summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-600">{t('payslip.baseSalary', 'Base Salary')}</p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {formatCurrency(viewingPayroll.base_salary)}
-                      </p>
-                    </div>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <p className="text-sm text-blue-700">{t('payslip.totalBonuses', 'Total Bonuses')}</p>
-                      <p className="text-xl font-bold text-blue-600">
-                        +{formatCurrency(viewingPayroll.total_bonuses)}
-                      </p>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-4">
-                      <p className="text-sm text-red-700">{t('payslip.totalDeductions', 'Total Deductions')}</p>
-                      <p className="text-xl font-bold text-red-600">
-                        -{formatCurrency(viewingPayroll.total_deductions)}
-                      </p>
-                    </div>
-                    <div className="bg-primary-50 rounded-lg p-4">
-                      <p className="text-sm text-primary-700">{t('payslip.netSalary', 'Net Salary')}</p>
-                      <p className="text-xl font-bold text-primary-600">
-                        {formatCurrency(viewingPayroll.net_salary)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Bonuses Section */}
-                  {bonuses.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 flex items-center mb-3">
-                        <TrendingUp className="w-4 h-4 text-blue-600 mr-2" />
-                        {t('payslip.bonuses', 'Bonuses')}
-                      </h4>
-                      <div className="space-y-2">
-                        {bonuses.map((bonus: BonusData) => (
-                          <div key={bonus.id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                            <div>
-                              <p className="font-medium text-gray-900">{bonus.type}</p>
-                              <p className="text-sm text-gray-600">{bonus.description}</p>
-                            </div>
-                            <span className="font-bold text-blue-600">+{formatCurrency(bonus.amount)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Deductions Section */}
-                  {deductions.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 flex items-center mb-3">
-                        <TrendingDown className="w-4 h-4 text-red-600 mr-2" />
-                        {t('payslip.deductions', 'Deductions')}
-                      </h4>
-                      <div className="space-y-2">
-                        {deductions.map((deduction: DeductionData) => (
-                          <div key={deduction.id} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                            <div>
-                              <p className="font-medium text-gray-900">{deduction.type}</p>
-                              <p className="text-sm text-gray-600">{deduction.description}</p>
-                            </div>
-                            <span className="font-bold text-red-600">-{formatCurrency(deduction.amount)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Actions */}
-              <div className="flex space-x-3 pt-4 border-t border-gray-200">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsPayslipModalOpen(false)}
-                  className="flex-1"
-                  icon={<X className="w-4 h-4" />}
-                >
-                  {t('common.close', 'Close')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleDownloadPDF}
-                  disabled={loadingPayslipDetails}
-                  className="flex-1"
-                  icon={<Download className="w-4 h-4" />}
-                >
-                  {t('payslip.downloadPDF', 'Download PDF')}
-                </Button>
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-      </Modal>
+        payroll={viewingPayroll}
+        bonuses={bonuses}
+        deductions={deductions}
+        loadingDetails={loadingPayslipDetails}
+        onClose={closePayslipModal}
+        onDownload={handleDownloadPDF}
+      />
     </div>
   );
 }
-

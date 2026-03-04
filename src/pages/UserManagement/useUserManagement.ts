@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { db } from '../../services/supabase';
-import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { logActivity } from '../../services/activityLog';
-import type { User, EmployeeWithoutAccess, GrantAccessFormData, EditUserFormData, BanUserFormData } from './types';
+import { useUserActions } from './useUserActions';
+import type { User, EmployeeWithoutAccess } from './types';
 import { getUserEmail } from './types';
-import { banUser, unbanUser, deactivateUser, activateUser } from './userStatusApi';
 
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -14,33 +12,8 @@ export function useUserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [showGrantAccessModal, setShowGrantAccessModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showRevokeAccessModal, setShowRevokeAccessModal] = useState(false);
-  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
-  const [showBanModal, setShowBanModal] = useState(false);
-  const [showUnbanModal, setShowUnbanModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const { user: currentUser } = useAuth();
   const { showNotification } = useNotification();
   const { t } = useTranslation();
-
-  const [grantAccessForm, setGrantAccessForm] = useState<GrantAccessFormData>({
-    employee_id: '',
-    password: '',
-    role: 'staff',
-  });
-
-  const [editForm, setEditForm] = useState<EditUserFormData>({
-    role: 'staff',
-  });
-
-  const [banForm, setBanForm] = useState<BanUserFormData>({
-    banDuration: '24',
-    reason: '',
-  });
 
   useEffect(() => {
     loadUsers();
@@ -101,7 +74,7 @@ export function useUserManagement() {
       const { data: usersData } = await db
         .from('users')
         .select('employee_id');
-      
+
       const employeesWithAccess = new Set(
         (usersData || []).map((u: { employee_id: string }) => u.employee_id)
       );
@@ -109,329 +82,31 @@ export function useUserManagement() {
       const withoutAccess = (allEmployees || []).filter(
         (emp: any) => !employeesWithAccess.has(emp.id)
       ) as EmployeeWithoutAccess[];
-      
+
       setEmployeesWithoutAccess(withoutAccess);
-    } catch (error) {
+    } catch {
+      // silent
     }
   };
 
-  const handleGrantAccess = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const selectedEmployee = employeesWithoutAccess.find(
-      emp => emp.id === grantAccessForm.employee_id
-    );
-    
-    if (!selectedEmployee) {
-      showNotification('error', t('userManagement.employeeNotFound'));
-      return;
-    }
+  // --- Actions hook ---
+  const actions = useUserActions({
+    employeesWithoutAccess,
+    loadUsers,
+    loadEmployeesWithoutAccess,
+  });
 
-    setSubmitting(true);
-    try {
-      const { data: { session } } = await db.auth.getSession();
-      if (!session) {
-        showNotification('error', 'Not authenticated');
-        return;
-      }
-
-      // Call edge function to grant access (handles both auth.users and users table)
-      const { data, error } = await db.functions.invoke('grant-user-access', {
-        body: {
-          email: selectedEmployee.email,
-          password: grantAccessForm.password,
-          role: grantAccessForm.role,
-          employee_id: selectedEmployee.id,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error || !data?.success) {
-        showNotification('error', `Failed to grant access: ${error?.message || data?.error}`);
-        throw new Error(error?.message || data?.error);
-      }
-
-      showNotification('success', t('userManagement.accessGrantedSuccess'));
-      if (data.user && currentUser) {
-        logActivity(currentUser.id, 'user_access_granted', 'user', data.user.id, {
-          employee_id: grantAccessForm.employee_id,
-          employee_email: selectedEmployee.email,
-          role: grantAccessForm.role,
-        });
-      }
-
-      setShowGrantAccessModal(false);
-      setGrantAccessForm({ employee_id: '', password: '', role: 'staff' });
-      loadUsers();
-      loadEmployeesWithoutAccess();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToGrantAccess'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser) return;
-
-    setSubmitting(true);
-    try {
-      const { error } = await (db.from('users') as any)
-        .update({
-          role: editForm.role,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
-
-      showNotification('success', t('userManagement.userUpdated'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_role_changed', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-          old_role: selectedUser.role,
-          new_role: editForm.role,
-        });
-      }
-
-      setShowEditModal(false);
-      setSelectedUser(null);
-      loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToUpdate'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleRevokeAccess = async () => {
-    if (!selectedUser) return;
-
-    if (selectedUser.id === currentUser?.id) {
-      showNotification('error', t('userManagement.cannotRevokeSelf'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const { error: dbError } = await db
-        .from('users')
-        .delete()
-        .eq('id', selectedUser.id);
-
-      if (dbError) throw dbError;
-
-      showNotification('success', t('userManagement.accessRevoked'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_access_revoked', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-          employee_name: `${selectedUser.employees.first_name} ${selectedUser.employees.last_name}`,
-        });
-      }
-
-      setShowRevokeAccessModal(false);
-      setSelectedUser(null);
-      loadUsers();
-      loadEmployeesWithoutAccess();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToRevokeAccess'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!selectedUser) return;
-
-    setSubmitting(true);
-    try {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const userEmail = getUserEmail(selectedUser);
-      const { error } = await db.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${appUrl}/reset-password`,
-      });
-
-      if (error) throw error;
-
-      showNotification('success', t('userManagement.resetEmailSent'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_password_reset', 'user', selectedUser.id, {
-          email: userEmail,
-        });
-      }
-
-      setShowResetPasswordModal(false);
-      setSelectedUser(null);
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToResetPassword'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openEditModal = (user: User) => {
-    setSelectedUser(user);
-    setEditForm({ role: user.role });
-    setShowEditModal(true);
-  };
-
-  const openRevokeAccessModal = (user: User) => {
-    setSelectedUser(user);
-    setShowRevokeAccessModal(true);
-  };
-
-  const openResetPasswordModal = (user: User) => {
-    setSelectedUser(user);
-    setShowResetPasswordModal(true);
-  };
-
-  const openBanModal = (user: User) => {
-    setSelectedUser(user);
-    setBanForm({ banDuration: '24', reason: '' });
-    setShowBanModal(true);
-  };
-
-  const openUnbanModal = (user: User) => {
-    setSelectedUser(user);
-    setShowUnbanModal(true);
-  };
-
-  const handleBanUser = async () => {
-    if (!selectedUser) return;
-
-    if (selectedUser.id === currentUser?.id) {
-      showNotification('error', t('userManagement.cannotBanSelf'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const result = await banUser(selectedUser.id, banForm.banDuration, banForm.reason);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userBanned'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_banned', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-          ban_duration: banForm.banDuration,
-          reason: banForm.reason,
-        });
-      }
-
-      setShowBanModal(false);
-      setSelectedUser(null);
-      loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToBan'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleUnbanUser = async () => {
-    if (!selectedUser) return;
-
-    setSubmitting(true);
-    try {
-      const result = await unbanUser(selectedUser.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userUnbanned'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_unbanned', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-        });
-      }
-
-      setShowUnbanModal(false);
-      setSelectedUser(null);
-      loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToUnban'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeactivateUser = async (user: User) => {
-    if (user.id === currentUser?.id) {
-      showNotification('error', t('userManagement.cannotDeactivateSelf'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const result = await deactivateUser(user.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userDeactivated'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_deactivated', 'user', user.id, {
-          employee_email: getUserEmail(user),
-        });
-      }
-
-      loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToDeactivate'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleActivateUser = async (user: User) => {
-    setSubmitting(true);
-    try {
-      const result = await activateUser(user.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userActivated'));
-      
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_activated', 'user', user.id, {
-          employee_email: getUserEmail(user),
-        });
-      }
-
-      loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToActivate'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  // --- Filtered users ---
   const filteredUsers = users.filter(user => {
     const userEmail = getUserEmail(user);
-    const matchesSearch = 
+    const matchesSearch =
       userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.employees?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.employees?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.employees?.employee_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    
+
     return matchesSearch && matchesRole;
   });
 
@@ -453,49 +128,10 @@ export function useUserManagement() {
     setSearchTerm,
     roleFilter,
     setRoleFilter,
-    showGrantAccessModal,
-    setShowGrantAccessModal,
-    showEditModal,
-    setShowEditModal,
-    showRevokeAccessModal,
-    setShowRevokeAccessModal,
-    showResetPasswordModal,
-    setShowResetPasswordModal,
-    showBanModal,
-    setShowBanModal,
-    showUnbanModal,
-    setShowUnbanModal,
-    selectedUser,
-    setSelectedUser,
-    submitting,
-    showPassword,
-    setShowPassword,
-    grantAccessForm,
-    setGrantAccessForm,
-    editForm,
-    setEditForm,
-    banForm,
-    setBanForm,
-    currentUserId: currentUser?.id,
-
-    loadUsers,
-    loadEmployeesWithoutAccess,
-    handleGrantAccess,
-    handleEditUser,
-    handleRevokeAccess,
-    handleResetPassword,
-    handleBanUser,
-    handleUnbanUser,
-    handleDeactivateUser,
-    handleActivateUser,
-    openEditModal,
-    openRevokeAccessModal,
-    openResetPasswordModal,
-    openBanModal,
-    openUnbanModal,
-
     filteredUsers,
     stats,
+    loadUsers,
+    loadEmployeesWithoutAccess,
+    ...actions,
   };
 }
-

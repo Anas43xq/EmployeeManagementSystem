@@ -477,8 +477,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAllCache();
     updateLastActivity();
 
-    // ── Step 1: check if OTP is already required (pre-auth RPC) ──────────────
+    // ── Step 1: check if email exists & OTP status (pre-auth RPC) ─────────
     const status = await getLoginAttemptStatus(email);
+
+    if (!status.userId) {
+      throw new Error('EMAIL_NOT_FOUND');
+    }
 
     if (status.requiresOtp && status.otpSecondsLeft > 0) {
       throw new Error('REQUIRES_OTP');

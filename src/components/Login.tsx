@@ -3,41 +3,25 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { supabase } from '../services/supabase';
-import {
-  sendLoginOtp,
-  verifyLoginOtp,
-} from '../services/loginAttempts';
-import {
-  authenticateWithPasskey,
-  isWebAuthnSupported
-} from '../services/passkeys';
-import { Briefcase, ArrowLeft, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Mail, Clock } from 'lucide-react';
+import { sendLoginOtp } from '../services/loginAttempts';
+import { isWebAuthnSupported } from '../services/passkeys';
+import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import OtpScreen from './login/OtpScreen';
+import PasskeyScreen from './login/PasskeyScreen';
+import ForgotPasswordScreen from './login/ForgotPasswordScreen';
+
+type Screen = 'login' | 'otp' | 'passkey' | 'forgot';
 
 export default function Login() {
+  const [screen, setScreen] = useState<Screen>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-
   const [passkeySupported, setPasskeySupported] = useState(false);
-  const [passkeyLoading, setPasskeyLoading] = useState(false);
-  const [showPasskeyLogin, setShowPasskeyLogin] = useState(false);
-  const [passkeyEmail, setPasskeyEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [warnMessage, setWarnMessage] = useState('');
-
-  // OTP states
-  const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState('');
-  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
-  const [otpCountdown, setOtpCountdown] = useState(0);
 
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
@@ -67,87 +51,18 @@ export default function Login() {
     setPasskeySupported(isWebAuthnSupported());
   }, []);
 
-  // Tick down the OTP countdown
-  useEffect(() => {
-    if (!otpExpiresAt) return;
-    const tick = () => {
-      const remaining = Math.ceil((otpExpiresAt - Date.now()) / 1000);
-      if (remaining <= 0) {
-        setOtpCountdown(0);
-        setShowOtpScreen(false);
-        setOtpCode('');
-        setOtpExpiresAt(null);
-        setError(t('auth.otpExpired'));
-      } else {
-        setOtpCountdown(remaining);
-      }
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [otpExpiresAt, t]);
-
-  // Helper: trigger OTP send and switch to OTP screen
+  // Trigger OTP flow: send OTP then switch to OTP screen
   const triggerOtpFlow = async (targetEmail: string) => {
-    setOtpEmail(targetEmail);
-    setOtpLoading(true);
-    setOtpError('');
-
     const { error: sendError } = await sendLoginOtp(targetEmail);
-
     if (sendError) {
-      setOtpError(sendError);
-      setOtpLoading(false);
+      setError(sendError);
       return;
     }
-
-    setShowOtpScreen(true);
-    setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutes
-    setOtpCode('');
-    setError('');
-    setWarnMessage('');
-    setOtpLoading(false);
+    setOtpEmail(targetEmail);
+    setScreen('otp');
   };
 
-  // Verify OTP code
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOtpError('');
-    setOtpLoading(true);
 
-    const result = await verifyLoginOtp(otpEmail, otpCode);
-
-    if (result.error || !result.success) {
-      setOtpError(result.error || t('auth.otpVerificationFailed'));
-      setOtpLoading(false);
-      return;
-    }
-
-    // OTP verified — user is now authenticated
-    setShowOtpScreen(false);
-    setOtpCode('');
-    setOtpExpiresAt(null);
-    showNotification('success', t('auth.otpVerifiedSuccess'));
-    navigate('/dashboard', { replace: true });
-    setOtpLoading(false);
-  };
-
-  // Request a fresh OTP code
-  const handleRequestNewOtp = async () => {
-    setOtpLoading(true);
-    setOtpError('');
-
-    const { error: sendError } = await sendLoginOtp(otpEmail);
-
-    if (sendError) {
-      setOtpError(sendError);
-    } else {
-      setOtpExpiresAt(Date.now() + 10 * 60 * 1000);
-      setOtpCode('');
-      showNotification('success', t('auth.newOtpSent'));
-    }
-    setOtpLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,7 +77,11 @@ export default function Login() {
     } catch (err: any) {
       const errorMessage: string = err?.message || '';
 
-      if (errorMessage === 'REQUIRES_OTP') {
+      if (errorMessage === 'EMAIL_NOT_FOUND') {
+        setError(t('auth.emailNotFound'));
+        showNotification('error', t('auth.emailNotFound'));
+
+      } else if (errorMessage === 'REQUIRES_OTP') {
         // 5 failed attempts reached — send OTP and show OTP screen
         await triggerOtpFlow(email);
 
@@ -189,275 +108,18 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setResetLoading(true);
 
-    try {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const redirectUrl = `${appUrl}/reset-password`;
 
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: redirectUrl,
-      });
-
-      if (error) throw error;
-
-      showNotification('success', t('auth.resetEmailSent'));
-      setShowForgotPassword(false);
-      setResetEmail('');
-    } catch (err: any) {
-      setError(err.message || t('auth.resetEmailFailed'));
-      showNotification('error', t('auth.resetEmailFailed'));
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handlePasskeyLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setPasskeyLoading(true);
-
-    try {
-      const result = await authenticateWithPasskey(passkeyEmail);
-
-      if (result.success) {
-        showNotification('success', t('auth.passkeyLoginSuccess'));
-        navigate('/dashboard', { replace: true });
-      } else {
-        const errorMessage = result.error?.toLowerCase() || '';
-        if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
-          setError(t('auth.accountBanned'));
-          showNotification('error', t('auth.accountBanned'));
-        } else {
-          setError(result.error || t('auth.passkeyLoginFailed'));
-        }
-      }
-    } catch (err: any) {
-      const errorMessage = err.message?.toLowerCase() || '';
-      if (errorMessage.includes('banned') || errorMessage.includes('user is banned')) {
-        setError(t('auth.accountBanned'));
-        showNotification('error', t('auth.accountBanned'));
-      } else {
-        setError(err.message || t('auth.passkeyLoginFailed', 'Passkey authentication failed'));
-        showNotification('error', err.message || t('auth.passkeyLoginFailed'));
-      }
-    } finally {
-      setPasskeyLoading(false);
-    }
-  };
-
-  if (showOtpScreen) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="bg-blue-100 p-4 rounded-full mb-4">
-              <Mail className="w-8 h-8 text-blue-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {t('auth.enterOtp')}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {t('auth.otpSentTo', { email: otpEmail })}
-            </p>
-          </div>
-
-          {/* Countdown timer */}
-          {otpCountdown > 0 && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-700 flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {t('auth.otpExpiresIn')}
-              </span>
-              <span className="font-mono font-bold text-blue-600 text-lg">
-                {String(Math.floor(otpCountdown / 60)).padStart(2, '0')}:{String(otpCountdown % 60).padStart(2, '0')}
-              </span>
-            </div>
-          )}
-
-          {/* OTP error */}
-          {otpError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">{otpError}</p>
-            </div>
-          )}
-
-          {/* OTP form */}
-          <form onSubmit={handleOtpSubmit} className="space-y-4">
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="000000"
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              maxLength={6}
-              disabled={otpLoading}
-              autoFocus
-              className="w-full px-4 py-4 text-center text-3xl tracking-[0.5em] font-mono border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 disabled:bg-gray-100 transition-colors"
-            />
-
-            <button
-              type="submit"
-              disabled={otpLoading || otpCode.length < 6}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-xl transition-colors disabled:cursor-not-allowed"
-            >
-              {otpLoading ? t('auth.verifying') : t('auth.verifyOtp')}
-            </button>
-          </form>
-
-          {/* Actions */}
-          <div className="mt-5 pt-4 border-t border-gray-200 space-y-3">
-            <button
-              onClick={handleRequestNewOtp}
-              disabled={otpLoading}
-              className="w-full text-blue-600 hover:text-blue-700 font-medium text-sm disabled:opacity-50"
-            >
-              {t('auth.requestNewOtp')}
-            </button>
-            <button
-              onClick={() => {
-                setShowOtpScreen(false);
-                setOtpError('');
-                setOtpExpiresAt(null);
-                setOtpCode('');
-              }}
-              className="w-full text-gray-500 hover:text-gray-700 text-sm"
-            >
-              {t('auth.backToLogin')}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  if (screen === 'otp') {
+    return <OtpScreen email={otpEmail} onBack={() => setScreen('login')} />;
   }
 
-  if (showPasskeyLogin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
-          <button
-            onClick={() => setShowPasskeyLogin(false)}
-            className={`flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
-          >
-            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span>{t('auth.backToSignIn')}</span>
-          </button>
-
-          <div className="flex items-center justify-center mb-8">
-            <div className="bg-primary-900 p-3 rounded-lg">
-              <Fingerprint className="w-10 h-10 text-white" />
-            </div>
-          </div>
-
-          <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-            {t('auth.passkeyLogin', 'Passkey Login')}
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            {t('auth.passkeyLoginDesc')}
-          </p>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handlePasskeyLogin} className="space-y-6">
-            <div>
-              <label htmlFor="passkey-email" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('auth.emailAddress')}
-              </label>
-              <input
-                id="passkey-email"
-                type="email"
-                value={passkeyEmail}
-                onChange={(e) => setPasskeyEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={passkeyLoading}
-              className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {passkeyLoading ? (
-                <span>{t('auth.authenticating')}</span>
-              ) : (
-                <>
-                  <Fingerprint className="w-5 h-5" />
-                  <span>{t('auth.signInWithPasskey')}</span>
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
+  if (screen === 'passkey') {
+    return <PasskeyScreen onBack={() => setScreen('login')} />;
   }
 
-  if (showForgotPassword) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
-          <button
-            onClick={() => setShowForgotPassword(false)}
-            className={`flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
-          >
-            <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-            <span>{t('auth.backToSignIn')}</span>
-          </button>
-
-          <div className="flex items-center justify-center mb-8">
-            <div className="bg-primary-900 p-3 rounded-lg">
-              <Briefcase className="w-10 h-10 text-white" />
-            </div>
-          </div>
-
-          <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-            {t('auth.resetPassword')}
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            {t('auth.resetPasswordDesc')}
-          </p>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleForgotPassword} className="space-y-6">
-            <div>
-              <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('auth.emailAddress')}
-              </label>
-              <input
-                id="reset-email"
-                type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={resetLoading}
-              className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {resetLoading ? t('common.sending') : t('auth.sendResetLink')}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
+  if (screen === 'forgot') {
+    return <ForgotPasswordScreen onBack={() => setScreen('login')} />;
   }
 
   return (
@@ -530,7 +192,7 @@ export default function Login() {
               </label>
               <button
                 type="button"
-                onClick={() => setShowForgotPassword(true)}
+                onClick={() => setScreen('forgot')}
                 className="text-sm text-primary-900 hover:text-primary-700 transition-colors"
               >
                 {t('auth.forgotPassword')}
@@ -579,9 +241,8 @@ export default function Login() {
 
             <div className="mt-6 space-y-3">
               <button
-                onClick={() => setShowPasskeyLogin(true)}
-                disabled={passkeyLoading}
-                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setScreen('passkey')}
+                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all"
               >
                 <Fingerprint className="w-5 h-5" />
                 <span>{t('auth.passkeyLogin')}</span>
