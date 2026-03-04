@@ -81,9 +81,14 @@ export default function Login() {
         setError(t('auth.emailNotFound'));
         showNotification('error', t('auth.emailNotFound'));
 
-      } else if (errorMessage === 'REQUIRES_OTP') {
-        // 5 failed attempts reached — send OTP and show OTP screen
+      } else if (errorMessage === 'REQUIRES_OTP_NEW') {
+        // Just hit 5 failures — send OTP email then show OTP screen
         await triggerOtpFlow(email);
+
+      } else if (errorMessage === 'REQUIRES_OTP_ACTIVE') {
+        // OTP already sent (user returned after closing browser) — just show OTP screen
+        setOtpEmail(email);
+        setScreen('otp');
 
       } else if (errorMessage.startsWith('ATTEMPTS_REMAINING:')) {
         const remaining = parseInt(errorMessage.split(':')[1], 10) || 0;

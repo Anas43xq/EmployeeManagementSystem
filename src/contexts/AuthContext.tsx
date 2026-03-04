@@ -485,7 +485,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (status.requiresOtp && status.otpSecondsLeft > 0) {
-      throw new Error('REQUIRES_OTP');
+      // OTP already active — email already sent, just redirect to OTP screen
+      throw new Error('REQUIRES_OTP_ACTIVE');
     }
 
     // ── Step 2: attempt authentication ───────────────────────────────────────
@@ -496,7 +497,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const updated = await recordFailedAttempt(email);
 
       if (updated.requiresOtp) {
-        throw new Error('REQUIRES_OTP');
+        // Just hit the threshold for the first time — send OTP now
+        throw new Error('REQUIRES_OTP_NEW');
       }
       // Warn user how many attempts remain before OTP
       if (updated.attemptsRemaining > 0 && updated.attemptsRemaining < 5) {
