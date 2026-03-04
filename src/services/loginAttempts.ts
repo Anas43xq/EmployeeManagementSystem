@@ -25,6 +25,9 @@ export type LoginPhase = keyof typeof LOGIN_PHASES;
 // ─── Deactivation duration ─────────────────────────────────────────────────────
 export const DEACTIVATION_HOURS = 2;
 
+// ─── Admin spam-prevention (admins never lock/deactivate) ──────────────────────
+export const ADMIN_SPAM_COOLDOWN_SECONDS = 15;
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface LoginAttemptRecord {
   id: string;
@@ -54,6 +57,19 @@ export interface LockoutStatus {
 // and the generated Supabase types file hasn't been regenerated yet.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
+
+/**
+ * Check whether a user has the 'admin' role.
+ * Admins are exempt from lockout / deactivation — only spam-prevention applies.
+ */
+async function isUserAdmin(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single();
+  return data?.role === 'admin';
+}
 
 async function getRecord(userId: string): Promise<LoginAttemptRecord | null> {
   const { data, error } = await db
@@ -174,13 +190,51 @@ export async function checkLoginLockout(userId: string): Promise<LockoutStatus> 
  * Returns the updated LockoutStatus so the caller knows what happened.
  */
 export async function recordFailedAttempt(userId: string, userEmail?: string): Promise<LockoutStatus> {
+  const admin = await isUserAdmin(userId);
   const record = await getRecord(userId);
 
-  const currentFails    = record?.failed_attempts ?? 0;
-  const currentPhase    = (record?.login_phase as LoginPhase) ?? 1;
-  const newFails        = currentFails + 1;
+  const currentFails = record?.failed_attempts ?? 0;
+  const newFails     = currentFails + 1;
 
-  // ── Phase boundaries ────────────────────────────────────────────────────────
+  // ── Admin path: never escalate, never deactivate ────────────────────────────
+  if (admin) {
+    let lockedUntil: string | null = null;
+
+    // After 3 rapid fails → simple 15 s cooldown, then reset counter
+    if (newFails >= 3) {
+      lockedUntil = new Date(Date.now() + ADMIN_SPAM_COOLDOWN_SECONDS * 1000).toISOString();
+    }
+
+    await upsertRecord(userId, {
+      failed_attempts:     lockedUntil ? 0 : newFails, // reset after cooldown
+      login_phase:         1,                          // always stay phase 1
+      locked_until:        lockedUntil,
+      last_attempt_at:     new Date().toISOString(),
+      deactivated_at:      null,
+      deactivation_reason: null,
+    });
+
+    // Activity log
+    try {
+      await logActivity(userId, 'user_login_failed', 'user', userId, {
+        email:           userEmail,
+        phase:           1,
+        failed_attempts: newFails,
+        locked_until:    lockedUntil,
+        deactivated:     false,
+        reason:          'invalid_credentials',
+        admin_exempt:    true,
+      });
+    } catch {
+      // Non-critical
+    }
+
+    return checkLoginLockout(userId);
+  }
+
+  // ── Regular user path: escalating phases ────────────────────────────────────
+  const currentPhase = (record?.login_phase as LoginPhase) ?? 1;
+
   // Phase 1: fails 1-3   → after 3rd fail: 7s lock, move to phase 2
   // Phase 2: fails 4-5   → after 5th fail: 17s lock, move to phase 3
   // Phase 3: fail  6     → deactivate
