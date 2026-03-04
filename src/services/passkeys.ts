@@ -242,6 +242,94 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
   }
 }
 
+export interface PasskeyVerificationResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Verifies the current user's identity using a registered passkey WITHOUT
+ * touching the existing session. Used in Settings to skip "current password"
+ * when changing password.
+ */
+export async function verifyPasskeyIdentity(email: string): Promise<PasskeyVerificationResult> {
+  if (!isWebAuthnSupported()) {
+    return { success: false, error: 'WebAuthn is not supported in this browser' };
+  }
+
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    const optionsResponse = await fetch(`${supabaseUrl}/functions/v1/webauthn-authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+      },
+      body: JSON.stringify({ action: 'generate-options', email }),
+    });
+
+    if (!optionsResponse.ok) {
+      if (optionsResponse.status === 404) {
+        return { success: false, error: 'Passkey service is not available. Please use your current password instead.' };
+      }
+      const errorData = await optionsResponse.json().catch(() => ({}));
+      if (errorData.error?.includes('No passkeys registered') || errorData.error?.includes('User not found')) {
+        return { success: false, error: 'No passkey registered for this account.' };
+      }
+      throw new Error(errorData.error || `HTTP ${optionsResponse.status}`);
+    }
+
+    const data = await optionsResponse.json();
+    if (!data) {
+      return { success: false, error: 'No passkey registered for this account.' };
+    }
+
+    const { options, challenge, userId } = data;
+
+    const authenticationResponse = await startAuthentication(options);
+
+    const verifyResponse = await fetch(`${supabaseUrl}/functions/v1/webauthn-authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+      },
+      body: JSON.stringify({
+        action: 'verify-authentication',
+        credential: authenticationResponse,
+        expectedChallenge: challenge,
+        userId,
+      }),
+    });
+
+    if (!verifyResponse.ok) {
+      const errorData = await verifyResponse.json().catch(() => ({}));
+      throw new Error(errorData.error || `Verification failed: HTTP ${verifyResponse.status}`);
+    }
+
+    // Verification succeeded — intentionally do NOT establish a new session;
+    // the caller already has an active session and only needs identity confirmation.
+    return { success: true };
+
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const name = error.name.toLowerCase();
+
+      if (name === 'notallowederror' || message.includes('timed out') || message.includes('not allowed') || message.includes('cancelled')) {
+        return { success: false, error: 'Passkey verification was cancelled or timed out. Please try again.' };
+      }
+      if (name === 'typeerror' || message.includes('failed to fetch') || message.includes('network')) {
+        return { success: false, error: 'Network error. Please check your connection and try again.' };
+      }
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Verification failed. Please try again.' };
+  }
+}
+
 export async function getUserPasskeys(): Promise<Passkey[]> {
   try {
     const { data, error } = await db

@@ -523,7 +523,16 @@
     "arabic": "العربية (Arabic)",
     "passwordChanged": "تم تغيير كلمة المرور بنجاح!",
     "allFieldsRequired": "جميع الحقول مطلوبة",
-    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة"
+    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة",
+    "verifyWithCurrentPassword": "كلمة المرور الحالية",
+    "verifyWithPasskey": "مفتاح المرور",
+    "verifyWithPasskeyBtn": "التحقق بمفتاح المرور",
+    "passkeyVerifying": "جاري التحقق...",
+    "passkeyVerifyPrompt": "تحقق من هويتك باستخدام جهازك المسجل بمفتاح المرور",
+    "passkeyVerifySuccess": "تم التحقق من الهوية بمفتاح المرور",
+    "passkeyVerifyFailed": "فشل التحقق بمفتاح المرور. يرجى المحاولة مرة أخرى.",
+    "passkeyVerifyFirst": "يرجى التحقق من هويتك بمفتاح المرور أولاً",
+    "noPasskeyForReset": "سجّل مفتاح مرور في إدارة مفاتيح المرور للتحقق من هويتك هنا دون إدخال كلمة مرورك الحالية."
   },
   "resetPassword": {
     "title": "إعادة تعيين كلمة المرور",

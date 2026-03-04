@@ -525,7 +525,16 @@
     "arabic": "Arabic (العربية)",
     "passwordChanged": "Password changed successfully!",
     "allFieldsRequired": "All fields are required",
-    "currentPasswordIncorrect": "Current password is incorrect"
+    "currentPasswordIncorrect": "Current password is incorrect",
+    "verifyWithCurrentPassword": "Current Password",
+    "verifyWithPasskey": "Passkey",
+    "verifyWithPasskeyBtn": "Verify with Passkey",
+    "passkeyVerifying": "Verifying...",
+    "passkeyVerifyPrompt": "Verify your identity using your registered passkey device",
+    "passkeyVerifySuccess": "Identity verified with passkey",
+    "passkeyVerifyFailed": "Passkey verification failed. Please try again.",
+    "passkeyVerifyFirst": "Please verify your identity with a passkey first",
+    "noPasskeyForReset": "Register a passkey in Passkey Management to verify your identity here without entering your current password."
   },
   "resetPassword": {
     "title": "Reset Password",
