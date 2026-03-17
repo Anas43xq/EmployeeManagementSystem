@@ -54,15 +54,17 @@ Built with React and TypeScript on the frontend, Supabase handling the backend. 
 **Reporting** - Export anything to CSV. Date filters, role filters, whatever you need.
 
 - **WebAuthn Authentication** - Passkey login is surprisingly smooth once you try it
+- **OTP Brute-Force Protection** - After 5 failed login attempts the account locks and an 8-digit OTP is emailed. Counter resets on success. Handles the browser-close-and-reopen edge case without double-sending.
+- **Single-Session Enforcement** - Logging in on a second device silently signs out the first one in real time.
 - **Smart Performance Scoring** - Weekly calculations based on attendance + completed tasks - warnings received. Totally transparent algorithm.
 - **Bilingual Support** - English and Arabic with proper RTL layouts (learned this the hard way)
-- **Real-time Notifications** - In-app alerts plus email notifications
+- **Real-time Notifications** - In-app alerts plus email notifications with branded SMTP templates
 - **Mobile Responsive** - Works on phones, though honestly most HR stuff is better on desktop
 - **Complete Audit Trail** - Every action gets logged. Compliance teams love this.
 
 ---
 
-## Point System (This is kinda clever)
+## Point System 
 
 I implemented this automated weekly scoring system that picks "Employee of the Week" based on actual metrics instead of who brought donuts.
 
@@ -123,7 +125,7 @@ Frontend (React SPA on Vercel)
           │ HTTPS / WebSocket
           ▼
 Supabase Cloud
-├── PostgreSQL (19 tables + RLS)
+├── PostgreSQL (20 tables + RLS)
 ├── Edge Functions (6 Deno functions) 
 ├── Storage (employee photos)
 ├── Auth (GoTrue)
@@ -199,9 +201,10 @@ npx supabase db reset --linked
 npx supabase functions deploy --project-ref YOUR_PROJECT_REF --no-verify-jwt
 ```
 
-This pushes 5 functions:
+This pushes 6 functions:
+- `grant-user-access` - creates auth accounts for employees and assigns roles
 - `generate-monthly-payroll` - payroll calculations and approval
-- `manage-user-status` - user account management 
+- `manage-user-status` - user account management (ban, unban, deactivate, reset password)
 - `send-notification-email` - SMTP email sending
 - `webauthn-register` - passkey registration
 - `webauthn-authenticate` - passkey login
@@ -218,7 +221,7 @@ Should open on `localhost:5173`. The demo data includes 3 test accounts you can 
 
 ## Tables
 
-19 tables with proper RLS policies on everything:
+20 tables with proper RLS policies on everything:
 
 | Table | What it stores |
 |-------|---------------|
@@ -229,6 +232,7 @@ Should open on `localhost:5173`. The demo data includes 3 test accounts you can 
 | `leave_balances` | How many leave days each employee has left, tracked per year |
 | `attendance` | Daily check-in/out records with status and which method was used |
 | `passkeys` | Stored WebAuthn credentials for biometric login |
+| `login_attempts` | Failed login counter per user — triggers OTP lockout at 5 failures |
 | `payrolls` | Monthly payroll - base salary, total bonuses, total deductions, net pay |
 | `bonuses` | Individual bonus entries (allowance, performance, overtime) |
 | `deductions` | Individual deduction entries (tax, insurance, penalty) |
@@ -301,9 +305,10 @@ Each page module (like Attendance/ or Tasks/) follows the same pattern: an index
 
 | Function | Method | Who can call it | What it does |
 |----------|--------|----------------|--------------|
+| `grant-user-access` | POST | Admin only | Creates a Supabase auth account for an employee, sets role, sends confirmation email |
 | `generate-monthly-payroll` | POST | Admin or HR | Generates payroll records, approves drafts, calculates net salary |
-| `manage-user-status` | POST | Admin only | Bans, unbans, activates, or deactivates a user account |
-| `send-notification-email` | POST | Internal/system | Sends an email notification via SMTP |
+| `manage-user-status` | POST | Admin only | Bans, unbans, activates, deactivates, or triggers password reset |
+| `send-notification-email` | POST | Internal/system | Sends a branded email notification via SMTP |
 | `webauthn-register` | POST | Any logged-in user | Registers a new biometric passkey |
 | `webauthn-authenticate` | POST | Anyone | Logs in using a registered passkey |
 
@@ -319,6 +324,8 @@ All functions are deployed with `--no-verify-jwt` because they handle their own 
 2. Go to [vercel.com](https://vercel.com) and import the repo
 3. Add these env vars: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 4. Hit deploy. After that, every push to main auto-deploys.
+
+The `vercel.json` includes cache headers — `index.html` is never cached so users always get fresh chunk URLs after a new deployment, while hashed `/assets/*` files are cached permanently. This prevents the "Failed to load this section" error that happens when users have a stale HTML file after a redeploy.
 
 ### Backend on Supabase
 
