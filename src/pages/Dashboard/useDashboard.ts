@@ -58,7 +58,7 @@ export function useDashboard() {
         pendingLeavesQuery,
         approvedLeavesQuery,
         rejectedLeavesQuery,
-        // Only admin may read activity_logs — skip the query entirely for other roles
+        // Only admin read activity_logs
         role === 'admin'
           ? db.from('activity_logs').select('id, action, created_at, entity_type').order('created_at', { ascending: false }).limit(5)
           : Promise.resolve({ data: [], error: null }),
