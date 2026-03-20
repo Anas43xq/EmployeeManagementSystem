@@ -14,6 +14,7 @@
  */
 
 import { supabase } from './supabase';
+import { logActivity } from './activityLog';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = supabase as any;
@@ -135,6 +136,7 @@ export async function verifyLoginOtp(
 
     if (data?.user?.id) {
       await resetLoginAttempts(data.user.id);
+      logActivity(data.user.id, 'user_login', 'user', data.user.id, { email });
       return { success: true };
     }
 

@@ -37,7 +37,19 @@ export type ActivityAction =
   | 'user_login'
   | 'user_logout'
   | 'user_login_failed'
-  | 'session_timeout';
+  | 'session_timeout'
+  | 'warning_created'
+  | 'warning_acknowledged'
+  | 'warning_resolved'
+  | 'warning_deleted'
+  | 'complaint_created'
+  | 'complaint_reviewed'
+  | 'complaint_resolved'
+  | 'complaint_deleted'
+  | 'task_created'
+  | 'task_updated'
+  | 'task_status_changed'
+  | 'task_deleted';
 
 export type EntityType =
   | 'user'
@@ -46,7 +58,10 @@ export type EntityType =
   | 'department'
   | 'attendance'
   | 'announcement'
-  | 'login_attempt';
+  | 'login_attempt'
+  | 'warning'
+  | 'complaint'
+  | 'task';
 
 export async function logActivity(
   userId: string,

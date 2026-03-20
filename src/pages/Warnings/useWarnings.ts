@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase, db } from '../../services/supabase';
+import { logActivity } from '../../services/activityLog';
 import {
   getWarnings,
   createWarning,
@@ -111,8 +112,12 @@ export function useWarnings() {
 
     setSubmitting(true);
     try {
-      await createWarning(formData, user.id);
-      
+      const created = await createWarning(formData, user.id);
+      logActivity(user.id, 'warning_created', 'warning', created.id, {
+        employee_id: formData.employee_id,
+        severity: formData.severity,
+      });
+
       const { data: targetUser, error: userLookupError } = await db
         .from('users')
         .select('id')
@@ -136,6 +141,9 @@ export function useWarnings() {
   const handleAcknowledge = async (warningId: string) => {
     try {
       await acknowledgeWarning(warningId);
+      if (user) {
+        logActivity(user.id, 'warning_acknowledged', 'warning', warningId);
+      }
       showNotification('success', t('warnings.acknowledged'));
       loadWarnings();
     } catch (error: any) {
@@ -155,6 +163,11 @@ export function useWarnings() {
     setSubmitting(true);
     try {
       await resolveWarning(selectedWarning.id, resolutionNotes);
+      if (user) {
+        logActivity(user.id, 'warning_resolved', 'warning', selectedWarning.id, {
+          resolution_notes: resolutionNotes,
+        });
+      }
       showNotification('success', t('warnings.resolved'));
       setShowResolveModal(false);
       setSelectedWarning(null);
@@ -170,6 +183,9 @@ export function useWarnings() {
   const handleDelete = async (warningId: string) => {
     try {
       await deleteWarning(warningId);
+      if (user) {
+        logActivity(user.id, 'warning_deleted', 'warning', warningId);
+      }
       showNotification('success', t('warnings.deleteSuccess'));
       loadWarnings();
     } catch (error: any) {

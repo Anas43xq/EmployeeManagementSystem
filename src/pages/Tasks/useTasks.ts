@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase, db } from '../../services/supabase';
+import { logActivity } from '../../services/activityLog';
 import {
   getTasks,
   createTask,
@@ -135,11 +136,15 @@ export function useTasks() {
           points: formData.points,
           penalty_points: formData.penalty_points,
         });
-
+        logActivity(user.id, 'task_updated', 'task', editingTask.id, { title: formData.title });
         showNotification('success', t('tasks.updateSuccess'));
       } else {
-        await createTask(formData, user.id);
-        
+        const created = await createTask(formData, user.id);
+        logActivity(user.id, 'task_created', 'task', created.id, {
+          title: formData.title,
+          employee_id: formData.employee_id,
+        });
+
         const { data: targetUser, error: userLookupError } = await db
           .from('users')
           .select('id')
@@ -168,6 +173,9 @@ export function useTasks() {
     try {
       const task = tasks.find(t => t.id === taskId);
       await updateTaskStatus(taskId, newStatus);
+      if (user) {
+        logActivity(user.id, 'task_status_changed', 'task', taskId, { status: newStatus });
+      }
       showNotification('success', t('tasks.statusUpdated'));
 
       // Notify admin/HR when staff changes task status
@@ -199,6 +207,9 @@ export function useTasks() {
     setProcessingTasks(prev => new Set(prev).add(taskId));
     try {
       await deleteTask(taskId);
+      if (user) {
+        logActivity(user.id, 'task_deleted', 'task', taskId);
+      }
       showNotification('success', t('tasks.deleteSuccess'));
       loadTasks();
     } catch (error: any) {

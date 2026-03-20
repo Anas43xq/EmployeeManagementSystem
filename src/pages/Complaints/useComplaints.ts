@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { supabase, db } from '../../services/supabase';
+import { logActivity } from '../../services/activityLog';
 import {
   getComplaints,
   createComplaint,
@@ -92,7 +93,10 @@ export function useComplaints() {
 
     setSubmitting(true);
     try {
-      await createComplaint(formData, user.employeeId);
+      const created = await createComplaint(formData, user.employeeId!);
+      logActivity(user.id, 'complaint_created', 'complaint', created.id, {
+        category: formData.category,
+      });
 
       // Notify HR/Admin about new complaint with email
       const { data: employeeData } = await db
@@ -130,6 +134,7 @@ export function useComplaints() {
       await updateComplaintStatus(complaintId, 'under_review', {
         assignedTo: user.id,
       });
+      logActivity(user.id, 'complaint_reviewed', 'complaint', complaintId);
       showNotification('success', t('complaints.underReview'));
       loadComplaints();
     } catch (error: any) {
@@ -152,6 +157,10 @@ export function useComplaints() {
       await updateComplaintStatus(selectedComplaint.id, resolveAction, {
         resolutionNotes,
         resolvedBy: user.id,
+      });
+      logActivity(user.id, 'complaint_resolved', 'complaint', selectedComplaint.id, {
+        status: resolveAction,
+        resolution_notes: resolutionNotes,
       });
 
       const { data: employeeUser, error: userLookupError } = await db
@@ -185,6 +194,9 @@ export function useComplaints() {
   const handleDelete = async (complaintId: string) => {
     try {
       await deleteComplaint(complaintId);
+      if (user) {
+        logActivity(user.id, 'complaint_deleted', 'complaint', complaintId);
+      }
       showNotification('success', t('complaints.deleteSuccess'));
       loadComplaints();
     } catch (error: any) {

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { db } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageSpinner, PageHeader, Card, Button, Modal } from '../components/ui';
+import { logActivity } from '../services/activityLog';
 import type { EmployeeListItem } from '../types';
 
 export default function Employees() {
@@ -20,6 +22,7 @@ export default function Employees() {
   });
   const [deleting, setDeleting] = useState(false);
   const { showNotification } = useNotification();
+  const { user } = useAuth();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -68,12 +71,18 @@ export default function Employees() {
     try {
       const { error } = await db
         .from('employees')
-        .delete()
+        .update({ status: 'inactive' })
         .eq('id', deleteModal.employee.id);
 
       if (error) throw error;
 
       showNotification('success', t('employees.deletedSuccess'));
+      if (user) {
+        logActivity(user.id, 'employee_deleted', 'employee', deleteModal.employee.id, {
+          name: `${deleteModal.employee.first_name} ${deleteModal.employee.last_name}`,
+          employee_number: deleteModal.employee.employee_number,
+        });
+      }
       setDeleteModal({ open: false, employee: null, hasAccess: false });
       loadEmployees();
     } catch (error: any) {

@@ -1,5 +1,6 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { supabase, db } from './supabase';
+import { logActivity } from './activityLog';
 
 export interface PasskeyRegistrationResult {
   success: boolean;
@@ -219,6 +220,10 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
       if (sessionError) {
         throw new Error('Failed to establish session');
       }
+      const logUserId = sessionData.session?.user?.id || verificationData.user?.id;
+      if (logUserId) {
+        logActivity(logUserId, 'user_login', 'user', logUserId, { email });
+      }
       return {
         success: true,
         user: verificationData.user,
@@ -226,6 +231,9 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
       };
     }
 
+    if (verificationData.user?.id) {
+      logActivity(verificationData.user.id, 'user_login', 'user', verificationData.user.id, { email });
+    }
     return {
       success: true,
       user: verificationData.user,
