@@ -286,7 +286,14 @@ export default function EmployeeView() {
               <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <span className="text-gray-600">{t('employees.yearsOfService')}</span>
                 <span className="font-semibold text-gray-900">
-                  {Math.floor((new Date().getTime() - new Date(employee.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 365))} {t('employees.years')}
+                  {(() => {
+                    const hire = new Date(employee.hire_date);
+                    const now = new Date();
+                    let years = now.getFullYear() - hire.getFullYear();
+                    const monthDiff = now.getMonth() - hire.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < hire.getDate())) years--;
+                    return Math.max(0, years);
+                  })()} {t('employees.years')}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
