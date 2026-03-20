@@ -8,7 +8,6 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotificationContainer from './components/NotificationContainer';
 import { ErrorBoundary, RouteErrorBoundary } from './components/ErrorBoundary';
-import useText from '../Text';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Employees = lazy(() => import('./pages/Employees'));
@@ -45,7 +44,6 @@ function PageLoader() {
 }
 
 function App() {
-  useText();
   return (
     <ErrorBoundary>
       <NotificationProvider>
