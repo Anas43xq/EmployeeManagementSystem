@@ -299,6 +299,49 @@ serve(async (req) => {
       );
     }
 
+    if (action === 'mark-as-paid') {
+      const { payrollIds } = payload as { payrollIds: string[] };
+
+      if (!payrollIds || payrollIds.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No payroll IDs provided' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      const { data: paidPayrolls, error: paidError } = await supabaseAdmin
+        .from('payrolls')
+        .update({ status: 'paid' })
+        .in('id', payrollIds)
+        .eq('status', 'approved')
+        .select();
+
+      if (paidError) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to mark payrolls as paid', details: paidError.message }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Marked ${paidPayrolls.length} payroll records as paid`,
+          count: paidPayrolls.length
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Invalid action' }),
       {

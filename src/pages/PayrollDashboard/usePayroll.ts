@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { logActivity } from '../../services/activityLog';
 import {
   generateMonthlyPayroll,
   getPayrollRecords,
   approvePayroll,
+  markPayrollAsPaid,
   getBonuses,
   getDeductions,
   generatePayslipPDF,
+  getMonthName,
   type PayrollData,
   type BonusData,
   type DeductionData,
@@ -16,11 +20,13 @@ import {
 export function usePayroll() {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
+  const { user } = useAuth();
 
   const [payrolls, setPayrolls] = useState<PayrollData[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -99,6 +105,13 @@ export function usePayroll() {
       const result = await generateMonthlyPayroll(selectedMonth, selectedYear);
       if (result.success) {
         showNotification('success', result.message || t('payroll.generatedSuccessfully', 'Payroll generated successfully'));
+        if (user) {
+          logActivity(user.id, 'payroll_generated', 'payroll', undefined, {
+            month_name: getMonthName(selectedMonth),
+            year: selectedYear,
+            employee_count: result.results?.length ?? 0,
+          });
+        }
         setIsGenerateModalOpen(false);
         loadPayrollRecords();
       } else {
@@ -122,6 +135,13 @@ export function usePayroll() {
       const success = await approvePayroll(selectedPayrolls);
       if (success) {
         showNotification('success', t('payroll.approvedSuccessfully', 'Payroll records approved successfully'));
+        if (user) {
+          logActivity(user.id, 'payroll_approved', 'payroll', undefined, {
+            month_name: getMonthName(selectedMonth),
+            year: selectedYear,
+            employee_count: selectedPayrolls.length,
+          });
+        }
         setSelectedPayrolls([]);
         loadPayrollRecords();
       } else {
@@ -151,6 +171,45 @@ export function usePayroll() {
     }
   };
 
+  const selectAllApprovedPayrolls = () => {
+    const approvedPayrolls = payrolls.filter(p => p.status === 'approved').map(p => p.id);
+    if (selectedPayrolls.length === approvedPayrolls.length && approvedPayrolls.length > 0) {
+      setSelectedPayrolls([]);
+    } else {
+      setSelectedPayrolls(approvedPayrolls);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (selectedPayrolls.length === 0) {
+      showNotification('error', t('payroll.selectPayrollsToPay', 'Please select payroll records to mark as paid'));
+      return;
+    }
+
+    setPaying(true);
+    try {
+      const result = await markPayrollAsPaid(selectedPayrolls);
+      if (result.success) {
+        showNotification('success', t('payroll.markedAsPaid', 'Payroll records marked as paid'));
+        if (user) {
+          logActivity(user.id, 'payroll_paid', 'payroll', undefined, {
+            month_name: getMonthName(selectedMonth),
+            year: selectedYear,
+            employee_count: result.count,
+          });
+        }
+        setSelectedPayrolls([]);
+        loadPayrollRecords();
+      } else {
+        throw new Error('Failed to mark payrolls as paid');
+      }
+    } catch (error: any) {
+      showNotification('error', error.message || t('payroll.markAsPaidFailed', 'Failed to mark payroll records as paid'));
+    } finally {
+      setPaying(false);
+    }
+  };
+
   const stats = {
     total: payrolls.length,
     draft: payrolls.filter(p => p.status === 'draft').length,
@@ -164,6 +223,7 @@ export function usePayroll() {
     loading,
     generating,
     approving,
+    paying,
     selectedMonth,
     setSelectedMonth,
     selectedYear,
@@ -185,7 +245,9 @@ export function usePayroll() {
     handleDownloadPDF,
     handleGeneratePayroll,
     handleApproveSelected,
+    handleMarkAsPaid,
     togglePayrollSelection,
     selectAllDraftPayrolls,
+    selectAllApprovedPayrolls,
   };
 }

@@ -49,7 +49,10 @@ export type ActivityAction =
   | 'task_created'
   | 'task_updated'
   | 'task_status_changed'
-  | 'task_deleted';
+  | 'task_deleted'
+  | 'payroll_generated'
+  | 'payroll_approved'
+  | 'payroll_paid';
 
 export type EntityType =
   | 'user'
@@ -61,7 +64,8 @@ export type EntityType =
   | 'login_attempt'
   | 'warning'
   | 'complaint'
-  | 'task';
+  | 'task'
+  | 'payroll';
 
 export async function logActivity(
   userId: string,

@@ -175,6 +175,34 @@ export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
   }
 }
 
+export async function markPayrollAsPaid(payrollIds: string[]): Promise<{ success: boolean; count: number }> {
+  try {
+    const accessToken = await getFreshAccessToken();
+
+    if (!accessToken) {
+      return { success: false, count: 0 };
+    }
+
+    const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
+      body: {
+        action: 'mark-as-paid',
+        payrollIds,
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: data.success, count: data.count ?? 0 };
+  } catch (error) {
+    return { success: false, count: 0 };
+  }
+}
+
 export async function getPayrollRecords(
   month?: number,
   year?: number,

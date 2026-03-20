@@ -12,6 +12,7 @@ import {
   Filter,
   Users,
   Eye,
+  Banknote,
 } from 'lucide-react';
 
 export default function PayrollDashboard() {
@@ -21,6 +22,7 @@ export default function PayrollDashboard() {
     loading,
     generating,
     approving,
+    paying,
     selectedMonth,
     setSelectedMonth,
     selectedYear,
@@ -41,8 +43,10 @@ export default function PayrollDashboard() {
     handleDownloadPDF,
     handleGeneratePayroll,
     handleApproveSelected,
+    handleMarkAsPaid,
     togglePayrollSelection,
     selectAllDraftPayrolls,
+    selectAllApprovedPayrolls,
   } = usePayroll();
 
   return (
@@ -168,14 +172,26 @@ export default function PayrollDashboard() {
 
             {selectedPayrolls.length > 0 && (
               <div className="flex items-center gap-2">
-                <Button
-                  variant="primary"
-                  onClick={handleApproveSelected}
-                  loading={approving}
-                  icon={<CheckCircle className="w-4 h-4" />}
-                >
-                  {t('payroll.approve', 'Approve')}
-                </Button>
+                {selectedPayrolls.some(id => payrolls.find(p => p.id === id)?.status === 'draft') && (
+                  <Button
+                    variant="primary"
+                    onClick={handleApproveSelected}
+                    loading={approving}
+                    icon={<CheckCircle className="w-4 h-4" />}
+                  >
+                    {t('payroll.approve', 'Approve')}
+                  </Button>
+                )}
+                {selectedPayrolls.some(id => payrolls.find(p => p.id === id)?.status === 'approved') && (
+                  <Button
+                    variant="primary"
+                    onClick={handleMarkAsPaid}
+                    loading={paying}
+                    icon={<Banknote className="w-4 h-4" />}
+                  >
+                    {t('payroll.markAsPaid', 'Mark as Paid')}
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -186,6 +202,14 @@ export default function PayrollDashboard() {
             <div className="mb-4">
               <Button variant="secondary" onClick={selectAllDraftPayrolls}>
                 {t('payroll.selectAllDraft', 'Select All Draft Records')}
+              </Button>
+            </div>
+          )}
+
+          {selectedPayrolls.length === 0 && stats.approved > 0 && (
+            <div className="mb-4">
+              <Button variant="secondary" onClick={selectAllApprovedPayrolls}>
+                {t('payroll.selectAllApproved', 'Select All Approved Records')}
               </Button>
             </div>
           )}
@@ -241,7 +265,7 @@ export default function PayrollDashboard() {
                           type="checkbox"
                           checked={selectedPayrolls.includes(payroll.id)}
                           onChange={() => togglePayrollSelection(payroll.id)}
-                          disabled={payroll.status !== 'draft'}
+                          disabled={payroll.status === 'paid'}
                           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                       </td>
