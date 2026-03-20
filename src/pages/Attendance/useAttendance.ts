@@ -225,7 +225,7 @@ export function useAttendance() {
       if (error) throw error;
 
       if (user) {
-        logActivity(user.id, 'attendance_recorded', 'attendance', undefined, {
+        logActivity(user.id, 'attendance_manual_entry', 'attendance', undefined, {
           employee_id: formData.employee_id,
           date: formData.date,
           status: formData.status,

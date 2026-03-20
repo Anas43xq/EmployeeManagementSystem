@@ -4,11 +4,6 @@ import type { Database } from '../types/database';
 type ActivityLogInsert = Database['public']['Tables']['activity_logs']['Insert'];
 
 export type ActivityAction =
-  | 'user_created'
-  | 'user_updated'
-  | 'user_deleted'
-  | 'user_employee_linked'
-  | 'user_employee_unlinked'
   | 'user_password_reset'
   | 'user_access_granted'
   | 'user_access_revoked'
@@ -23,13 +18,12 @@ export type ActivityAction =
   | 'leave_requested'
   | 'leave_approved'
   | 'leave_rejected'
-  | 'leave_cancelled'
   | 'department_created'
   | 'department_updated'
   | 'department_deleted'
   | 'attendance_checked_in'
   | 'attendance_checked_out'
-  | 'attendance_recorded'
+  | 'attendance_manual_entry'
   | 'announcement_created'
   | 'announcement_updated'
   | 'announcement_deleted'
