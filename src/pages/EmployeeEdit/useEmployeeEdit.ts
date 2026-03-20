@@ -45,9 +45,34 @@ export function useEmployeeEdit() {
     if (id && id !== 'new') {
       loadEmployee();
     } else {
-      setLoading(false);
+      loadNextEmployeeNumber();
     }
   }, [id]);
+
+  const loadNextEmployeeNumber = async () => {
+    try {
+      const { data } = await db
+        .from('employees')
+        .select('employee_number')
+        .order('employee_number', { ascending: false })
+        .limit(1)
+        .maybeSingle() as { data: { employee_number: string } | null; error: any };
+
+      let preview = 'EMP001';
+      if (data?.employee_number) {
+        const match = data.employee_number.match(/^EMP(\d+)$/);
+        if (match) {
+          const next = parseInt(match[1], 10) + 1;
+          preview = 'EMP' + String(next).padStart(3, '0');
+        }
+      }
+      setFormData(prev => ({ ...prev, employee_number: preview }));
+    } catch {
+      // fallback — DB will assign the real number on save
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadDepartments = async () => {
     try {
@@ -121,7 +146,7 @@ export function useEmployeeEdit() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.first_name || !formData.last_name || !formData.email || !formData.position || !formData.employee_number) {
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.position) {
       showNotification('error', t('employees.fillRequiredFields'));
       return;
     }
@@ -141,9 +166,10 @@ export function useEmployeeEdit() {
       const isNewEmployee = !id || id === 'new';
 
       if (isNewEmployee) {
+        const { employee_number: _preview, ...employeeData } = submitData;
         const { data, error: insertError } = await (db.from('employees') as any)
-          .insert([submitData])
-          .select('id')
+          .insert([employeeData])
+          .select('id, employee_number')
           .single();
 
         if (insertError) throw insertError;

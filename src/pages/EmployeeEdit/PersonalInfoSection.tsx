@@ -37,10 +37,12 @@ export default function PersonalInfoSection({ formData, onChange, onPhotoChange,
             name="employee_number"
             value={formData.employee_number}
             onChange={onChange}
-            required
-            disabled={!isNewEmployee}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-lg ${isNewEmployee ? 'focus:ring-2 focus:ring-primary-500 focus:border-transparent' : 'bg-gray-50 cursor-not-allowed'}`}
+            disabled
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
           />
+          {isNewEmployee && (
+            <p className="mt-1 text-xs text-gray-400">Auto-assigned on save</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
