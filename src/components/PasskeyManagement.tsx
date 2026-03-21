@@ -44,7 +44,7 @@ export default function PasskeyManagement() {
     try {
       const data = await getUserPasskeys();
       setPasskeys(data);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('passkeys.failedToLoad'));
     } finally {
       setLoading(false);
@@ -70,8 +70,8 @@ export default function PasskeyManagement() {
       } else {
         throw new Error(result.error);
       }
-    } catch (error: any) {
-      showNotification('error', error.message || t('passkeys.registrationFailed'));
+    } catch (error: Error | unknown) {
+      showNotification('error', (error instanceof Error ? error.message : typeof error === 'object' && error && 'message' in error ? String(error.message) : '') || t('passkeys.registrationFailed'));
     } finally {
       setRegisterLoading(false);
     }
@@ -93,8 +93,8 @@ export default function PasskeyManagement() {
       } else {
         throw new Error('Failed to delete passkey');
       }
-    } catch (error: any) {
-      showNotification('error', error.message || t('passkeys.deletionFailed'));
+    } catch (error: Error | unknown) {
+      showNotification('error', (error instanceof Error ? error.message : typeof error === 'object' && error && 'message' in error ? String(error.message) : '') || t('passkeys.deletionFailed'));
     }
   };
 

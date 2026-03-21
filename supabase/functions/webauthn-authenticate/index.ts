@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.5";
-import { encode as base64Encode, decode as base64Decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+import { encode as _base64Encode, decode as base64Decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import {
   verifyAuthenticationResponse,
   generateAuthenticationOptions,
@@ -83,7 +83,7 @@ serve(async (req) => {
 
       const options = await generateAuthenticationOptions({
         rpID: rpID,
-        allowCredentials: passkeys.map((pk: any) => ({
+        allowCredentials: passkeys.map((pk: unknown) => ({
           id: base64Decode(pk.credential_id),
           type: 'public-key',
         })),

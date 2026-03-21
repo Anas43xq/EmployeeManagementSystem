@@ -103,8 +103,8 @@ export default function ChangePasswordCard() {
         setPasskeyVerified(false);
         await supabase.auth.signOut();
         navigate('/login', { state: { successMessage: t('settings.passwordChanged', 'Password changed successfully!') } });
-      } catch (error: any) {
-        showNotification('error', error.message || t('resetPassword.failedToChange'));
+      } catch (_error: unknown) {
+        showNotification('error', (_error as Error).message || t('resetPassword.failedToChange'));
       } finally {
         setLoading(false);
       }
@@ -135,8 +135,8 @@ export default function ChangePasswordCard() {
 
         await supabase.auth.signOut();
         navigate('/login', { state: { successMessage: t('settings.passwordChanged', 'Password changed successfully!') } });
-      } catch (error: any) {
-        showNotification('error', error.message || t('resetPassword.failedToChange'));
+      } catch (_error: unknown) {
+        showNotification('error', (_error as Error).message || t('resetPassword.failedToChange'));
       } finally {
         setLoading(false);
       }

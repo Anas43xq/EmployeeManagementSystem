@@ -66,6 +66,7 @@ export function useSettings() {
 
     setSavingPrefs(true);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('user_preferences') as any)
         .upsert({
           user_id: user.id,
@@ -114,11 +115,11 @@ export function useSettings() {
 
       await db.auth.signOut();
       navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
-    } catch (error: any) {
-      if (error?.message?.includes('same')) {
+    } catch (_error: unknown) {
+      if ((_error as Error)?.message?.includes('same')) {
         showNotification('info', 'New email is the same as current email');
       } else {
-        showNotification('error', 'Failed to update email: ' + (error?.message || 'Please try again'));
+        showNotification('error', 'Failed to update email: ' + ((_error as Error)?.message || 'Please try again'));
       }
       setNewEmail(user?.email || '');
     } finally {

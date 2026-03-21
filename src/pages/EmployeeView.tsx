@@ -55,7 +55,7 @@ export default function EmployeeView() {
       }
 
       setEmployee(data as Employee);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('employees.failedToLoadDetails'));
       navigate('/employees');
     } finally {
@@ -82,8 +82,8 @@ export default function EmployeeView() {
       showNotification('success', t('employees.employeeTerminated'));
       setTerminateModal(false);
       loadEmployee(); // Reload employee data
-    } catch (error: any) {
-      showNotification('error', error.message || t('employees.failedToTerminate'));
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || t('employees.failedToTerminate'));
     } finally {
       setTerminating(false);
     }

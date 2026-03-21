@@ -4,7 +4,7 @@ export interface ManageUserStatusResult {
   success: boolean;
   message?: string;
   error?: string;
-  user?: any;
+  user?: unknown;
 }
 
 export async function banUser(
@@ -41,10 +41,10 @@ export async function banUser(
     }
 
     return data;
-  } catch (error: any) {
+  } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       success: false,
-      error: error.message || 'Failed to ban user',
+      error: (_error as Error).message || 'Failed to ban user',
     };
   }
 }
@@ -77,10 +77,10 @@ export async function unbanUser(userId: string): Promise<ManageUserStatusResult>
     }
 
     return data;
-  } catch (error: any) {
+  } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       success: false,
-      error: error.message || 'Failed to unban user',
+      error: (_error as Error).message || 'Failed to unban user',
     };
   }
 }
@@ -113,10 +113,10 @@ export async function deactivateUser(userId: string): Promise<ManageUserStatusRe
     }
 
     return data;
-  } catch (error: any) {
+  } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       success: false,
-      error: error.message || 'Failed to deactivate user',
+      error: (_error as Error).message || 'Failed to deactivate user',
     };
   }
 }
@@ -149,10 +149,10 @@ export async function activateUser(userId: string): Promise<ManageUserStatusResu
     }
 
     return data;
-  } catch (error: any) {
+  } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       success: false,
-      error: error.message || 'Failed to activate user',
+      error: (_error as Error).message || 'Failed to activate user',
     };
   }
 }
@@ -185,10 +185,10 @@ export async function getUserStatus(userId: string): Promise<ManageUserStatusRes
     }
 
     return data;
-  } catch (error: any) {
+  } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     return {
       success: false,
-      error: error.message || 'Failed to get user status',
+      error: (_error as Error).message || 'Failed to get user status',
     };
   }
 }

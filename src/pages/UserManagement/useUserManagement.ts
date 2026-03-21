@@ -43,7 +43,7 @@ export function useUserManagement() {
 
       if (error) throw error;
       setUsers((data || []) as User[]);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('userManagement.failedToLoad'));
     } finally {
       setLoading(false);
@@ -80,7 +80,8 @@ export function useUserManagement() {
       );
 
       const withoutAccess = (allEmployees || []).filter(
-        (emp: any) => !employeesWithAccess.has(emp.id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (emp: unknown) => !employeesWithAccess.has((emp as any).id)
       ) as EmployeeWithoutAccess[];
 
       setEmployeesWithoutAccess(withoutAccess);

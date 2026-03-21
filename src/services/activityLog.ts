@@ -77,14 +77,15 @@ export async function logActivity(
       action,
       entity_type: entityType,
       entity_id: entityId || null,
-      details: details as any,
+      details: details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     };
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('activity_logs') as any).insert(record);
 
     if (error) {
     }
-  } catch (err) {
+  } catch (_err) {
   }
 }
 
@@ -103,14 +104,15 @@ export async function logActivities(
       action: a.action,
       entity_type: a.entityType,
       entity_id: a.entityId || null,
-      details: a.details as any,
+      details: a.details as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     }));
 
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('activity_logs') as any).insert(records);
 
     if (error) {
     }
-  } catch (err) {
+  } catch (_err) {
   }
 }

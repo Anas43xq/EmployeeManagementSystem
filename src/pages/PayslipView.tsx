@@ -50,7 +50,7 @@ export default function PayslipView() {
     try {
       const data = await getPayrollRecords(undefined, selectedYear);
       setPayrolls(data);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('payslip.failedToLoad', 'Failed to load payslips'));
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ export default function PayslipView() {
       ]);
       setBonuses(bonusData);
       setDeductions(deductionData);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('payslip.failedToLoadDetails', 'Failed to load payslip details'));
     } finally {
       setDetailsLoading(false);
@@ -77,7 +77,7 @@ export default function PayslipView() {
     try {
       generatePayslipPDF(payroll, bonuses, deductions);
       showNotification('success', t('payslip.downloadStarted', 'Payslip download started'));
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('payslip.downloadFailed', 'Failed to generate payslip PDF'));
     }
   };

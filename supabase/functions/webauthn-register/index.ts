@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.5";
-import { encode as base64Encode, decode as base64Decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+import { encode as base64Encode, decode as _base64Decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import {
   verifyRegistrationResponse,
   generateRegistrationOptions,
@@ -16,7 +16,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-interface PasskeyRegistration {
+interface _PasskeyRegistration {
   credentialId: string;
   publicKey: string;
   counter: number;

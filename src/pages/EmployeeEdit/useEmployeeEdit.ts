@@ -57,7 +57,7 @@ export function useEmployeeEdit() {
         .select('employee_number')
         .order('employee_number', { ascending: false })
         .limit(1)
-        .maybeSingle() as { data: { employee_number: string } | null; error: any };
+        .maybeSingle() as { data: { employee_number: string } | null; error: unknown };
 
       let preview = 'EMP001';
       if (data?.employee_number) {
@@ -84,7 +84,7 @@ export function useEmployeeEdit() {
 
       if (error) throw error;
       setDepartments(data || []);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('employees.failedToLoadDepartments'));
     }
   };
@@ -95,7 +95,7 @@ export function useEmployeeEdit() {
         .from('employees')
         .select('*')
         .eq('id', id!)
-        .maybeSingle() as { data: any; error: any };
+        .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
 
       if (error) throw error;
 
@@ -106,29 +106,29 @@ export function useEmployeeEdit() {
       }
 
       setFormData({
-        employee_number: data.employee_number || '',
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        email: data.email || '',
-        phone: data.phone || '',
-        date_of_birth: data.date_of_birth || '',
-        gender: data.gender || '',
-        address: data.address || '',
-        city: data.city || '',
-        state: data.state || '',
-        postal_code: data.postal_code || '',
-        department_id: data.department_id || '',
-        position: data.position || '',
-        employment_type: data.employment_type || 'full-time',
-        status: data.status || 'active',
-        hire_date: data.hire_date || '',
-        salary: data.salary?.toString() || '',
-        emergency_contact_name: data.emergency_contact_name || '',
-        emergency_contact_phone: data.emergency_contact_phone || '',
-        photo_url: data.photo_url || '',
-        qualifications: data.qualifications || [],
+        employee_number: (data.employee_number as string) || '',
+        first_name: (data.first_name as string) || '',
+        last_name: (data.last_name as string) || '',
+        email: (data.email as string) || '',
+        phone: (data.phone as string) || '',
+        date_of_birth: (data.date_of_birth as string) || '',
+        gender: (data.gender as string) || '',
+        address: (data.address as string) || '',
+        city: (data.city as string) || '',
+        state: (data.state as string) || '',
+        postal_code: (data.postal_code as string) || '',
+        department_id: (data.department_id as string) || '',
+        position: (data.position as string) || '',
+        employment_type: (data.employment_type as string) || 'full-time',
+        status: (data.status as string) || 'active',
+        hire_date: (data.hire_date as string) || '',
+        salary: ((data.salary as number) || 0).toString(),
+        emergency_contact_name: (data.emergency_contact_name as string) || '',
+        emergency_contact_phone: (data.emergency_contact_phone as string) || '',
+        photo_url: (data.photo_url as string) || '',
+        qualifications: (data.qualifications as Qualification[]) || [],
       });
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('employees.failedToLoadDetails'));
       navigate('/employees');
     } finally {
@@ -191,6 +191,7 @@ export function useEmployeeEdit() {
 
       if (isNewEmployee) {
         const { employee_number: _preview, ...employeeData } = submitData;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error: insertError } = await (db.from('employees') as any)
           .insert([employeeData])
           .select('id, employee_number')
@@ -201,6 +202,7 @@ export function useEmployeeEdit() {
 
         showNotification('success', t('employees.employeeCreated'));
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error: updateError } = await (db.from('employees') as any)
           .update(submitData)
           .eq('id', id!);
@@ -218,8 +220,8 @@ export function useEmployeeEdit() {
       }
 
       navigate(`/employees/${newEmployeeId || id}`);
-    } catch (error: any) {
-      showNotification('error', error.message || t('employees.failedToSave'));
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || t('employees.failedToSave'));
     } finally {
       setSaving(false);
     }

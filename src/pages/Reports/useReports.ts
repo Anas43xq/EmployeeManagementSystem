@@ -28,7 +28,7 @@ export function useReports() {
 
       if (error) throw error;
       setDepartments(data || []);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load departments'));
     }
   };
@@ -65,7 +65,7 @@ export function useReports() {
       query = query.eq('department_id', selectedDepartment);
     }
 
-    const { data, error } = await query as { data: ReportEmployee[] | null; error: any };
+    const { data, error } = await query as { data: ReportEmployee[] | null; error: unknown };
     if (error) throw error;
     if (!data) return [];
 
@@ -112,7 +112,7 @@ export function useReports() {
       query = query.eq('employees.department_id', selectedDepartment);
     }
 
-    const { data, error } = await query as { data: Leave[] | null; error: any };
+    const { data, error } = await query as { data: Leave[] | null; error: unknown };
     if (error) throw error;
     if (!data) return [];
 
@@ -155,7 +155,7 @@ export function useReports() {
       query = query.eq('employees.department_id', selectedDepartment);
     }
 
-    const { data, error } = await query as { data: Attendance[] | null; error: any };
+    const { data, error } = await query as { data: Attendance[] | null; error: unknown };
     if (error) throw error;
     if (!data) return [];
 
@@ -168,6 +168,7 @@ export function useReports() {
       'Check Out': att.check_out || 'N/A',
       'Status': att.status,
       'Hours Worked': att.check_in && att.check_out
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? Math.round(((new Date(`1970-01-01T${att.check_out}`) as any) - (new Date(`1970-01-01T${att.check_in}`) as any)) / 3600000 * 100) / 100
         : 0,
     }));
@@ -189,7 +190,7 @@ export function useReports() {
       query = query.eq('id', selectedDepartment);
     }
 
-    const { data, error } = await query as { data: DepartmentReport[] | null; error: any };
+    const { data, error } = await query as { data: DepartmentReport[] | null; error: unknown };
     if (error) throw error;
     if (!data) return [];
 
@@ -237,7 +238,7 @@ export function useReports() {
       query = query.eq('employees.department_id', selectedDepartment);
     }
 
-    const { data, error } = await query as { data: PayrollReport[] | null; error: any };
+    const { data, error } = await query as { data: PayrollReport[] | null; error: unknown };
     if (error) throw error;
     if (!data) return [];
 
@@ -258,15 +259,15 @@ export function useReports() {
     }));
   };
 
-  const downloadCSV = (data: any[], filename: string) => {
+  const downloadCSV = (data: unknown[], filename: string) => {
     if (data.length === 0) return;
 
-    const headers = Object.keys(data[0]);
+    const headers = Object.keys(data[0] as Record<string, unknown>);
     const csvContent = [
       headers.join(','),
       ...data.map(row =>
         headers.map(header => {
-          const value = row[header]?.toString() || '';
+          const value = (row as Record<string, unknown>)[header]?.toString() || '';
           return `"${value.replace(/"/g, '""')}"`;
         }).join(',')
       )
@@ -318,7 +319,7 @@ export function useReports() {
       } else {
         showNotification('warning', t('reports.noData'));
       }
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('reports.reportFailed'));
     } finally {
       setLoading(false);

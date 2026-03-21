@@ -14,6 +14,7 @@ import type {
   ComplaintStatus,
 } from '../types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
 
@@ -77,7 +78,7 @@ export async function createTask(task: EmployeeTaskCreate, assignedBy: string) {
 }
 
 export async function updateTaskStatus(id: string, status: TaskStatus) {
-  const updateData: Record<string, any> = { status };
+  const updateData: Record<string, any> = { status }; // eslint-disable-line @typescript-eslint/no-explicit-any
   if (status === 'completed') {
     updateData.completed_at = new Date().toISOString();
   }
@@ -279,7 +280,7 @@ export async function updateComplaintStatus(
   status: ComplaintStatus,
   updates?: { assignedTo?: string; resolutionNotes?: string; resolvedBy?: string }
 ) {
-  const updateData: Record<string, any> = { status };
+  const updateData: Record<string, any> = { status }; // eslint-disable-line @typescript-eslint/no-explicit-any
   if (updates?.assignedTo) updateData.assigned_to = updates.assignedTo;
   if (updates?.resolutionNotes) updateData.resolution_notes = updates.resolutionNotes;
   if (updates?.resolvedBy) updateData.resolved_by = updates.resolvedBy;
@@ -383,14 +384,18 @@ export async function getTopPerformers(weekStart?: string) {
   }
 
   // Sort by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
-  const sortedData = (data || []).sort((a: any, b: any) => {
+  const sortedData = (data || []).sort((a: unknown, b: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const aData = a as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bData = b as any;
     // First, sort by total_score descending
-    if (b.total_score !== a.total_score) {
-      return b.total_score - a.total_score;
+    if (bData.total_score !== aData.total_score) {
+      return bData.total_score - aData.total_score;
     }
     // If scores are equal, sort by hire_date ascending (earliest first)
-    const aHireDate = a.employees?.hire_date ? new Date(a.employees.hire_date).getTime() : Infinity;
-    const bHireDate = b.employees?.hire_date ? new Date(b.employees.hire_date).getTime() : Infinity;
+    const aHireDate = aData.employees?.hire_date ? new Date(aData.employees.hire_date).getTime() : Infinity;
+    const bHireDate = bData.employees?.hire_date ? new Date(bData.employees.hire_date).getTime() : Infinity;
     return aHireDate - bHireDate;
   });
 

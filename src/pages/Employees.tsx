@@ -43,7 +43,7 @@ export default function Employees() {
 
       if (error) throw error;
       setEmployees((data || []) as EmployeeListItem[]);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', 'Failed to load employees');
     } finally {
       setLoading(false);
@@ -85,8 +85,8 @@ export default function Employees() {
       }
       setDeleteModal({ open: false, employee: null, hasAccess: false });
       loadEmployees();
-    } catch (error: any) {
-      showNotification('error', error.message || t('employees.deleteFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || t('employees.deleteFailed'));
     } finally {
       setDeleting(false);
     }

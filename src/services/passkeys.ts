@@ -10,8 +10,8 @@ export interface PasskeyRegistrationResult {
 
 export interface PasskeyAuthenticationResult {
   success: boolean;
-  user?: any;
-  session?: any;
+  user?: unknown;
+  session?: unknown;
   error?: string;
 }
 
@@ -107,14 +107,14 @@ export async function registerPasskey(deviceName: string): Promise<PasskeyRegist
       credentialId: verificationData.credentialId
     };
 
-  } catch (error) {
-    const isAborted = error instanceof Error &&
-      (error.name === 'NotAllowedError' || error.message.includes('timed out') || error.message.includes('not allowed'));
+  } catch (_error) {
+    const isAborted = _error instanceof Error &&
+      (_error.name === 'NotAllowedError' || _error.message.includes('timed out') || _error.message.includes('not allowed'));
     return {
       success: false,
       error: isAborted
         ? 'Passkey registration was cancelled or timed out. Please try again.'
-        : (error instanceof Error ? error.message : 'Registration failed')
+        : (_error instanceof Error ? _error.message : 'Registration failed')
     };
   }
 }
@@ -240,10 +240,10 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
       session: verificationData.session
     };
 
-  } catch (error) {
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      const name = error.name.toLowerCase();
+  } catch (_error) {
+    if (_error instanceof Error) {
+      const message = _error.message.toLowerCase();
+      const name = _error.name.toLowerCase();
       
       // User cancelled or timed out
       if (name === 'notallowederror' || message.includes('timed out') || message.includes('not allowed') || message.includes('cancelled')) {
@@ -261,7 +261,7 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
         };
       }
       
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
     
     return { success: false, error: 'Authentication failed. Please try again.' };
@@ -339,10 +339,10 @@ export async function verifyPasskeyIdentity(email: string): Promise<PasskeyVerif
     // the caller already has an active session and only needs identity confirmation.
     return { success: true };
 
-  } catch (error) {
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      const name = error.name.toLowerCase();
+  } catch (_error) {
+    if (_error instanceof Error) {
+      const message = _error.message.toLowerCase();
+      const name = _error.name.toLowerCase();
 
       if (name === 'notallowederror' || message.includes('timed out') || message.includes('not allowed') || message.includes('cancelled')) {
         return { success: false, error: 'Passkey verification was cancelled or timed out. Please try again.' };
@@ -350,7 +350,7 @@ export async function verifyPasskeyIdentity(email: string): Promise<PasskeyVerif
       if (name === 'typeerror' || message.includes('failed to fetch') || message.includes('network')) {
         return { success: false, error: 'Network error. Please check your connection and try again.' };
       }
-      return { success: false, error: error.message };
+      return { success: false, error: _error.message };
     }
     return { success: false, error: 'Verification failed. Please try again.' };
   }
@@ -368,7 +368,7 @@ export async function getUserPasskeys(): Promise<Passkey[]> {
     }
 
     return (data || []) as Passkey[];
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -385,7 +385,7 @@ export async function deletePasskey(passkeyId: string): Promise<boolean> {
     }
 
     return true;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }

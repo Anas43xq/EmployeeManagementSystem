@@ -117,8 +117,8 @@ export function usePayroll() {
       } else {
         throw new Error(result.message);
       }
-    } catch (error: any) {
-      showNotification('error', error.message || t('payroll.generationFailed', 'Failed to generate payroll'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('payroll.generationFailed', 'Failed to generate payroll')));
     } finally {
       setGenerating(false);
     }
@@ -147,8 +147,8 @@ export function usePayroll() {
       } else {
         throw new Error('Failed to approve payrolls');
       }
-    } catch (error: any) {
-      showNotification('error', error.message || t('payroll.approvalFailed', 'Failed to approve payroll records'));
+    } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      showNotification('error', (_error as Error).message || t('payroll.approvalFailed', 'Failed to approve payroll records'));
     } finally {
       setApproving(false);
     }
@@ -203,8 +203,8 @@ export function usePayroll() {
       } else {
         throw new Error('Failed to mark payrolls as paid');
       }
-    } catch (error: any) {
-      showNotification('error', error.message || t('payroll.markAsPaidFailed', 'Failed to mark payroll records as paid'));
+    } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      showNotification('error', (_error as Error).message || t('payroll.markAsPaidFailed', 'Failed to mark payroll records as paid'));
     } finally {
       setPaying(false);
     }

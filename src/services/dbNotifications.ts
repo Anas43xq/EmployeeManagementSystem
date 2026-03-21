@@ -83,6 +83,7 @@ export async function createNotification(
       type,
     };
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('notifications') as any).insert(record);
 
     if (!error) {
@@ -117,6 +118,7 @@ export async function createNotifications(
     }));
 
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('notifications') as any).insert(records);
 
     if (!error) {
@@ -149,6 +151,7 @@ export async function notifyHRAndAdmins(
       rpcParams.p_exclude_user_id = excludeUserId;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: rpcError } = await (supabase.rpc as any)('notify_role_users', rpcParams);
 
     if (rpcError) return;
@@ -162,6 +165,7 @@ export async function notifyHRAndAdmins(
           emailRpcParams.p_exclude_user_id = excludeUserId;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', emailRpcParams);
 
         if (!emailError && emailData) {
@@ -199,7 +203,7 @@ export async function fetchUnreadNotifications(
     }
 
     return (data || []) as DbNotification[];
-  } catch (err) {
+  } catch (_err) {
     return [];
   }
 }
@@ -221,7 +225,7 @@ export async function fetchNotifications(
     }
 
     return (data || []) as DbNotification[];
-  } catch (err) {
+  } catch (_err) {
     return [];
   }
 }
@@ -236,7 +240,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
 
     if (error) {
     }
-  } catch (err) {
+  } catch (_err) {
   }
 }
 
@@ -251,7 +255,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 
     if (error) {
     }
-  } catch (err) {
+  } catch (_err) {
   }
 }
 
@@ -264,6 +268,6 @@ export async function deleteNotification(notificationId: string): Promise<void> 
 
     if (error) {
     }
-  } catch (err) {
+  } catch (_err) {
   }
 }

@@ -61,7 +61,7 @@ export default function AnnouncementFormModal({
             <FormField label={t('announcements.priority')}>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as unknown as 'low' | 'normal' | 'high' | 'urgent' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="low">{t('announcements.low')}</option>

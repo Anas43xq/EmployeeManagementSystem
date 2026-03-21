@@ -63,8 +63,8 @@ export default function PhotoUpload({
       lastUploadedUrlRef.current = publicUrl;
       setPreviewUrl(publicUrl);
       onPhotoChange(publicUrl);
-    } catch (err) {
-      const msg = (err as Error).message;
+    } catch (_err) {
+      const msg = (_err as Error).message;
       if (msg.includes('Storage not configured')) {
         alert(t('employees.photoBucketNotConfigured', 'Storage not configured'));
       } else {

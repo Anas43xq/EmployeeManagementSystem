@@ -35,12 +35,13 @@ export default function AnnouncementsWidget() {
         .match({ is_active: true })
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(6) as any) as { data: Announcement[] | null; error: any };
+        .limit(6) as unknown) as { data: Announcement[] | null; error: unknown };
 
       if (error) throw error;
 
       setAnnouncements(data || []);
-    } catch (err) {
+    } catch (_) {
+      // silently fail
     } finally {
       setLoading(false);
     }

@@ -5,8 +5,10 @@ type CacheEntry<T> = {
   expiresAt: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const pendingRequests = new Map<string, Promise<any>>();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const cache = new Map<string, CacheEntry<any>>();
 
 const DEFAULT_TTL_MS = 30 * 1000;
@@ -26,13 +28,13 @@ function getTTLMs(ttl: CacheTTL): number {
   }
 }
 
-export function createCacheKey(table: string, query: Record<string, any>): string {
+export function createCacheKey(table: string, query: Record<string, any>): string { // eslint-disable-line @typescript-eslint/no-explicit-any
   const sortedQuery = Object.keys(query)
     .sort()
     .reduce((acc, key) => {
       acc[key] = query[key];
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
   
   return `${table}:${JSON.stringify(sortedQuery)}`;
 }
@@ -110,10 +112,10 @@ export async function cachedQuery<T>(
   return promise;
 }
 
-const batchQueue = new Map<string, {
-  resolve: (value: any) => void;
-  reject: (error: any) => void;
-}[]>();
+const batchQueue = new Map<string, Array<{
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
+}>>();
 
 let batchTimeout: ReturnType<typeof setTimeout> | null = null;
 const BATCH_DELAY_MS = 10;
@@ -128,11 +130,11 @@ export function batchedQuery<T>(
     return Promise.resolve(cached);
   }
   
-  return new Promise((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     if (!batchQueue.has(key)) {
       batchQueue.set(key, []);
     }
-    batchQueue.get(key)!.push({ resolve, reject });
+    batchQueue.get(key)!.push({ resolve: resolve as (value: unknown) => void, reject });
     
     if (!batchTimeout) {
       batchTimeout = setTimeout(async () => {
@@ -146,8 +148,8 @@ export function batchedQuery<T>(
             try {
               const result = await cachedQuery(batchKey, queryFn, options);
               callbacks.forEach(cb => cb.resolve(result));
-            } catch (error) {
-              callbacks.forEach(cb => cb.reject(error));
+            } catch (_error) {
+              callbacks.forEach(cb => cb.reject(_error));
             }
           })
         );

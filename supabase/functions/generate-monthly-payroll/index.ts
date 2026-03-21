@@ -362,8 +362,8 @@ serve(async (req) => {
 });
 
 async function calculateEmployeePayroll(
-  supabaseClient: any,
-  employee: any,
+  supabaseClient: unknown,
+  employee: unknown,
   month: number,
   year: number
 ): Promise<PayrollCalculation> {

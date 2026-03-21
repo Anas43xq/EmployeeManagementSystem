@@ -32,6 +32,7 @@ export function useDepartments() {
   const loadDepartments = async () => {
     try {
       const { data, error } = await (db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('departments') as any)
         .select(`
           *,
@@ -41,7 +42,7 @@ export function useDepartments() {
 
       if (error) throw error;
       setDepartments(data || []);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', 'Failed to load departments');
     } finally {
       setLoading(false);
@@ -51,6 +52,7 @@ export function useDepartments() {
   const loadEmployees = async () => {
     try {
       const { data, error } = await (db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('employees') as any)
         .select('id, first_name, last_name')
         .eq('status', 'active')
@@ -58,7 +60,7 @@ export function useDepartments() {
 
       if (error) throw error;
       setEmployees(data || []);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
   };
@@ -89,7 +91,7 @@ export function useDepartments() {
 
     setSubmitting(true);
     try {
-      const payload: any = {
+      const payload = {
         name: formData.name.trim(),
         type: formData.type,
         description: formData.description.trim(),
@@ -98,6 +100,7 @@ export function useDepartments() {
 
       if (editingDept) {
         const { error } = await (db
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('departments') as any)
           .update(payload)
           .eq('id', editingDept.id);
@@ -113,6 +116,7 @@ export function useDepartments() {
         }
       } else {
         const { data, error } = await (db
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('departments') as any)
           .insert(payload)
           .select()
@@ -131,8 +135,8 @@ export function useDepartments() {
 
       setShowModal(false);
       loadDepartments();
-    } catch (error: any) {
-      showNotification('error', error.message || 'Failed to save department');
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || 'Failed to save department');
     } finally {
       setSubmitting(false);
     }
@@ -149,6 +153,7 @@ export function useDepartments() {
 
     try {
       const { error } = await (db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('departments') as any)
         .delete()
         .eq('id', dept.id);
@@ -163,8 +168,8 @@ export function useDepartments() {
       }
 
       loadDepartments();
-    } catch (error: any) {
-      showNotification('error', error.message || 'Failed to delete department');
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || 'Failed to delete department');
     }
   };
 

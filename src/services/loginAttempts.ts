@@ -105,8 +105,8 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+  } catch (_err: unknown) {
+    const message = _err instanceof Error ? _err.message : 'Unknown error';
     return { error: message };
   }
 }
@@ -137,8 +137,8 @@ export async function verifyLoginOtp(
     }
 
     return { success: false, error: 'OTP verification failed' };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+  } catch (_err: unknown) {
+    const message = _err instanceof Error ? _err.message : 'Unknown error';
     return { success: false, error: message };
   }
 }

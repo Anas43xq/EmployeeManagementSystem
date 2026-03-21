@@ -34,7 +34,8 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     setIsResetting(true);
     try {
       await resetSession();
-    } catch {
+    } catch (_) {
+      // silently fail
     } finally {
       setIsResetting(false);
     }

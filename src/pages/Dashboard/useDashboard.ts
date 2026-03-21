@@ -67,7 +67,7 @@ export function useDashboard() {
         db.from('departments').select('id, name'),
       ]);
 
-      const activeEmployees = employeesRes.data?.filter((e: any) => e.status === 'active').length || 0;
+      const activeEmployees = employeesRes.data?.filter((e: unknown) => (e as any).status === 'active').length || 0; // eslint-disable-line @typescript-eslint/no-explicit-any
 
       setStats({
         totalEmployees: employeesRes.count || 0,
@@ -82,13 +82,15 @@ export function useDashboard() {
       setRecentActivities(activitiesRes.data || []);
 
       const deptMap: { [key: string]: string } = {};
-      departmentNamesRes.data?.forEach((dept: any) => {
-        deptMap[dept.id] = dept.name;
+      departmentNamesRes.data?.forEach((dept: unknown) => {
+        const deptData = dept as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        deptMap[deptData.id] = deptData.name;
       });
 
       const deptCounts: { [key: string]: number } = {};
-      departmentEmployeesRes.data?.forEach((emp: any) => {
-        const deptName = emp.department_id ? (deptMap[emp.department_id] || 'Unassigned') : 'Unassigned';
+      departmentEmployeesRes.data?.forEach((emp: unknown) => {
+        const empData = emp as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        const deptName = empData.department_id ? (deptMap[empData.department_id] || 'Unassigned') : 'Unassigned';
         deptCounts[deptName] = (deptCounts[deptName] || 0) + 1;
       });
 
@@ -112,7 +114,7 @@ export function useDashboard() {
         }));
       setLeaveStatusData(leaveData);
 
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoading(false);
     }

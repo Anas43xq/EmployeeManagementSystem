@@ -67,7 +67,7 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    const info = await transporter.sendMail({
+    const _info = await transporter.sendMail({
       from: fromEmail,
       to: to,
       subject: subject,

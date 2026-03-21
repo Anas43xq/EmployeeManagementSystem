@@ -18,7 +18,7 @@ export default function PerformanceChartWidget() {
     try {
       const data = await getTopPerformers();
       setTopPerformers(data.slice(0, 5)); // Top 5 performers
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoading(false);
     }

@@ -34,8 +34,8 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
 
       showNotification('success', t('auth.resetEmailSent'));
       onBack();
-    } catch (err: any) {
-      setError(err.message || t('auth.resetEmailFailed'));
+    } catch (err: Error | unknown) {
+      setError((err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in err ? String(err.message) : '') || t('auth.resetEmailFailed'));
       showNotification('error', t('auth.resetEmailFailed'));
     } finally {
       setResetLoading(false);

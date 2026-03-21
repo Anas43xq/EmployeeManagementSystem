@@ -39,7 +39,7 @@ export function useWarnings() {
       const filters = isStaff && user?.employeeId ? { employeeId: user.employeeId } : undefined;
       const data = await getWarnings(filters);
       setWarnings(data);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('warnings.loadFailed'));
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ export function useWarnings() {
 
       if (error) throw error;
       setEmployees(data || []);
-    } catch (error) {
+    } catch (_error) {
     }
   }, [isStaff]);
 
@@ -122,7 +122,7 @@ export function useWarnings() {
         .from('users')
         .select('id')
         .eq('employee_id', formData.employee_id)
-        .maybeSingle() as { data: { id: string } | null; error: any };
+        .maybeSingle() as { data: { id: string } | null; error: unknown };
 
       if (!userLookupError && targetUser) {
         await createWarningNotification(targetUser.id, formData.severity);
@@ -131,8 +131,8 @@ export function useWarnings() {
       showNotification('success', t('warnings.createSuccess'));
       handleCloseModal();
       loadWarnings();
-    } catch (error: any) {
-      showNotification('error', error.message || t('warnings.createFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('warnings.createFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -146,8 +146,8 @@ export function useWarnings() {
       }
       showNotification('success', t('warnings.acknowledged'));
       loadWarnings();
-    } catch (error: any) {
-      showNotification('error', error.message || t('warnings.acknowledgeFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('warnings.acknowledgeFailed')));
     }
   };
 
@@ -173,8 +173,8 @@ export function useWarnings() {
       setSelectedWarning(null);
       setResolutionNotes('');
       loadWarnings();
-    } catch (error: any) {
-      showNotification('error', error.message || t('warnings.resolveFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('warnings.resolveFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -188,8 +188,8 @@ export function useWarnings() {
       }
       showNotification('success', t('warnings.deleteSuccess'));
       loadWarnings();
-    } catch (error: any) {
-      showNotification('error', error.message || t('warnings.deleteFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('warnings.deleteFailed')));
     }
   };
 

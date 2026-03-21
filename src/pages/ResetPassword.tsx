@@ -72,7 +72,7 @@ export default function ResetPassword() {
         showNotification('error', t('resetPassword.invalidLink'));
         setValidating(false);
         setTimeout(() => navigate('/login'), 3000);
-      } catch (error) {
+      } catch (_error) {
         showNotification('error', t('resetPassword.invalidLink'));
         setValidating(false);
         setTimeout(() => navigate('/login'), 3000);
@@ -156,13 +156,12 @@ export default function ResetPassword() {
 
       await supabase.auth.signOut();
       navigate('/login', { state: { successMessage: t('resetPassword.passwordChanged') } });
-    } catch (error: any) {
-
-      if (error.message?.includes('Invalid Refresh Token')) {
+    } catch (_error: unknown) {
+      if ((_error as Error).message?.includes('Invalid Refresh Token')) {
         showNotification('error', t('resetPassword.sessionExpired'));
         setTimeout(() => navigate('/login'), 2000);
       } else {
-        showNotification('error', error.message || t('resetPassword.failedToChange'));
+        showNotification('error', (_error as Error).message || t('resetPassword.failedToChange'));
       }
     } finally {
       setLoading(false);

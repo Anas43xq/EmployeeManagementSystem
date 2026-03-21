@@ -68,7 +68,7 @@ export function useAttendance() {
 
       if (error) throw error;
       setEmployees(data || []);
-    } catch (err) {
+    } catch (_err) {
     }
   };
 
@@ -95,7 +95,7 @@ export function useAttendance() {
 
       if (error) throw error;
       setAttendanceRecords(data || []);
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoading(false);
     }
@@ -127,6 +127,7 @@ export function useAttendance() {
         date: today,
         check_in: time,
         status: 'present' as const,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       if (error) throw error;
@@ -141,7 +142,7 @@ export function useAttendance() {
       if (selectedDate === today) {
         loadAttendance();
       }
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('attendance.checkInFailed'));
     }
   };
@@ -155,6 +156,7 @@ export function useAttendance() {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('attendance') as any)
         .update({ check_out: time })
         .eq('id', recordId)
@@ -170,7 +172,7 @@ export function useAttendance() {
       });
 
       loadAttendance();
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('attendance.checkOutFailed'));
     }
   };
@@ -213,6 +215,7 @@ export function useAttendance() {
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('attendance') as any).insert({
         employee_id: formData.employee_id,
         date: formData.date,
@@ -236,8 +239,8 @@ export function useAttendance() {
       if (formData.date === selectedDate) {
         loadAttendance();
       }
-    } catch (err: any) {
-      setError(err.message || t('attendance.failedToAdd'));
+    } catch (_err: unknown) {
+      setError((_err as Error).message || t('attendance.failedToAdd'));
     } finally {
       setSubmitting(false);
     }

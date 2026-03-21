@@ -41,11 +41,12 @@ export function useAnnouncements() {
       const { data, error } = await (db
         .from('announcements')
         .select('*')
-        .order('created_at', { ascending: false }) as any) as { data: Announcement[] | null; error: any };
+        .order('created_at', { ascending: false }) as unknown) as { data: Announcement[] | null; error: unknown };
 
       if (error) throw error;
       setAnnouncements(data || []);
-    } catch (err) {
+    } catch (_) {
+      // silently fail
     } finally {
       setLoading(false);
     }
@@ -106,6 +107,7 @@ export function useAnnouncements() {
 
       if (editingAnnouncement) {
         const { error } = await (db
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('announcements') as any)
           .update(announcementData)
           .eq('id', editingAnnouncement.id);
@@ -119,6 +121,7 @@ export function useAnnouncements() {
         }
       } else {
         const { data, error } = await (db
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('announcements') as any)
           .insert(announcementData)
           .select()
@@ -135,8 +138,8 @@ export function useAnnouncements() {
 
       setShowModal(false);
       loadAnnouncements();
-    } catch (err: any) {
-      setError(err.message || t('announcements.saveFailed'));
+    } catch (_err: unknown) {
+      setError(((_err as Error)?.message) || t('announcements.saveFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -159,6 +162,7 @@ export function useAnnouncements() {
       const { error } = await (db
         .from('announcements')
         .delete()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .eq('id', id) as any);
 
       if (error) throw error;
@@ -169,7 +173,7 @@ export function useAnnouncements() {
 
       setPendingDeleteId(null);
       loadAnnouncements();
-    } catch (err: any) {
+    } catch (_) {
       // Error silently handled
     } finally {
       setDeleting(false);
@@ -179,6 +183,7 @@ export function useAnnouncements() {
   const toggleActive = async (announcement: Announcement) => {
     try {
       const { error } = await (db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('announcements') as any)
         .update({ is_active: !announcement.is_active })
         .eq('id', announcement.id);
@@ -192,7 +197,8 @@ export function useAnnouncements() {
       }
 
       loadAnnouncements();
-    } catch (err: any) {
+    } catch (_) {
+      // Error silently handled
     }
   };
 

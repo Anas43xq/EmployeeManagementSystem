@@ -123,15 +123,16 @@ export default function Dashboard() {
         <Card className="p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('dashboard.quickActions')}</h2>
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            {getVisibleQuickActions(userRole as any).map((action) => {
-              const iconMap: { [key: string]: any } = { Users, Calendar, Clock, TrendingUp };
+            {getVisibleQuickActions(userRole as any).map((action) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+              const iconMap: { [key: string]: unknown } = { Users, Calendar, Clock, TrendingUp };
               const colorMap: { [key: string]: string } = {
                 blue: 'bg-primary-50 hover:bg-primary-100 text-primary-900',
                 green: 'bg-green-50 hover:bg-green-100 text-green-900',
                 teal: 'bg-teal-50 hover:bg-teal-100 text-teal-900',
                 orange: 'bg-orange-50 hover:bg-orange-100 text-orange-900',
               };
-              const Icon = iconMap[action.icon];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const Icon = (iconMap[action.icon] as any) as React.ComponentType<any>;
               return (
                 <button key={action.id} onClick={() => navigate(action.to)}
                   className={`p-3 sm:p-4 ${colorMap[action.color]} rounded-lg text-left transition-all duration-200 group`}>

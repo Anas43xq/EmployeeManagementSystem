@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
@@ -12,7 +12,7 @@ import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
 export type { AuthUser } from '../services/authHelpers';
 import type { AuthUser, UserRole } from '../services/authHelpers';
 
-// ── User data cache ───────────────────────────────────────────────────────────
+// -- User data cache -----------------------------------------------------------
 const userDataCache = new Map<string, { data: AuthUser; timestamp: number }>();
 const USER_CACHE_TTL = 60000; // 1 minute
 
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const visibilityCheckRef = useRef(false);
   const lastVisibilityCheckRef = useRef(0);
 
-  // ── Load user data from DB (with in-memory cache) ─────────────────────────
+  // -- Load user data from DB (with in-memory cache) -------------------------
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
     const cached = userDataCache.get(authUser.id);
     if (cached && Date.now() - cached.timestamp < USER_CACHE_TTL) return cached.data;
@@ -72,8 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       userDataCache.set(authUser.id, { data: userData, timestamp: Date.now() });
       return userData;
-    } catch (error) {
-      if ((error as Error).message === 'Your account has been banned') throw error;
+    } catch (_error) {
+      if ((_error as Error).message === 'Your account has been banned') throw _error;
       return { id: authUser.id, email: authUser.email || '', role: 'staff', employeeId: null, is_active: false };
     } finally {
       loadingUserRef.current = null;
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearCache = useCallback(() => { userDataCache.clear(); }, []);
 
-  // ── Session init, auth state listener, visibility token refresh ───────────
+  // -- Session init, auth state listener, visibility token refresh -----------
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -98,10 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         const userData = await loadUserData(session.user);
         if (mounted && userData) setUser(userData);
-      } catch (error) {
-        if ((error as Error).message === 'Your account has been deactivated') {
+      } catch (_error) {
+        if ((_error as Error).message === 'Your account has been deactivated') {
           if (mounted) setUser(null);
-        } else if (isRefreshTokenError(error as Error)) {
+        } else if (isRefreshTokenError(_error as Error)) {
           await clearAuthState();
         }
       } finally {
@@ -118,8 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const userData = await loadUserData(session.user);
           if (mounted && userData) setUser(userData);
-        } catch (err) {
-          if ((err as Error).message === 'Your account has been deactivated' && mounted) setUser(null);
+        } catch (_err) {
+          if ((_err as Error).message === 'Your account has been deactivated' && mounted) setUser(null);
         }
       }
     });
@@ -143,8 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         if (isTransientError(refreshError) || refreshData?.session) return;
         if (isRefreshTokenError(refreshError) && mounted) { clearCache(); setUser(null); }
-      } catch (err) {
-        if (isRefreshTokenError(err as Error) && mounted) { clearCache(); setUser(null); }
+      } catch (_err) {
+        if (isRefreshTokenError(_err as Error) && mounted) { clearCache(); setUser(null); }
       } finally {
         visibilityCheckRef.current = false;
       }
@@ -159,13 +159,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadUserData, clearCache]);
 
-  // ── Inactivity auto-logout ────────────────────────────────────────────────
+  // -- Inactivity auto-logout ------------------------------------------------
   const handleInactivityLogout = useCallback(() => {
     clearCache(); clearAllCache(); setUser(null);
   }, [clearCache]);
   useInactivityLogout(user, handleInactivityLogout);
 
-  // ── Single-session enforcement + ban/deactivation ─────────────────────────
+  // -- Single-session enforcement + ban/deactivation -------------------------
   const handleForceLogout = useCallback(async () => {
     clearCache(); clearAllCache();
     localStorage.removeItem('ems_session_token');
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useSessionEnforcement({ userId: user?.id, onForceLogout: handleForceLogout, onDeactivate: handleDeactivate });
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // -- Actions ---------------------------------------------------------------
   const resetSession = useCallback(async () => {
     setLoading(true);
     try {
@@ -224,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     if (user) {
       logActivity(user.id, 'user_logout', 'user', user.id);
-      await supabase.rpc('clear_own_session_token'); // SECURITY DEFINER — bypasses RLS
+      await supabase.rpc('clear_own_session_token'); // SECURITY DEFINER � bypasses RLS
     }
     localStorage.removeItem('ems_session_token');
     clearCache(); clearAllCache(); resetSessionHealth(); clearLastActivity();
@@ -240,6 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');

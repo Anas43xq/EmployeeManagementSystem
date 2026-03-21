@@ -51,8 +51,8 @@ export default function PerformanceCalculationStatus() {
       const now = new Date().toLocaleString();
       setLastCalculation(now);
       showNotification('success', `Performance calculated for week starting ${weekStart}`);
-    } catch (err) {
-      showNotification('error', 'Failed to calculate performance: ' + (err as Error).message);
+    } catch (_err) {
+      showNotification('error', 'Failed to calculate performance: ' + (_err as Error).message);
     } finally {
       setIsCalculating(false);
     }

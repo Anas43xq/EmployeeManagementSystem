@@ -125,8 +125,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       setGrantAccessForm({ employee_id: '', password: '', role: 'staff' });
       loadUsers();
       loadEmployeesWithoutAccess();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToGrantAccess'));
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || t('userManagement.failedToGrantAccess'));
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +138,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
     setSubmitting(true);
     try {
-      const { error } = await (db.from('users') as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (db.from('users') as unknown as any)
         .update({
           role: editForm.role,
           updated_at: new Date().toISOString(),
@@ -160,8 +161,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       setShowEditModal(false);
       setSelectedUser(null);
       loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToUpdate'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToUpdate')));
     } finally {
       setSubmitting(false);
     }
@@ -197,8 +198,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       setSelectedUser(null);
       loadUsers();
       loadEmployeesWithoutAccess();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToRevokeAccess'));
+    } catch (_error: unknown) {
+      showNotification('error', (_error as Error).message || t('userManagement.failedToUpdate'));
     } finally {
       setSubmitting(false);
     }
@@ -227,8 +228,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
       setShowResetPasswordModal(false);
       setSelectedUser(null);
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToResetPassword'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToResetPassword')));
     } finally {
       setSubmitting(false);
     }
@@ -263,8 +264,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       setShowBanModal(false);
       setSelectedUser(null);
       loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToBan'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToBan')));
     } finally {
       setSubmitting(false);
     }
@@ -292,8 +293,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       setShowUnbanModal(false);
       setSelectedUser(null);
       loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToUnban'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToUnban')));
     } finally {
       setSubmitting(false);
     }
@@ -322,8 +323,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       }
 
       loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToDeactivate'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToDeactivate')));
     } finally {
       setSubmitting(false);
     }
@@ -347,8 +348,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       }
 
       loadUsers();
-    } catch (error: any) {
-      showNotification('error', error.message || t('userManagement.failedToActivate'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToActivate')));
     } finally {
       setSubmitting(false);
     }

@@ -15,6 +15,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     lock: (async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => {
       return fn();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any,
     storage: localStorage,
     storageKey: 'ems-auth-token',
@@ -22,4 +23,5 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = supabase as any;

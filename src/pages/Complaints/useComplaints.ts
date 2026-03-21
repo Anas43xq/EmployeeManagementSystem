@@ -37,7 +37,7 @@ export function useComplaints() {
       const filters = isStaff && user?.employeeId ? { employeeId: user.employeeId } : undefined;
       const data = await getComplaints(filters);
       setComplaints(data);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('complaints.loadFailed'));
     } finally {
       setLoading(false);
@@ -120,8 +120,8 @@ export function useComplaints() {
       showNotification('success', t('complaints.createSuccess'));
       handleCloseModal();
       loadComplaints();
-    } catch (error: any) {
-      showNotification('error', error.message || t('complaints.createFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('complaints.createFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -137,8 +137,8 @@ export function useComplaints() {
       logActivity(user.id, 'complaint_reviewed', 'complaint', complaintId);
       showNotification('success', t('complaints.underReview'));
       loadComplaints();
-    } catch (error: any) {
-      showNotification('error', error.message || t('complaints.reviewFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('complaints.reviewFailed')));
     }
   };
 
@@ -167,7 +167,7 @@ export function useComplaints() {
         .from('users')
         .select('id')
         .eq('employee_id', selectedComplaint.employee_id)
-        .maybeSingle() as { data: { id: string } | null; error: any };
+        .maybeSingle() as { data: { id: string } | null; error: unknown };
 
       if (!userLookupError && employeeUser) {
         await createNotification(
@@ -184,8 +184,8 @@ export function useComplaints() {
       setSelectedComplaint(null);
       setResolutionNotes('');
       loadComplaints();
-    } catch (error: any) {
-      showNotification('error', error.message || t('complaints.resolveFailed'));
+    } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      showNotification('error', (_error as Error).message || t('complaints.resolveFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -199,8 +199,8 @@ export function useComplaints() {
       }
       showNotification('success', t('complaints.deleteSuccess'));
       loadComplaints();
-    } catch (error: any) {
-      showNotification('error', error.message || t('complaints.deleteFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('complaints.deleteFailed')));
     }
   };
 

@@ -29,6 +29,7 @@ export default function Login() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const successMessage = (location.state as any)?.successMessage as string | undefined;
   const isRTL = i18n.language === 'ar';
 
@@ -74,13 +75,12 @@ export default function Login() {
       await signIn(email, password);
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      const errorMessage: string = err?.message || '';
+    } catch (err: Error | unknown) {
+      const errorMessage: string = (err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in err ? String(err.message) : '') || '';
 
       if (errorMessage === 'EMAIL_NOT_FOUND') {
         setError(t('auth.emailNotFound'));
-        showNotification('error', t('auth.emailNotFound'));
-
+          showNotification('error', t('auth.emailNotFound'));
       } else if (errorMessage === 'REQUIRES_OTP_NEW') {
         // Just hit 5 failures — send OTP email then show OTP screen
         await triggerOtpFlow(email);

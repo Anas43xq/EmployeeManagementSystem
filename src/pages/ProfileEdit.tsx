@@ -75,7 +75,7 @@ export default function ProfileEdit() {
 
       showNotification('success', t('profile.updateSuccess'));
       navigate('/profile');
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('profile.updateFailed'));
     } finally {
       setSaving(false);

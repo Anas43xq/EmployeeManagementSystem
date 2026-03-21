@@ -83,6 +83,7 @@ export function useLeaves() {
       if (data) {
         setLeaveBalance(data);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: newBalance, error: insertError } = await (db.from('leave_balances') as any)
           .insert({
             employee_id: user.employeeId, year: currentYear,
@@ -142,6 +143,7 @@ export function useLeaves() {
         const newValue = action === 'add'
           ? (rec[fieldToUpdate] || 0) + days
           : Math.max(0, (rec[fieldToUpdate] || 0) - days);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db.from('leave_balances') as any)
           .update({ [fieldToUpdate]: newValue })
           .eq('employee_id', employeeId)
@@ -169,10 +171,14 @@ export function useLeaves() {
         .lte('start_date', endDate)
         .gte('end_date', startDate);
       if (error) { setLeaveConflicts([]); return []; }
-      const conflicts: LeaveConflict[] = (data || []).map((leave: any) => ({
-        id: leave.id, leave_type: leave.leave_type,
-        start_date: leave.start_date, end_date: leave.end_date, status: leave.status,
-      }));
+      const conflicts: LeaveConflict[] = (data || []).map((leave: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const leaveData = leave as any;
+        return {
+          id: leaveData.id, leave_type: leaveData.leave_type,
+          start_date: leaveData.start_date, end_date: leaveData.end_date, status: leaveData.status,
+        };
+      });
       setLeaveConflicts(conflicts);
       return conflicts;
     } catch {
@@ -205,6 +211,7 @@ export function useLeaves() {
         .from('employees').select('first_name, last_name').eq('id', user.employeeId).single() as
         { data: { first_name: string; last_name: string } | null };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('leaves') as any)
         .insert({
           employee_id: user.employeeId, leave_type: formData.leave_type,
@@ -247,6 +254,7 @@ export function useLeaves() {
       if (leave.status === 'approved') { showNotification('info', 'Leave request is already approved'); return; }
       if (leave.status !== 'pending') { showNotification('error', 'Can only approve pending leave requests'); return; }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('leaves') as any)
         .update({ status: 'approved', approved_by: user?.id, approved_at: new Date().toISOString() })
         .eq('id', leaveId).eq('status', 'pending');
@@ -260,7 +268,7 @@ export function useLeaves() {
 
       const { data: employeeUser, error: userLookupError } = await db
         .from('users').select('id').eq('employee_id', leave.employee_id).single() as
-        { data: { id: string } | null; error: any };
+        { data: { id: string } | null; error: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!userLookupError && employeeUser) {
         await createNotification(employeeUser.id, 'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
@@ -283,6 +291,7 @@ export function useLeaves() {
       if (leave.status === 'rejected') { showNotification('info', 'Leave request is already rejected'); return; }
       if (leave.status !== 'pending') { showNotification('error', 'Can only reject pending leave requests'); return; }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (db.from('leaves') as any)
         .update({ status: 'rejected', approved_by: user?.id, approved_at: new Date().toISOString() })
         .eq('id', leaveId).eq('status', 'pending');
@@ -295,7 +304,7 @@ export function useLeaves() {
 
       const { data: employeeUser, error: userLookupError } = await db
         .from('users').select('id').eq('employee_id', leave.employee_id).single() as
-        { data: { id: string } | null; error: any };
+        { data: { id: string } | null; error: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!userLookupError && employeeUser) {
         await createNotification(employeeUser.id, 'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,

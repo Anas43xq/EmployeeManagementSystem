@@ -19,7 +19,7 @@ export default function EmployeeOfWeekWidget() {
     try {
       const data = await getEmployeeOfWeek();
       setEmployeeOfWeek(data);
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoading(false);
     }

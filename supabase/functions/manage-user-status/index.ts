@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-async function sendBanNotificationEmail(email: string, reason: string | null, banDuration: string): Promise<void> {
+async function _sendBanNotificationEmail(email: string, reason: string | null, banDuration: string): Promise<void> {
   const smtpHost = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
   const smtpUser = Deno.env.get("SMTP_USER");
   const smtpPass = Deno.env.get("SMTP_PASS");

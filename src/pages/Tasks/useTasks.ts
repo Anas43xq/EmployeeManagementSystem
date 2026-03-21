@@ -39,7 +39,7 @@ export function useTasks() {
       const filters = isStaff && user?.employeeId ? { employeeId: user.employeeId } : undefined;
       const data = await getTasks(filters);
       setTasks(data);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('tasks.loadFailed'));
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ export function useTasks() {
 
       if (error) throw error;
       setEmployees(data || []);
-    } catch (error) {
+    } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
   }, [isStaff, showNotification, t]);
@@ -150,7 +150,7 @@ export function useTasks() {
           .from('users')
           .select('id')
           .eq('employee_id', formData.employee_id)
-          .maybeSingle() as { data: { id: string } | null; error: any };
+          .maybeSingle() as { data: { id: string } | null; error: unknown };
 
         if (!userLookupError && targetUser) {
           await createTaskNotification(targetUser.id, formData.title, 'assigned');
@@ -161,8 +161,8 @@ export function useTasks() {
 
       handleCloseModal();
       loadTasks();
-    } catch (error: any) {
-      showNotification('error', error.message || t('tasks.saveFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('tasks.deleteFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -196,8 +196,8 @@ export function useTasks() {
       }
 
       loadTasks();
-    } catch (error: any) {
-      showNotification('error', error.message || t('tasks.statusUpdateFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('tasks.statusUpdateFailed')));
     } finally {
       setProcessingTasks(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
@@ -213,8 +213,8 @@ export function useTasks() {
       }
       showNotification('success', t('tasks.deleteSuccess'));
       loadTasks();
-    } catch (error: any) {
-      showNotification('error', error.message || t('tasks.deleteFailed'));
+    } catch (_error: unknown) {
+      showNotification('error', ((_error as Error)?.message || t('tasks.deleteFailed')));
     } finally {
       setProcessingTasks(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }

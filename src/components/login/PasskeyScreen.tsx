@@ -39,14 +39,15 @@ export default function PasskeyScreen({ onBack }: PasskeyScreenProps) {
           setError(result.error || t('auth.passkeyLoginFailed'));
         }
       }
-    } catch (err: any) {
-      const msg = err.message?.toLowerCase() || '';
+    } catch (err: Error | unknown) {
+      const msg = (err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in err ? String(err.message) : '')?.toLowerCase() || '';
+      const errMessage = (err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in err ? String(err.message) : '');
       if (msg.includes('banned') || msg.includes('user is banned')) {
         setError(t('auth.accountBanned'));
         showNotification('error', t('auth.accountBanned'));
       } else {
-        setError(err.message || t('auth.passkeyLoginFailed'));
-        showNotification('error', err.message || t('auth.passkeyLoginFailed'));
+        setError(errMessage || t('auth.passkeyLoginFailed'));
+        showNotification('error', errMessage || t('auth.passkeyLoginFailed'));
       }
     } finally {
       setPasskeyLoading(false);

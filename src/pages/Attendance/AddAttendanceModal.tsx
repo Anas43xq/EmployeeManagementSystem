@@ -81,7 +81,7 @@ export default function AddAttendanceModal({
           <FormField label={t('attendance.status')}>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as unknown as 'present' | 'absent' | 'late' | 'half-day' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="present">{t('attendance.present')}</option>

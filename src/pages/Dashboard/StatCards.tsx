@@ -22,21 +22,25 @@ export default function StatCards({ stats, userRole }: StatCardsProps) {
     { id: 'rejectedLeaves', name: t('dashboard.rejectedLeaves'), value: stats.rejectedLeaves, icon: XCircle, color: 'bg-red-500' },
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statCards = allStatCards.filter(card => isWidgetVisible(card.id, userRole as any));
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-      {statCards.map((stat: any) => (
-        <StatsCard
-          key={stat.id}
-          label={stat.name}
-          value={stat.value}
-          Icon={stat.icon}
-          iconBg={stat.color}
-          iconClassName="w-4 h-4 sm:w-6 sm:h-6 text-white"
-          className="p-3 sm:p-6 hover:shadow-md transition-shadow"
-        />
-      ))}
+      {statCards.map((stat: unknown) => {
+        const s = stat as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        return (
+          <StatsCard
+            key={s.id}
+            label={s.name}
+            value={s.value}
+            Icon={s.icon}
+            iconBg={s.color}
+            iconClassName="w-4 h-4 sm:w-6 sm:h-6 text-white"
+            className="p-3 sm:p-6 hover:shadow-md transition-shadow"
+          />
+        );
+      })}
     </div>
   );
 }

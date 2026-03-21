@@ -43,7 +43,7 @@ export interface DeductionData {
 
 export interface PayrollCalculationResult {
   success: boolean;
-  results?: any[];
+  results?: unknown[];
   errors?: string[];
   message?: string;
 }
@@ -109,10 +109,10 @@ export async function generateMonthlyPayroll(
     }
 
     return data;
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to generate payroll'
+      message: _error instanceof Error ? _error.message : 'Failed to generate payroll'
     };
   }
 }
@@ -121,30 +121,26 @@ export async function calculateEmployeePayroll(
   employeeId: string,
   month: number,
   year: number
-): Promise<any> {
-  try {
-    const accessToken = await getValidAccessToken();
-    
-    const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
-      body: {
-        action: 'calculate-employee',
-        employeeId,
-        month,
-        year
-      },
-      headers: accessToken ? {
-        Authorization: `Bearer ${accessToken}`
-      } : undefined
-    });
+): Promise<any> { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const accessToken = await getValidAccessToken();
+  
+  const { data, error } = await supabase.functions.invoke('generate-monthly-payroll', {
+    body: {
+      action: 'calculate-employee',
+      employeeId,
+      month,
+      year
+    },
+    headers: accessToken ? {
+      Authorization: `Bearer ${accessToken}`
+    } : undefined
+  });
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  } catch (error) {
-    throw error;
+  if (error) {
+    throw new Error(error.message);
   }
+
+  return data;
 }
 
 export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
@@ -170,7 +166,7 @@ export async function approvePayroll(payrollIds: string[]): Promise<boolean> {
     }
 
     return data.success;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -198,7 +194,7 @@ export async function markPayrollAsPaid(payrollIds: string[]): Promise<{ success
     }
 
     return { success: data.success, count: data.count ?? 0 };
-  } catch (error) {
+  } catch (_error) {
     return { success: false, count: 0 };
   }
 }
@@ -237,7 +233,7 @@ export async function getPayrollRecords(
     }
 
     return (data || []) as unknown as PayrollData[];
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -255,7 +251,7 @@ export async function getBonuses(employeeId: string, month: number, year: number
     }
 
     return data || [];
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -273,7 +269,7 @@ export async function getDeductions(employeeId: string, month: number, year: num
     }
 
     return data || [];
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -303,7 +299,7 @@ export async function addBonus(
     }
 
     return true;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -333,7 +329,7 @@ export async function addDeduction(
     }
 
     return true;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -404,7 +400,7 @@ export function generatePayslipPDF(
     }
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 20;
+  const finalY = (doc as any).lastAutoTable.finalY + 20; // eslint-disable-line @typescript-eslint/no-explicit-any
   doc.setFontSize(10);
   doc.text('Generated on: ' + new Date().toLocaleDateString(), 20, finalY);
   doc.text('This is a computer-generated payslip.', 20, finalY + 10);
