@@ -545,3 +545,27 @@ export async function getMyTotalPoints(employeeId: string): Promise<number> {
     return 0;
   }
 }
+
+export async function getWeeklyDataAvailability(weekStart: string) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)('check_week_data_availability', {
+      p_week_start: weekStart,
+    });
+
+    if (error) throw error;
+    
+    return data as {
+      days_with_data: number;
+      total_days: number;
+      has_sufficient_data: boolean;
+    };
+  } catch (_error) {
+    // Return default insufficient data on error
+    return {
+      days_with_data: 0,
+      total_days: 7,
+      has_sufficient_data: false,
+    };
+  }
+}

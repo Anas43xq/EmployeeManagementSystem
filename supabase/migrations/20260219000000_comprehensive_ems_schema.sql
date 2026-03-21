@@ -1550,6 +1550,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+CREATE OR REPLACE FUNCTION check_week_data_availability(p_week_start DATE DEFAULT date_trunc('week', CURRENT_DATE)::DATE)
+RETURNS jsonb AS $$
+DECLARE
+  p_week_end DATE;
+  v_days_with_data INTEGER;
+  v_result jsonb;
+BEGIN
+  p_week_end := p_week_start + INTERVAL '6 days';
+
+  -- Count distinct days with attendance records in the week
+  SELECT COUNT(DISTINCT DATE(a.date))
+  INTO v_days_with_data
+  FROM public.attendance a
+  WHERE a.date BETWEEN p_week_start AND p_week_end;
+
+  -- Return object with days_with_data and has_sufficient_data (1+ days = sufficient)
+  v_result := jsonb_build_object(
+    'days_with_data', COALESCE(v_days_with_data, 0),
+    'total_days', 7,
+    'has_sufficient_data', COALESCE(v_days_with_data, 0) >= 1
+  );
+
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- =============================================
 -- PAYROLL UTILITY FUNCTIONS 
 -- =============================================
