@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { X, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Modal, Button, FormField } from '../../components/ui';
 import type { EmployeeWithoutAccess, GrantAccessFormData } from './types';
 
 interface GrantAccessModalProps {
@@ -27,29 +28,21 @@ export default function GrantAccessModal({
 }: GrantAccessModalProps) {
   const { t } = useTranslation();
 
-  if (!show) return null;
-
   const selectedEmployee = employeesWithoutAccess.find(
     emp => emp.id === formData.employee_id
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <UserPlus className="w-5 h-5 text-primary-600" />
-            <h2 className="text-xl font-semibold text-gray-900">{t('userManagement.grantAccess')}</h2>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal show={show} onClose={onClose}>
+      <Modal.Header onClose={onClose}>
+        <div className="flex items-center space-x-2">
+          <UserPlus className="w-5 h-5 text-primary-600" />
+          <span>{t('userManagement.grantAccess')}</span>
         </div>
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('userManagement.selectEmployee')}
-            </label>
+      </Modal.Header>
+      <form onSubmit={onSubmit}>
+        <Modal.Body>
+          <FormField label={t('userManagement.selectEmployee')}>
             <select
               value={formData.employee_id}
               onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
@@ -66,7 +59,7 @@ export default function GrantAccessModal({
             {employeesWithoutAccess.length === 0 && (
               <p className="text-xs text-amber-600 mt-1">{t('userManagement.allEmployeesHaveAccess')}</p>
             )}
-          </div>
+          </FormField>
 
           {selectedEmployee && (
             <div className="bg-primary-50 rounded-lg p-3">
@@ -84,10 +77,7 @@ export default function GrantAccessModal({
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('userManagement.password')}
-            </label>
+          <FormField label={t('userManagement.password')}>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -107,12 +97,9 @@ export default function GrantAccessModal({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">{t('userManagement.minChars')}</p>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('userManagement.role')}
-            </label>
+          <FormField label={t('userManagement.role')}>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'hr' | 'staff' })}
@@ -122,26 +109,15 @@ export default function GrantAccessModal({
               <option value="hr">{t('userManagement.hr')}</option>
               <option value="admin">{t('userManagement.admin')}</option>
             </select>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || !formData.employee_id}
-              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
-            >
-              {submitting ? t('common.processing') : t('userManagement.grantAccessBtn')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </FormField>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={!formData.employee_id} loading={submitting} loadingText={t('common.processing')}>
+            {t('userManagement.grantAccessBtn')}
+          </Button>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 }

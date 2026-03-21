@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Clock, CheckCircle, XCircle, LogOut } from 'lucide-react';
+import { StatusBadge } from '../../components/ui';
 import type { AttendanceRecord } from './types';
 
 interface AttendanceRecordCardProps {
@@ -64,14 +65,7 @@ export default function AttendanceRecordCard({
               <span className="hidden sm:inline">Check Out</span>
             </button>
           )}
-          <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-            record.status === 'present' ? 'bg-green-100 text-green-800' :
-            record.status === 'late' ? 'bg-yellow-100 text-yellow-800' :
-            record.status === 'absent' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {record.status === 'present' ? t('attendance.present') : record.status === 'absent' ? t('attendance.absent') : record.status === 'late' ? t('attendance.late') : record.status === 'half-day' ? t('attendance.halfDay') : record.status}
-          </span>
+          <StatusBadge status={record.status} className="whitespace-nowrap" />
         </div>
       </div>
     </div>

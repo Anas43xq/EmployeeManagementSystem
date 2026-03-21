@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { ArrowLeft, Edit, Mail, Phone, Calendar, MapPin, Briefcase, User, FileText, UserX } from 'lucide-react';
 import { format } from 'date-fns';
-import { PageSpinner, Button, Modal } from '../components/ui';
+import { PageSpinner, Button, Modal, Card, StatusBadge } from '../components/ui';
 import type { Employee } from '../types';
 
 export default function EmployeeView() {
@@ -137,7 +137,7 @@ export default function EmployeeView() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <Card>
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
               <User className="w-5 h-5 mr-2" />
               {t('employees.personalInfo')}
@@ -191,9 +191,9 @@ export default function EmployeeView() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <Card>
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
               <Briefcase className="w-5 h-5 mr-2" />
               {t('employees.employmentDetails')}
@@ -209,21 +209,11 @@ export default function EmployeeView() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.employmentType')}</label>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800 capitalize">
-                  {employee.employment_type}
-                </span>
+                <StatusBadge status={employee.employment_type} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.status')}</label>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                  employee.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : employee.status === 'on-leave'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {employee.status}
-                </span>
+                <StatusBadge status={employee.status} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{t('employees.hireDate')}</label>
@@ -236,10 +226,10 @@ export default function EmployeeView() {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {employee.qualifications && employee.qualifications.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <Card>
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <FileText className="w-5 h-5 mr-2" />
                 {t('employees.qualifications')}
@@ -252,12 +242,12 @@ export default function EmployeeView() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <Card>
             <h2 className="text-xl font-bold text-gray-900 mb-4">{t('employees.emergencyContact')}</h2>
             <div className="space-y-3">
               <div>
@@ -278,9 +268,9 @@ export default function EmployeeView() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <Card>
             <h2 className="text-xl font-bold text-gray-900 mb-4">{t('employees.quickStats')}</h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-200">
@@ -298,22 +288,11 @@ export default function EmployeeView() {
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-gray-600">{t('employees.employmentStatus')}</span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                  employee.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : employee.status === 'on-leave'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {employee.status}
-                </span>
+                <StatusBadge status={employee.status} />
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </Card>
 
-      <Modal
         show={terminateModal}
         onClose={() => setTerminateModal(false)}
       >

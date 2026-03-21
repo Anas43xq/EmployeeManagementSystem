@@ -6,6 +6,7 @@ import {
   Shield,
   UserPlus,
 } from 'lucide-react';
+import { StatsCard } from '../../components/ui';
 
 interface UserStatsCardsProps {
   stats: {
@@ -22,51 +23,11 @@ export default function UserStatsCards({ stats }: UserStatsCardsProps) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{t('userManagement.totalUsers')}</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-          </div>
-          <UserCog className="w-8 h-8 text-gray-400" />
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{t('userManagement.admins')}</p>
-            <p className="text-2xl font-bold text-red-600">{stats.admins}</p>
-          </div>
-          <ShieldAlert className="w-8 h-8 text-red-400" />
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{t('userManagement.hrStaff')}</p>
-            <p className="text-2xl font-bold text-purple-600">{stats.hr}</p>
-          </div>
-          <ShieldCheck className="w-8 h-8 text-purple-400" />
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{t('userManagement.employees')}</p>
-            <p className="text-2xl font-bold text-primary-600">{stats.employees}</p>
-          </div>
-          <Shield className="w-8 h-8 text-primary-400" />
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{t('userManagement.withoutAccess')}</p>
-            <p className="text-2xl font-bold text-amber-600">{stats.withoutAccess}</p>
-          </div>
-          <UserPlus className="w-8 h-8 text-amber-400" />
-        </div>
-      </div>
+      <StatsCard label={t('userManagement.totalUsers')} value={stats.total} Icon={UserCog} iconClassName="w-8 h-8 text-gray-400" />
+      <StatsCard label={t('userManagement.admins')} value={stats.admins} Icon={ShieldAlert} iconClassName="w-8 h-8 text-red-400" valueClassName="text-2xl font-bold text-red-600" />
+      <StatsCard label={t('userManagement.hrStaff')} value={stats.hr} Icon={ShieldCheck} iconClassName="w-8 h-8 text-purple-400" valueClassName="text-2xl font-bold text-purple-600" />
+      <StatsCard label={t('userManagement.employees')} value={stats.employees} Icon={Shield} iconClassName="w-8 h-8 text-primary-400" valueClassName="text-2xl font-bold text-primary-600" />
+      <StatsCard label={t('userManagement.withoutAccess')} value={stats.withoutAccess} Icon={UserPlus} iconClassName="w-8 h-8 text-amber-400" valueClassName="text-2xl font-bold text-amber-600" />
     </div>
   );
 }

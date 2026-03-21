@@ -7,3 +7,4 @@ export { default as EmptyState } from './EmptyState';
 export { default as FormField } from './FormField';
 export { default as FormError } from './FormError';
 export { default as Button } from './Button';
+export { default as StatsCard } from './StatsCard';

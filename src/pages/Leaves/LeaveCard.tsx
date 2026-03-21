@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { StatusBadge } from '../../components/ui';
 import type { Leave } from './types';
 
 interface LeaveCardProps {
@@ -43,22 +44,7 @@ export default function LeaveCard({ leave, userRole, onApprove, onReject, proces
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-            leave.status === 'approved'
-              ? 'bg-green-100 text-green-800'
-              : leave.status === 'rejected'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-orange-100 text-orange-800'
-          }`}>
-            {leave.status === 'approved' ? (
-              <CheckCircle className="w-3 h-3" />
-            ) : leave.status === 'rejected' ? (
-              <XCircle className="w-3 h-3" />
-            ) : (
-              <Clock className="w-3 h-3" />
-            )}
-            <span className="capitalize">{leave.status}</span>
-          </span>
+          <StatusBadge status={leave.status} className="whitespace-nowrap" />
           {(userRole === 'admin' || userRole === 'hr') && leave.status === 'pending' && (
             <div className="flex gap-1">
               <button

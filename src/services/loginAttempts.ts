@@ -65,7 +65,6 @@ export async function getLoginAttemptStatus(email: string): Promise<LoginAttempt
   });
 
   if (error) {
-    console.error('[loginAttempts] pre_auth_login_check error:', error.message);
     return parseRpcResult(null);
   }
 
@@ -82,7 +81,6 @@ export async function recordFailedAttempt(email: string): Promise<LoginAttemptSt
   });
 
   if (error) {
-    console.error('[loginAttempts] record_failed_login error:', error.message);
     return parseRpcResult(null);
   }
 
@@ -100,7 +98,6 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
     });
 
     if (error) {
-      console.error('[loginAttempts] sendLoginOtp error:', error.message);
       return { error: error.message };
     }
 
@@ -110,7 +107,6 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
     return {};
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[loginAttempts] sendLoginOtp exception:', message);
     return { error: message };
   }
 }
@@ -157,6 +153,6 @@ export async function resetLoginAttempts(userId: string): Promise<void> {
   });
 
   if (error) {
-    console.error('[loginAttempts] resetLoginAttempts error:', error.message);
+    // non-critical: counter reset failure should not interrupt the login flow
   }
 }

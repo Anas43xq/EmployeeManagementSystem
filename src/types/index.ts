@@ -1,3 +1,9 @@
+export interface Qualification {
+  degree: string;
+  institution: string;
+  year?: string;
+}
+
 export interface Employee {
   id: string;
   employee_number: string;
@@ -18,7 +24,7 @@ export interface Employee {
   hire_date: string;
   termination_date: string | null;
   salary: number;
-  qualifications: any[];
+  qualifications: Qualification[];
   emergency_contact_name: string;
   emergency_contact_phone: string;
   photo_url?: string | null;

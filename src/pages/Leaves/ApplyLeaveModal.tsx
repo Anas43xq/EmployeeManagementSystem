@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { X, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
+import { Modal, Button, FormField } from '../../components/ui';
 import type { LeaveFormData, LeaveBalance, LeaveConflict } from './types';
 
 interface ApplyLeaveModalProps {
@@ -49,23 +50,11 @@ export default function ApplyLeaveModal({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">{t('leaves.applyForLeave')}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('leaves.leaveType')}
-            </label>
+    <Modal show={show} onClose={onClose}>
+      <Modal.Header onClose={onClose}>{t('leaves.applyForLeave')}</Modal.Header>
+      <form onSubmit={onSubmit}>
+        <Modal.Body>
+          <FormField label={t('leaves.leaveType')}>
             <select
               value={formData.leave_type}
               onChange={(e) => setFormData({ ...formData, leave_type: e.target.value })}
@@ -76,13 +65,10 @@ export default function ApplyLeaveModal({
               <option value="casual">{t('leaves.casual')}</option>
               <option value="sabbatical">{t('leaves.sabbatical')}</option>
             </select>
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('leaves.startDate')}
-              </label>
+            <FormField label={t('leaves.startDate')}>
               <input
                 type="date"
                 value={formData.start_date}
@@ -91,11 +77,8 @@ export default function ApplyLeaveModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('leaves.endDate')}
-              </label>
+            </FormField>
+            <FormField label={t('leaves.endDate')}>
               <input
                 type="date"
                 value={formData.end_date}
@@ -104,7 +87,7 @@ export default function ApplyLeaveModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
-            </div>
+            </FormField>
           </div>
 
           {formData.start_date && formData.end_date && (
@@ -128,8 +111,7 @@ export default function ApplyLeaveModal({
                   </p>
                 </div>
               )}
-              
-              {/* Conflict Warning */}
+
               {checkingConflicts && (
                 <div className="bg-gray-50 px-3 py-2 rounded-lg">
                   <p className="text-sm text-gray-600 flex items-center">
@@ -138,18 +120,14 @@ export default function ApplyLeaveModal({
                   </p>
                 </div>
               )}
-              
+
               {!checkingConflicts && hasConflicts && (
                 <div className="bg-red-50 border border-red-200 px-3 py-3 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-red-800">
-                        {t('leaves.conflictDetected')}
-                      </p>
-                      <p className="text-sm text-red-600 mt-1">
-                        {t('leaves.conflictsFound', { count: leaveConflicts.length })}
-                      </p>
+                      <p className="text-sm font-medium text-red-800">{t('leaves.conflictDetected')}</p>
+                      <p className="text-sm text-red-600 mt-1">{t('leaves.conflictsFound', { count: leaveConflicts.length })}</p>
                       <ul className="mt-2 space-y-1">
                         {leaveConflicts.map((conflict) => (
                           <li key={conflict.id} className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded">
@@ -169,10 +147,7 @@ export default function ApplyLeaveModal({
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('leaves.reason')}
-            </label>
+          <FormField label={t('leaves.reason')}>
             <textarea
               value={formData.reason}
               onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
@@ -181,33 +156,20 @@ export default function ApplyLeaveModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               required
             />
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || hasConflicts || hasInsufficientBalance || checkingConflicts}
-              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>{t('leaves.submitting')}</span>
-                </>
-              ) : (
-                <span>{t('leaves.submitRequest')}</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </FormField>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button
+            type="submit"
+            disabled={hasConflicts || !!hasInsufficientBalance || checkingConflicts}
+            loading={submitting}
+            loadingText={t('leaves.submitting')}
+          >
+            {t('leaves.submitRequest')}
+          </Button>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 }

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { Modal, Button, FormField, FormError } from '../../components/ui';
 import type { Announcement } from './types';
 
 interface AnnouncementFormModalProps {
@@ -31,34 +31,15 @@ export default function AnnouncementFormModal({
 }: AnnouncementFormModalProps) {
   const { t } = useTranslation();
 
-  if (!show) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
-            {editingAnnouncement ? t('announcements.editAnnouncement') : t('announcements.newAnnouncement')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('announcements.announcementTitle')} <span className="text-red-500">*</span>
-            </label>
+    <Modal show={show} onClose={onClose} size="xl">
+      <Modal.Header onClose={onClose}>
+        {editingAnnouncement ? t('announcements.editAnnouncement') : t('announcements.newAnnouncement')}
+      </Modal.Header>
+      <form onSubmit={onSubmit}>
+        <Modal.Body>
+          <FormError message={error} />
+          <FormField label={t('announcements.announcementTitle')} required>
             <input
               type="text"
               value={formData.title}
@@ -66,12 +47,8 @@ export default function AnnouncementFormModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder={t('announcements.titlePlaceholder')}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('announcements.content')} <span className="text-red-500">*</span>
-            </label>
+          </FormField>
+          <FormField label={t('announcements.content')} required>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -79,11 +56,9 @@ export default function AnnouncementFormModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder={t('announcements.contentPlaceholder')}
             />
-          </div>
-
+          </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('announcements.priority')}</label>
+            <FormField label={t('announcements.priority')}>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
@@ -94,10 +69,8 @@ export default function AnnouncementFormModal({
                 <option value="high">{t('announcements.high')}</option>
                 <option value="urgent">{t('announcements.urgent')}</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('announcements.expiresOn')}</label>
+            </FormField>
+            <FormField label={t('announcements.expiresOn')}>
               <input
                 type="date"
                 value={formData.expires_at}
@@ -105,9 +78,8 @@ export default function AnnouncementFormModal({
                 min={new Date().toISOString().split('T')[0]}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-            </div>
+            </FormField>
           </div>
-
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -120,25 +92,16 @@ export default function AnnouncementFormModal({
               {t('announcements.activeLabel')}
             </label>
           </div>
-
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? t('common.saving') : editingAnnouncement ? t('announcements.update') : t('announcements.create')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" loading={submitting} loadingText={t('common.saving')}>
+            {editingAnnouncement ? t('announcements.update') : t('announcements.create')}
+          </Button>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 }

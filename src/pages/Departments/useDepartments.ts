@@ -59,6 +59,7 @@ export function useDepartments() {
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
+      showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
   };
 

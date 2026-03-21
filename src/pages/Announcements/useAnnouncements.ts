@@ -22,6 +22,8 @@ export function useAnnouncements() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const PRIORITY_CONFIG = {
     low: { label: t('announcements.low'), color: 'bg-gray-100 text-gray-700', icon: Info },
@@ -140,9 +142,19 @@ export function useAnnouncements() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('announcements.confirmDelete'))) return;
+  const requestDelete = (id: string) => {
+    setPendingDeleteId(id);
+  };
 
+  const cancelDelete = () => {
+    setPendingDeleteId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+
+    setDeleting(true);
     try {
       const { error } = await (db
         .from('announcements')
@@ -155,9 +167,12 @@ export function useAnnouncements() {
         logActivity(user.id, 'announcement_deleted', 'announcement', id);
       }
 
+      setPendingDeleteId(null);
       loadAnnouncements();
     } catch (err: any) {
-      alert(err.message || t('announcements.deleteFailed'));
+      // Error silently handled
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -195,7 +210,11 @@ export function useAnnouncements() {
     openCreateModal,
     openEditModal,
     handleSubmit,
-    handleDelete,
+    requestDelete,
+    cancelDelete,
+    confirmDelete,
+    pendingDeleteId,
+    deleting,
     toggleActive,
   };
 }

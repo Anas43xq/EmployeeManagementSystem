@@ -6,6 +6,7 @@ import { useEmployeeEdit } from './useEmployeeEdit';
 import PersonalInfoSection from './PersonalInfoSection';
 import EmploymentDetailsSection from './EmploymentDetailsSection';
 import EmergencyContactSection from './EmergencyContactSection';
+import QualificationsSection from './QualificationsSection';
 
 export default function EmployeeEdit() {
   const { t } = useTranslation();
@@ -18,6 +19,9 @@ export default function EmployeeEdit() {
     handleChange,
     handlePhotoChange,
     handleSubmit,
+    addQualification,
+    updateQualification,
+    removeQualification,
   } = useEmployeeEdit();
 
   if (loading) {
@@ -54,6 +58,12 @@ export default function EmployeeEdit() {
         />
         <EmploymentDetailsSection formData={formData} onChange={handleChange} departments={departments} />
         <EmergencyContactSection formData={formData} onChange={handleChange} />
+        <QualificationsSection
+          formData={formData}
+          onAdd={addQualification}
+          onUpdate={updateQualification}
+          onRemove={removeQualification}
+        />
 
         <div className="flex items-center justify-end space-x-4">
           <Link

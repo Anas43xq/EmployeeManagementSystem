@@ -29,6 +29,7 @@ export function useReports() {
       if (error) throw error;
       setDepartments(data || []);
     } catch (error) {
+      showNotification('error', t('common.failedToLoad', 'Failed to load departments'));
     }
   };
 

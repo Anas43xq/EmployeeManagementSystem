@@ -1,96 +1,20 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { db } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotification } from '../contexts/NotificationContext';
 import { Mail, Phone, Calendar, MapPin, Briefcase, User, Building2, Shield, Edit } from 'lucide-react';
 import { format } from 'date-fns';
-import { PageSpinner, PageHeader, Card, Button } from '../components/ui';
+import { PageSpinner, PageHeader, Card, Button, StatusBadge } from '../components/ui';
 import PasskeyManagement from '../components/PasskeyManagement';
-import type { Employee } from '../types';
+import { useEmployeeProfile } from '../hooks/useEmployeeProfile';
 
 export default function Profile() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { showNotification } = useNotification();
-
-  useEffect(() => {
-    if (user?.id) {
-      loadEmployeeProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const loadEmployeeProfile = async () => {
-    try {
-      if (user?.employeeId) {
-        const { data, error } = await db
-          .from('employees')
-          .select(`
-            *,
-            departments!department_id (name)
-          `)
-          .eq('id', user.employeeId)
-          .maybeSingle();
-
-        if (!error && data) {
-          setEmployee(data as Employee);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const { data: userData, error: userError } = await db
-        .from('users')
-        .select('employee_id')
-        .eq('id', user!.id)
-        .maybeSingle();
-
-      const userRecord = userData as { employee_id: string } | null;
-      if (userError || !userRecord?.employee_id) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await db
-        .from('employees')
-        .select(`
-          *,
-          departments!department_id (name)
-        `)
-        .eq('id', userRecord.employee_id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setEmployee(data as Employee);
-    } catch (error) {
-      showNotification('error', t('employees.failedToLoadDetails'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { employee, loading } = useEmployeeProfile();
 
   if (loading) {
     return <PageSpinner />;
   }
-
-  const getRoleBadge = () => {
-    const roleColors = {
-      admin: 'bg-purple-100 text-purple-800',
-      hr: 'bg-primary-100 text-primary-800',
-      staff: 'bg-green-100 text-green-800',
-    };
-    return (
-      <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${roleColors[user?.role || 'staff']}`}>
-        <Shield className="w-4 h-4 mr-1" />
-        {t(`userManagement.${user?.role || 'staff'}`)}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -119,16 +43,15 @@ export default function Profile() {
             {employee && <p className="text-gray-600">{employee.position}</p>}
             {employee && <p className="text-sm text-gray-500">{employee.employee_number}</p>}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
-              {getRoleBadge()}
-              {employee && (
-                <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                  employee.status === 'active' ? 'bg-green-100 text-green-800' :
-                  employee.status === 'on-leave' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {employee.status}
-                </span>
-              )}
+              <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${
+                user?.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                user?.role === 'hr' ? 'bg-primary-100 text-primary-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                <Shield className="w-4 h-4 mr-1" />
+                {t(`userManagement.${user?.role || 'staff'}`)}
+              </span>
+              {employee && <StatusBadge status={employee.status} />}
             </div>
             </div>
           </div>
@@ -147,7 +70,7 @@ export default function Profile() {
 
       {employee && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
+          <Card>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
               <User className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.personalInfo')}</span>
@@ -186,9 +109,9 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
+          <Card>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
               <Briefcase className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.employmentDetails')}</span>
@@ -222,9 +145,9 @@ export default function Profile() {
                 <p className="font-medium capitalize">{employee.employment_type?.replace('-', ' ') || t('common.na')}</p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 overflow-hidden">
+          <Card>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
               <Phone className="w-5 h-5 text-primary-900 shrink-0" />
               <span>{t('employees.emergencyContact')}</span>
@@ -242,7 +165,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 

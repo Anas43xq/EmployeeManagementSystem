@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { usePayroll } from './usePayroll';
 import PayslipModal from './PayslipModal';
-import { Card, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../../components/ui';
+import { StatsCard, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../../components/ui';
 import { formatCurrency, getMonthName } from '../../services/payroll';
 import {
   Calculator,
@@ -67,65 +67,11 @@ export default function PayrollDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
-        <Card>
-          <div className="p-2 sm:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.totalRecords', 'Total Records')}</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 shrink-0" />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-2 sm:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.draft', 'Draft')}</p>
-                <p className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.draft}</p>
-              </div>
-              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 shrink-0" />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-2 sm:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.approved', 'Approved')}</p>
-                <p className="text-lg sm:text-2xl font-bold text-blue-600">{stats.approved}</p>
-              </div>
-              <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 shrink-0" />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-2 sm:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.paid', 'Paid')}</p>
-                <p className="text-lg sm:text-2xl font-bold text-primary-600">{stats.paid}</p>
-              </div>
-              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 shrink-0" />
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="p-2 sm:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{t('payroll.totalAmount', 'Total Amount')}</p>
-                <p className="text-sm sm:text-lg font-bold text-gray-900 truncate">{formatCurrency(stats.totalAmount)}</p>
-              </div>
-              <Calculator className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 shrink-0" />
-            </div>
-          </div>
-        </Card>
+        <StatsCard label={t('payroll.totalRecords', 'Total Records')} value={stats.total} Icon={Users} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-gray-900" />
+        <StatsCard label={t('payroll.draft', 'Draft')} value={stats.draft} Icon={FileText} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-yellow-600" />
+        <StatsCard label={t('payroll.approved', 'Approved')} value={stats.approved} Icon={CheckCircle} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-blue-600" />
+        <StatsCard label={t('payroll.paid', 'Paid')} value={stats.paid} Icon={DollarSign} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-primary-600" />
+        <StatsCard label={t('payroll.totalAmount', 'Total Amount')} value={formatCurrency(stats.totalAmount)} Icon={Calculator} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" className="p-2 sm:p-4" valueClassName="text-sm sm:text-lg font-bold text-gray-900 truncate" />
       </div>
 
       {/* Payroll Table */}

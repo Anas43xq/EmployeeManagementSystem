@@ -5,7 +5,7 @@ import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
-import type { Department, EmployeeFormData } from './types';
+import type { Department, EmployeeFormData, Qualification } from './types';
 
 export function useEmployeeEdit() {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +38,7 @@ export function useEmployeeEdit() {
     emergency_contact_name: '',
     emergency_contact_phone: '',
     photo_url: '',
+    qualifications: [],
   });
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export function useEmployeeEdit() {
         emergency_contact_name: data.emergency_contact_name || '',
         emergency_contact_phone: data.emergency_contact_phone || '',
         photo_url: data.photo_url || '',
+        qualifications: data.qualifications || [],
       });
     } catch (error) {
       showNotification('error', t('employees.failedToLoadDetails'));
@@ -141,6 +143,28 @@ export function useEmployeeEdit() {
 
   const handlePhotoChange = (photoUrl: string | null) => {
     setFormData(prev => ({ ...prev, photo_url: photoUrl || '' }));
+  };
+
+  const addQualification = () => {
+    setFormData(prev => ({
+      ...prev,
+      qualifications: [...prev.qualifications, { degree: '', institution: '', year: '' }],
+    }));
+  };
+
+  const updateQualification = (index: number, field: keyof Qualification, value: string) => {
+    setFormData(prev => {
+      const updated = [...prev.qualifications];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, qualifications: updated };
+    });
+  };
+
+  const removeQualification = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      qualifications: prev.qualifications.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,6 +234,9 @@ export function useEmployeeEdit() {
     handleChange,
     handlePhotoChange,
     handleSubmit,
+    addQualification,
+    updateQualification,
+    removeQualification,
   };
 }
 

@@ -1,143 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../services/supabase';
-import type { Database } from '../../types/database';
+import { Globe, Shield } from 'lucide-react';
+import i18n from '../../i18n';
+import { useSettings } from './useSettings';
 import ProfileInfoCard from './ProfileInfoCard';
 import ChangePasswordCard from './ChangePasswordCard';
 import NotificationPrefsCard from './NotificationPrefsCard';
-import LanguageCard from './LanguageCard';
-import AccountInfoSidebar from './AccountInfoSidebar';
-
-type UserPreferences = Database['public']['Tables']['user_preferences']['Row'];
 
 export default function Settings() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const { showNotification } = useNotification();
-  const navigate = useNavigate();
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState(user?.email || '');
-  const [updatingEmail, setUpdatingEmail] = useState(false);
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    leave_approvals: true,
-    attendance_reminders: true,
-    warnings: true,
-    tasks: true,
-    complaints: true,
-  });
-  const [savingPrefs, setSavingPrefs] = useState(false);
-
-  const loadNotificationPreferences = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await db
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) return;
-
-      if (data) {
-        const prefs = data as UserPreferences;
-        setNotificationPrefs({
-          leave_approvals: prefs.email_leave_approvals ?? true,
-          attendance_reminders: prefs.email_attendance_reminders ?? true,
-          warnings: prefs.email_warnings ?? true,
-          tasks: prefs.email_tasks ?? true,
-          complaints: prefs.email_complaints ?? true,
-        });
-      }
-    } catch (err) {
-    }
-  };
-
-  useEffect(() => {
-    if (user?.id) {
-      loadNotificationPreferences();
-    }
-  }, [user?.id]);
-
-  const handleSavePreferences = async () => {
-    if (!user?.id) {
-      showNotification('error', 'User not authenticated');
-      return;
-    }
-
-    setSavingPrefs(true);
-    try {
-      const { error } = await (db.from('user_preferences') as any)
-        .upsert({
-          user_id: user.id,
-          email_leave_approvals: notificationPrefs.leave_approvals,
-          email_attendance_reminders: notificationPrefs.attendance_reminders,
-          email_warnings: notificationPrefs.warnings,
-          email_tasks: notificationPrefs.tasks,
-          email_complaints: notificationPrefs.complaints,
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      showNotification('success', t('settings.prefsSaved'));
-    } catch (err) {
-      showNotification('error', 'Failed to save preferences');
-    } finally {
-      setSavingPrefs(false);
-    }
-  };
-
-  const handleEmailUpdate = async () => {
-    if (!newEmail || !newEmail.includes('@')) {
-      showNotification('error', 'Please enter a valid email address');
-      return;
-    }
-
-    if (!user?.id) {
-      showNotification('error', 'User not authenticated');
-      return;
-    }
-
-    if (newEmail === user?.email) {
-      setIsEditingEmail(false);
-      return;
-    }
-
-    setUpdatingEmail(true);
-    try {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const redirectUrl = `${appUrl}/settings`;
-
-      const { error } = await db.auth.updateUser(
-        { email: newEmail },
-        {
-          emailRedirectTo: redirectUrl
-        }
-      );
-      
-      if (error) throw error;
-
-      await db.auth.signOut();
-      navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
-    } catch (error: any) {
-      if (error?.message?.includes('same')) {
-        showNotification('info', 'New email is the same as current email');
-      } else {
-        showNotification('error', 'Failed to update email: ' + (error?.message || 'Please try again'));
-      }
-      setNewEmail(user?.email || '');
-    } finally {
-      setUpdatingEmail(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingEmail(false);
-    setNewEmail(user?.email || '');
-  };
+  const {
+    user,
+    isEditingEmail,
+    setIsEditingEmail,
+    newEmail,
+    setNewEmail,
+    updatingEmail,
+    notificationPrefs,
+    setNotificationPrefs,
+    savingPrefs,
+    handleSavePreferences,
+    handleEmailUpdate,
+    handleCancelEdit,
+  } = useSettings();
 
   return (
     <div className="space-y-6">
@@ -165,10 +49,52 @@ export default function Settings() {
             savingPrefs={savingPrefs}
             onSave={handleSavePreferences}
           />
-          <LanguageCard />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <Globe className="w-5 h-5 text-gray-600" />
+              <h2 className="text-xl font-bold text-gray-900">{t('settings.language')}</h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">{t('settings.languageDesc')}</p>
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <AccountInfoSidebar user={user} />
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <Shield className="w-5 h-5 text-gray-600" />
+              <h2 className="text-lg font-bold text-gray-900">{t('settings.accountInfo')}</h2>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-gray-600">{t('settings.accountType')}</p>
+                <p className="font-medium text-gray-900 capitalize">{user?.role}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">{t('common.status')}</p>
+                <span className="inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                  {t('settings.active')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {(user?.role === 'admin' || user?.role === 'hr') && (
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
+              <h3 className="font-bold text-primary-900 mb-2">{t('settings.adminAccess')}</h3>
+              <p className="text-sm text-primary-800">{t('settings.adminAccessDesc')}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

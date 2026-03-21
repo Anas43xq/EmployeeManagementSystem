@@ -5,7 +5,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PageSpinner, PageHeader, Card, Button, Modal } from '../components/ui';
+import { PageSpinner, PageHeader, Card, Button, Modal, StatusBadge } from '../components/ui';
 import { logActivity } from '../services/activityLog';
 import type { EmployeeListItem } from '../types';
 
@@ -203,20 +203,10 @@ export default function Employees() {
                     <div className="text-sm text-gray-900">{employee.position}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
-                      {employee.employment_type}
-                    </span>
+                    <StatusBadge status={employee.employment_type} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      employee.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : employee.status === 'on-leave'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {employee.status}
-                    </span>
+                    <StatusBadge status={employee.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">

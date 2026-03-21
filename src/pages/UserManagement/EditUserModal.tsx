@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { X, Edit2 } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
+import { Modal, Button, FormField } from '../../components/ui';
 import type { User, EditUserFormData } from './types';
 import { getUserEmail, getUserDisplayName } from './types';
 
@@ -33,18 +34,15 @@ export default function EditUserModal({
   const isOwnAccount = selectedUser.id === currentUserId;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Edit2 className="w-5 h-5 text-primary-600" />
-            <h2 className="text-xl font-semibold text-gray-900">{t('userManagement.editRole')}</h2>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal show={show} onClose={onClose}>
+      <Modal.Header onClose={onClose}>
+        <div className="flex items-center space-x-2">
+          <Edit2 className="w-5 h-5 text-primary-600" />
+          <span>{t('userManagement.editRole')}</span>
         </div>
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
+      </Modal.Header>
+      <form onSubmit={onSubmit}>
+        <Modal.Body>
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
             <div>
               <span className="text-xs text-gray-500">{t('userManagement.employee')}</span>
@@ -65,9 +63,7 @@ export default function EditUserModal({
               </div>
             )}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('userManagement.role')}</label>
+          <FormField label={t('userManagement.role')}>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'hr' | 'staff' })}
@@ -81,26 +77,15 @@ export default function EditUserModal({
             {isOwnAccount && (
               <p className="text-xs text-amber-600 mt-1">{t('userManagement.cannotChangeOwnRole')}</p>
             )}
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || isOwnAccount}
-              className="px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50"
-            >
-              {submitting ? t('common.saving') : t('userManagement.saveChanges')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </FormField>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button type="submit" disabled={isOwnAccount} loading={submitting} loadingText={t('common.saving')}>
+            {t('userManagement.saveChanges')}
+          </Button>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 }

@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { db } from '../services/supabase';
-import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { PageSpinner, Button, Card } from '../components/ui';
+import { PageSpinner, Button, Card, FormField } from '../components/ui';
+import { useEmployeeProfile } from '../hooks/useEmployeeProfile';
 
 interface ProfileFormData {
   phone: string;
@@ -18,13 +18,11 @@ interface ProfileFormData {
 }
 
 export default function ProfileEdit() {
-  const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
-  const [loading, setLoading] = useState(true);
+  const { employee, employeeId, loading } = useEmployeeProfile();
   const [saving, setSaving] = useState(false);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProfileFormData>({
     phone: '',
     address: '',
@@ -36,59 +34,18 @@ export default function ProfileEdit() {
   });
 
   useEffect(() => {
-    if (user?.id) {
-      loadEmployeeProfile();
-    } else {
-      setLoading(false);
+    if (employee) {
+      setFormData({
+        phone: employee.phone || '',
+        address: employee.address || '',
+        city: employee.city || '',
+        state: employee.state || '',
+        postal_code: employee.postal_code || '',
+        emergency_contact_name: employee.emergency_contact_name || '',
+        emergency_contact_phone: employee.emergency_contact_phone || '',
+      });
     }
-  }, [user]);
-
-  const loadEmployeeProfile = async () => {
-    try {
-      let empId = user?.employeeId;
-
-      if (!empId) {
-        const { data: userData, error: userError } = await db
-          .from('users')
-          .select('employee_id')
-          .eq('id', user!.id)
-          .maybeSingle();
-
-        const userRecord = userData as { employee_id: string } | null;
-        if (userError || !userRecord?.employee_id) {
-          setLoading(false);
-          return;
-        }
-        empId = userRecord.employee_id;
-      }
-
-      setEmployeeId(empId);
-
-      const { data, error } = await db
-        .from('employees')
-        .select('phone, address, city, state, postal_code, emergency_contact_name, emergency_contact_phone')
-        .eq('id', empId)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setFormData({
-          phone: data.phone || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          postal_code: data.postal_code || '',
-          emergency_contact_name: data.emergency_contact_name || '',
-          emergency_contact_phone: data.emergency_contact_phone || '',
-        });
-      }
-    } catch (error) {
-      showNotification('error', t('employees.failedToLoadDetails'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [employee]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -157,10 +114,7 @@ export default function ProfileEdit() {
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('profile.contactInfo')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('employees.phone')}
-              </label>
+            <FormField label={t('employees.phone')}>
               <input
                 type="tel"
                 name="phone"
@@ -169,7 +123,7 @@ export default function ProfileEdit() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="+1 (555) 123-4567"
               />
-            </div>
+            </FormField>
           </div>
         </Card>
 
@@ -177,10 +131,7 @@ export default function ProfileEdit() {
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('profile.addressInfo')}</h2>
           <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('employees.address')}
-              </label>
+            <FormField label={t('employees.address')}>
               <input
                 type="text"
                 name="address"
@@ -189,12 +140,9 @@ export default function ProfileEdit() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="123 Main Street"
               />
-            </div>
+            </FormField>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('employees.city')}
-                </label>
+              <FormField label={t('employees.city')}>
                 <input
                   type="text"
                   name="city"
@@ -202,11 +150,8 @@ export default function ProfileEdit() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('employees.state')}
-                </label>
+              </FormField>
+              <FormField label={t('employees.state')}>
                 <input
                   type="text"
                   name="state"
@@ -214,11 +159,8 @@ export default function ProfileEdit() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('employees.postalCode')}
-                </label>
+              </FormField>
+              <FormField label={t('employees.postalCode')}>
                 <input
                   type="text"
                   name="postal_code"
@@ -226,7 +168,7 @@ export default function ProfileEdit() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-              </div>
+              </FormField>
             </div>
           </div>
         </Card>
@@ -235,10 +177,7 @@ export default function ProfileEdit() {
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('employees.emergencyContact')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('common.name')}
-              </label>
+            <FormField label={t('common.name')}>
               <input
                 type="text"
                 name="emergency_contact_name"
@@ -246,11 +185,8 @@ export default function ProfileEdit() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('employees.emergencyPhone')}
-              </label>
+            </FormField>
+            <FormField label={t('employees.emergencyPhone')}>
               <input
                 type="tel"
                 name="emergency_contact_phone"
@@ -258,7 +194,7 @@ export default function ProfileEdit() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-            </div>
+            </FormField>
           </div>
         </Card>
 
