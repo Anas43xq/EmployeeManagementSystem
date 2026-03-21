@@ -1,6 +1,6 @@
 -- ============================================================
 -- STAFFHUB - EMPLOYEE MANAGEMENT SYSTEM
--- Database Schema v3.4
+-- Database Schema v3.5
 -- Project: Senior Graduation Project - DevTeam Hub
 -- Date: February 2026
 -- ============================================================
@@ -50,6 +50,17 @@ END $$;
 -- Drop triggers safely
 DO $$
 BEGIN
+  DROP TRIGGER IF EXISTS update_departments_updated_at_trigger ON public.departments;
+  DROP TRIGGER IF EXISTS update_employees_updated_at_trigger ON public.employees;
+  DROP TRIGGER IF EXISTS update_users_updated_at_trigger ON public.users;
+  DROP TRIGGER IF EXISTS update_leaves_updated_at_trigger ON public.leaves;
+  DROP TRIGGER IF EXISTS update_leave_balances_updated_at_trigger ON public.leave_balances;
+  DROP TRIGGER IF EXISTS update_attendance_updated_at_trigger ON public.attendance;
+  DROP TRIGGER IF EXISTS update_payrolls_updated_at_trigger ON public.payrolls;
+  DROP TRIGGER IF EXISTS update_bonuses_updated_at_trigger ON public.bonuses;
+  DROP TRIGGER IF EXISTS update_deductions_updated_at_trigger ON public.deductions;
+  DROP TRIGGER IF EXISTS update_user_preferences_updated_at_trigger ON public.user_preferences;
+  DROP TRIGGER IF EXISTS update_employee_performance_updated_at_trigger ON public.employee_performance;
   DROP TRIGGER IF EXISTS update_announcements_updated_at_trigger ON public.announcements;
   DROP TRIGGER IF EXISTS update_employee_tasks_updated_at_trigger ON public.employee_tasks;
   DROP TRIGGER IF EXISTS update_employee_warnings_updated_at_trigger ON public.employee_warnings;
@@ -270,8 +281,6 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_own_session_token() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.set_own_session_token(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
-
-GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated;
 
 -- =============================================
 -- LOGIN ATTEMPT RPC FUNCTIONS (SECURITY DEFINER)
@@ -886,6 +895,50 @@ CREATE INDEX idx_notifications_user_unread
 -- TRIGGERS
 -- =============================================
 
+CREATE TRIGGER update_departments_updated_at_trigger
+  BEFORE UPDATE ON public.departments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employees_updated_at_trigger
+  BEFORE UPDATE ON public.employees
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_users_updated_at_trigger
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_leaves_updated_at_trigger
+  BEFORE UPDATE ON public.leaves
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_leave_balances_updated_at_trigger
+  BEFORE UPDATE ON public.leave_balances
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_attendance_updated_at_trigger
+  BEFORE UPDATE ON public.attendance
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_payrolls_updated_at_trigger
+  BEFORE UPDATE ON public.payrolls
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_bonuses_updated_at_trigger
+  BEFORE UPDATE ON public.bonuses
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_deductions_updated_at_trigger
+  BEFORE UPDATE ON public.deductions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_preferences_updated_at_trigger
+  BEFORE UPDATE ON public.user_preferences
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_employee_performance_updated_at_trigger
+  BEFORE UPDATE ON public.employee_performance
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_announcements_updated_at_trigger
   BEFORE UPDATE ON public.announcements
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -1064,6 +1117,10 @@ RETURNS TEXT AS $$
   LIMIT 1;
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, auth;
 
+GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_employee_id() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_email() TO authenticated;
+
 -- =============================================
 -- RLS POLICIES
 -- =============================================
@@ -1152,6 +1209,8 @@ CREATE POLICY "user_preferences_insert_own" ON public.user_preferences FOR INSER
   WITH CHECK (user_id = (select auth.uid()));
 CREATE POLICY "user_preferences_update_own" ON public.user_preferences FOR UPDATE TO authenticated
   USING (user_id = (select auth.uid()));
+CREATE POLICY "user_preferences_delete_admin" ON public.user_preferences FOR DELETE TO authenticated
+  USING ((select get_user_role()) = 'admin');
 
 -- ANNOUNCEMENTS
 CREATE POLICY "announcements_select_policy" ON public.announcements FOR SELECT TO authenticated
@@ -1603,6 +1662,7 @@ ALTER TABLE public.activity_logs REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.user_preferences REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.passkeys REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.login_attempts REPLICA IDENTITY FULL;
+ALTER TABLE public.leave_balances REPLICA IDENTITY FULL;
 
 -- Add tables to realtime publication
 DO $$
@@ -1625,6 +1685,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'users') THEN
       ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'leave_balances') THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_balances;
     END IF;
   END IF;
 END $$;

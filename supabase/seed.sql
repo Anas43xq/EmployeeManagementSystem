@@ -377,96 +377,96 @@ BEGIN
   IF v_admin_id IS NOT NULL THEN
     -- Pending tasks (different priorities)
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Complete Q1 Performance Review', 'Submit self-assessment form and schedule meeting with supervisor.', 'high', 'pending', '2026-02-28', 20, 10, v_admin_id
+    SELECT e.id, 'Complete Q1 Performance Review', 'Submit self-assessment form and schedule meeting with supervisor.', 'high', 'pending', CURRENT_DATE + 7, 20, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'tvissam96@gmail.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'System Security Audit', 'Conduct comprehensive security audit of all internal systems.', 'urgent', 'pending', '2026-02-25', 30, 20, v_admin_id
+    SELECT e.id, 'System Security Audit', 'Conduct comprehensive security audit of all internal systems.', 'urgent', 'pending', CURRENT_DATE + 14, 30, 20, v_admin_id
     FROM public.employees e WHERE e.email = 'c.harris@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Organize Team Building Event', 'Plan and arrange the quarterly team building activity.', 'low', 'pending', '2026-03-20', 5, 2, v_admin_id
+    SELECT e.id, 'Organize Team Building Event', 'Plan and arrange the quarterly team building activity.', 'low', 'pending', CURRENT_DATE + 21, 5, 2, v_admin_id
     FROM public.employees e WHERE e.email = 'n.hall@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Review Vendor Contracts', 'Review all vendor contracts expiring in Q1 and prepare renewal recommendations.', 'normal', 'pending', '2026-03-01', 15, 5, v_admin_id
+    SELECT e.id, 'Review Vendor Contracts', 'Review all vendor contracts expiring in Q1 and prepare renewal recommendations.', 'normal', 'pending', CURRENT_DATE + 10, 15, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'r.garcia@DevTeamHub.com';
 
     -- In-progress tasks
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Update Department Documentation', 'Review and update all department procedures and SOPs.', 'normal', 'in_progress', '2026-03-15', 15, 5, v_admin_id
+    SELECT e.id, 'Update Department Documentation', 'Review and update all department procedures and SOPs.', 'normal', 'in_progress', CURRENT_DATE + 5, 15, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'e.wilson@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Develop New Onboarding Module', 'Create training module for new employee onboarding process.', 'high', 'in_progress', '2026-03-10', 25, 15, v_admin_id
+    SELECT e.id, 'Develop New Onboarding Module', 'Create training module for new employee onboarding process.', 'high', 'in_progress', CURRENT_DATE + 3, 25, 15, v_admin_id
     FROM public.employees e WHERE e.email = 'r.jackson@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Database Migration Planning', 'Plan and document the database migration to new infrastructure.', 'urgent', 'in_progress', '2026-02-28', 30, 20, v_admin_id
+    SELECT e.id, 'Database Migration Planning', 'Plan and document the database migration to new infrastructure.', 'urgent', 'in_progress', CURRENT_DATE + 4, 30, 20, v_admin_id
     FROM public.employees e WHERE e.email = 'tvissam96@gmail.com';
 
-    -- Completed tasks
+    -- Completed tasks (older, outside current week)
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Submit Monthly Report', 'Compile and submit the monthly department activity report.', 'normal', 'completed', '2026-02-10', '2026-02-09 14:30:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'Submit Monthly Report', 'Compile and submit the monthly department activity report.', 'normal', 'completed', CURRENT_DATE - 30, CURRENT_DATE - 31 + INTERVAL '14 hours 30 minutes', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'd.brown@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Annual Budget Proposal', 'Prepare department annual budget proposal for FY2026.', 'high', 'completed', '2026-02-05', '2026-02-04 16:00:00+00', 25, 15, v_admin_id
+    SELECT e.id, 'Annual Budget Proposal', 'Prepare department annual budget proposal for FY2026.', 'high', 'completed', CURRENT_DATE - 35, CURRENT_DATE - 36 + INTERVAL '16 hours', 25, 15, v_admin_id
     FROM public.employees e WHERE e.email = 'j.lee@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'IT Inventory Audit', 'Complete inventory of all IT assets and update tracking system.', 'normal', 'completed', '2026-02-12', '2026-02-11 11:00:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'IT Inventory Audit', 'Complete inventory of all IT assets and update tracking system.', 'normal', 'completed', CURRENT_DATE - 28, CURRENT_DATE - 29 + INTERVAL '11 hours', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'c.harris@DevTeamHub.com';
 
     -- Overdue tasks (deadline in the past, not completed)
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Submit Research Proposal', 'Draft and submit research grant proposal for spring semester.', 'high', 'overdue', '2026-02-10', 20, 15, v_admin_id
+    SELECT e.id, 'Submit Research Proposal', 'Draft and submit research grant proposal for spring semester.', 'high', 'overdue', CURRENT_DATE - 10, 20, 15, v_admin_id
     FROM public.employees e WHERE e.email = 'k.walker@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Complete Safety Training', 'Finish the mandatory online safety training module.', 'normal', 'overdue', '2026-02-15', 10, 10, v_admin_id
+    SELECT e.id, 'Complete Safety Training', 'Finish the mandatory online safety training module.', 'normal', 'overdue', CURRENT_DATE - 5, 10, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'w.taylor@DevTeamHub.com';
 
     -- Cancelled task
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, points, penalty_points, assigned_by)
-    SELECT e.id, 'Legacy System Documentation', 'Document the legacy payroll system before decommission. (Cancelled - system already decommissioned)', 'low', 'cancelled', '2026-02-20', 10, 5, v_admin_id
+    SELECT e.id, 'Legacy System Documentation', 'Document the legacy payroll system before decommission. (Cancelled - system already decommissioned)', 'low', 'cancelled', CURRENT_DATE - 20, 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'b.scott@DevTeamHub.com';
 
     -- ============================================================================
-    -- THIS WEEK'S TASKS (Feb 16-22) - For performance calculation variety
+    -- THIS WEEK'S TASKS - For performance calculation (uses CURRENT_DATE)
     -- ============================================================================
     
     -- Completed tasks THIS WEEK (deadline this week, completed this week)
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Weekly Team Sync', 'Lead weekly team synchronization meeting.', 'normal', 'completed', '2026-02-18', '2026-02-18 10:00:00+00', 15, 5, v_admin_id
+    SELECT e.id, 'Weekly Team Sync', 'Lead weekly team synchronization meeting.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 2, date_trunc('week', CURRENT_DATE) + INTERVAL '2 days 10 hours', 15, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'anas.essam.work@gmail.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Code Review Sprint Tasks', 'Review all sprint pull requests and provide feedback.', 'high', 'completed', '2026-02-19', '2026-02-19 15:30:00+00', 20, 10, v_admin_id
+    SELECT e.id, 'Code Review Sprint Tasks', 'Review all sprint pull requests and provide feedback.', 'high', 'completed', date_trunc('week', CURRENT_DATE)::date + 3, date_trunc('week', CURRENT_DATE) + INTERVAL '3 days 15 hours 30 minutes', 20, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'anas.essam.work@gmail.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Engineering Team Report', 'Submit weekly engineering progress report.', 'normal', 'completed', '2026-02-20', '2026-02-20 09:00:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'Engineering Team Report', 'Submit weekly engineering progress report.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 4, date_trunc('week', CURRENT_DATE) + INTERVAL '4 days 9 hours', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'j.lee@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Review Hiring Candidates', 'Review resumes for open positions and schedule interviews.', 'high', 'completed', '2026-02-19', '2026-02-19 14:00:00+00', 20, 10, v_admin_id
+    SELECT e.id, 'Review Hiring Candidates', 'Review resumes for open positions and schedule interviews.', 'high', 'completed', date_trunc('week', CURRENT_DATE)::date + 3, date_trunc('week', CURRENT_DATE) + INTERVAL '3 days 14 hours', 20, 10, v_admin_id
     FROM public.employees e WHERE e.email = 'j.lee@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Business Unit Planning', 'Prepare Q1 business unit planning document.', 'normal', 'completed', '2026-02-17', '2026-02-17 16:00:00+00', 15, 5, v_admin_id
+    SELECT e.id, 'Business Unit Planning', 'Prepare Q1 business unit planning document.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 1, date_trunc('week', CURRENT_DATE) + INTERVAL '1 day 16 hours', 15, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'e.wilson@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Financial Report Review', 'Review and approve weekly financial reports.', 'normal', 'completed', '2026-02-18', '2026-02-18 11:00:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'Financial Report Review', 'Review and approve weekly financial reports.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 2, date_trunc('week', CURRENT_DATE) + INTERVAL '2 days 11 hours', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'r.garcia@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Update Training Materials', 'Update orientation training materials for new hires.', 'normal', 'completed', '2026-02-19', '2026-02-19 13:00:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'Update Training Materials', 'Update orientation training materials for new hires.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 3, date_trunc('week', CURRENT_DATE) + INTERVAL '3 days 13 hours', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'j.martinez@DevTeamHub.com';
 
     INSERT INTO public.employee_tasks (employee_id, title, description, priority, status, deadline, completed_at, points, penalty_points, assigned_by)
-    SELECT e.id, 'Staff Schedule Coordination', 'Coordinate next week staff schedule and coverage.', 'normal', 'completed', '2026-02-17', '2026-02-17 10:00:00+00', 10, 5, v_admin_id
+    SELECT e.id, 'Staff Schedule Coordination', 'Coordinate next week staff schedule and coverage.', 'normal', 'completed', date_trunc('week', CURRENT_DATE)::date + 1, date_trunc('week', CURRENT_DATE) + INTERVAL '1 day 10 hours', 10, 5, v_admin_id
     FROM public.employees e WHERE e.email = 'p.thomas@DevTeamHub.com';
 
     -- ============================================================================
