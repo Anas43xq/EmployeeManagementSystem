@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DataAvailabilityModalProps {
   weekStart: string;
@@ -15,6 +16,7 @@ export default function DataAvailabilityModal({
   onCancel,
   isLoading = false,
 }: DataAvailabilityModalProps) {
+  const { t } = useTranslation();
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -47,21 +49,21 @@ export default function DataAvailabilityModal({
             <AlertCircle className="w-6 h-6 text-orange-600" />
           )}
           <h2 className="text-lg font-semibold text-gray-900">
-            {hasSufficientData ? 'Data Available' : 'Limited Data'}
+            {hasSufficientData ? t('performance.dataAvailable') : t('performance.limitedData')}
           </h2>
         </div>
 
         {/* Week Range */}
         <p className="text-sm text-gray-600 mb-4">
-          Week: {formatDate(weekStart)} - {formatDate(weekEndStr)}
+          {t('performance.week')}: {formatDate(weekStart)} - {formatDate(weekEndStr)}
         </p>
 
         {/* Data Summary */}
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">{daysWithData}</div>
-            <div className="text-sm text-gray-600">days with attendance data</div>
-            <div className="text-xs text-gray-500 mt-1">(out of 7 days)</div>
+            <div className="text-sm text-gray-600">{t('performance.daysWithAttendance')}</div>
+            <div className="text-xs text-gray-500 mt-1">{t('performance.outOf7Days')}</div>
           </div>
         </div>
 
@@ -71,15 +73,14 @@ export default function DataAvailabilityModal({
             <>
               {showWarning ? (
                 <>
-                  This week has limited attendance records. Performance calculation will be based on
-                  {daysWithData} day{daysWithData !== 1 ? 's' : ''} of data. Continue?
+                  {t('performance.limitedRecords', { days: daysWithData })}
                 </>
               ) : (
-                <>Complete week data is available. You can safely calculate performance for this week.</>
+                <>{t('performance.fullDataAvailable')}</>
               )}
             </>
           ) : (
-            <>No attendance data found for this week. Performance cannot be calculated without attendance records.</>
+            <>{t('performance.noAttendanceData')}</>
           )}
         </p>
 
@@ -90,7 +91,7 @@ export default function DataAvailabilityModal({
             className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors"
             disabled={isLoading}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={onProceed}
@@ -101,7 +102,7 @@ export default function DataAvailabilityModal({
                 : 'bg-gray-400 cursor-not-allowed'
             }`}
           >
-            {isLoading ? 'Calculating...' : 'Proceed'}
+            {isLoading ? t('performance.calculating') : t('performance.proceed')}
           </button>
         </div>
       </div>

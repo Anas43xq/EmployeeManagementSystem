@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Card } from '../../components/ui';
@@ -14,6 +15,7 @@ interface DataAvailability {
 
 export default function PerformanceCalculationStatus() {
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
   const [lastCalculation, setLastCalculation] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -66,7 +68,7 @@ export default function PerformanceCalculationStatus() {
   const handleManualTrigger = async (targetWeek: 'current' | 'previous') => {
     // Spam prevention - don't allow if already calculating
     if (isCalculating) {
-      showNotification('warning', 'A calculation is already in progress. Please wait.');
+      showNotification('warning', t('performance.spamWarning'));
       return;
     }
 
@@ -87,7 +89,7 @@ export default function PerformanceCalculationStatus() {
 
       const now = new Date().toLocaleString('en-GB');
       setLastCalculation(now);
-      showNotification('success', `Performance calculated for week starting ${weekStart}`);
+      showNotification('success', t('performance.calculated', { weekStart }));
 
       // Refresh data availability after calculation
       const [currentData, previousData] = await Promise.all([
@@ -97,7 +99,7 @@ export default function PerformanceCalculationStatus() {
       setCurrentWeekData(currentData);
       setPreviousWeekData(previousData);
     } catch (_err) {
-      showNotification('error', 'Failed to calculate performance: ' + (_err as Error).message);
+      showNotification('error', t('performance.failedToCalculate') + ': ' + (_err as Error).message);
     } finally {
       setIsCalculating(false);
     }
@@ -106,7 +108,7 @@ export default function PerformanceCalculationStatus() {
   const handlePreviousWeekClick = () => {
     // Spam prevention - don't allow if already calculating
     if (isCalculating) {
-      showNotification('warning', 'A calculation is already in progress. Please wait.');
+      showNotification('warning', t('performance.spamWarning'));
       return;
     }
     setShowPreviousWeekModal(true);
@@ -128,14 +130,18 @@ export default function PerformanceCalculationStatus() {
     if (!data) return null;
 
     if (data.days_with_data === 0) {
-      return <span className="text-xs text-red-600 font-medium">No data</span>;
+      return <span className="text-xs text-red-600 font-medium">{t('performance.noData')}</span>;
     }
 
     if (data.days_with_data < 7) {
-      return <span className="text-xs text-orange-600 font-medium">{data.days_with_data}/7 days</span>;
+      return (
+        <span className="text-xs text-orange-600 font-medium">
+          {t('performance.daysData', { days: data.days_with_data })}
+        </span>
+      );
     }
 
-    return <span className="text-xs text-green-600 font-medium">✓ Full week</span>;
+    return <span className="text-xs text-green-600 font-medium">✓ {t('performance.fullWeek')}</span>;
   };
 
   return (
@@ -143,24 +149,24 @@ export default function PerformanceCalculationStatus() {
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <RefreshCw className="w-5 h-5 text-blue-500" />
-          <h3 className="font-semibold text-gray-900">Performance Calculation</h3>
+          <h3 className="font-semibold text-gray-900">{t('performance.calculation')}</h3>
         </div>
 
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Clock className="w-4 h-4 text-gray-400" />
-            <span>Last calculated: {lastCalculation ?? 'Never'}</span>
+            <span>
+              {t('performance.lastCalculated')}: {lastCalculation ?? t('performance.never')}
+            </span>
           </div>
-          <p className="text-xs text-gray-400">
-            Auto-runs every Monday at 00:05 UTC. Use "Current Week" to see live data.
-          </p>
+          <p className="text-xs text-gray-400">{t('performance.autoRuns')}</p>
         </div>
 
         {/* Data Availability Status */}
         {!isLoadingData && (
           <div className="bg-gray-50 rounded-lg p-3 mb-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-700">Current Week Status:</span>
+              <span className="text-gray-700">{t('performance.currentWeekStatus')}:</span>
               <div className="flex items-center gap-2">
                 {currentWeekData?.days_with_data === 0 ? (
                   <AlertCircle className="w-4 h-4 text-red-600" />
@@ -173,7 +179,7 @@ export default function PerformanceCalculationStatus() {
               </div>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-700">Previous Week Status:</span>
+              <span className="text-gray-700">{t('performance.previousWeekStatus')}:</span>
               <div className="flex items-center gap-2">
                 {previousWeekData?.days_with_data === 0 ? (
                   <AlertCircle className="w-4 h-4 text-red-600" />
@@ -194,12 +200,12 @@ export default function PerformanceCalculationStatus() {
             disabled={isCalculating || !currentWeekCanCalculate || isLoadingData}
             title={
               isCalculating
-                ? 'Calculation in progress... Please wait'
+                ? t('performance.calculationInProgress')
                 : isLoadingData
-                  ? 'Loading data availability...'
+                  ? t('performance.loadingAvailability')
                   : !currentWeekCanCalculate
-                    ? 'Insufficient attendance data for this week'
-                    : 'Calculate current week performance'
+                    ? t('performance.insufficientData')
+                    : t('performance.calculateCurrentWeek')
             }
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               !isCalculating && currentWeekCanCalculate && !isLoadingData
@@ -212,17 +218,17 @@ export default function PerformanceCalculationStatus() {
             ) : (
               <CheckCircle className="w-4 h-4" />
             )}
-            {isCalculating ? 'Calculating...' : 'Calculate Current Week'}
+            {isCalculating ? t('performance.calculating') : t('performance.calculateCurrentWeek')}
           </button>
           <button
             onClick={handlePreviousWeekClick}
             disabled={isCalculating || isLoadingData}
             title={
               isCalculating
-                ? 'Calculation in progress... Please wait'
+                ? t('performance.calculationInProgress')
                 : isLoadingData
-                  ? 'Loading data availability...'
-                  : 'Review previous week data before calculating'
+                  ? t('performance.loadingAvailability')
+                  : t('performance.reviewDataBeforeCalculating')
             }
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               !isCalculating && !isLoadingData
@@ -235,7 +241,7 @@ export default function PerformanceCalculationStatus() {
             ) : (
               <RefreshCw className="w-4 h-4" />
             )}
-            {isCalculating ? 'Calculating...' : 'Calculate Previous Week'}
+            {isCalculating ? t('performance.calculating') : t('performance.calculatePreviousWeek')}
           </button>
         </div>
       </Card>
