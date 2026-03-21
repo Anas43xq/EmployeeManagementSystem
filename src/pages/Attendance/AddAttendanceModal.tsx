@@ -107,7 +107,6 @@ export default function AddAttendanceModal({
           </Button>
         </Modal.Footer>
       </form>
-    </Modal
-    </div>
+    </Modal>
   );
 }

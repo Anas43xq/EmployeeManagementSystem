@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { StatusBadge } from '../../components/ui';
 import type { Leave } from './types';
 

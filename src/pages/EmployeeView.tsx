@@ -292,7 +292,10 @@ export default function EmployeeView() {
               </div>
             </div>
           </Card>
+        </div>
+      </div>
 
+      <Modal
         show={terminateModal}
         onClose={() => setTerminateModal(false)}
       >

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { usePayroll } from './usePayroll';
 import PayslipModal from './PayslipModal';
-import { StatsCard, Button, StatusBadge, Modal, PageHeader, EmptyState } from '../../components/ui';
+import { StatsCard, Button, StatusBadge, Modal, PageHeader, EmptyState, Card } from '../../components/ui';
 import { formatCurrency, getMonthName } from '../../services/payroll';
 import {
   Calculator,
