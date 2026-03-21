@@ -64,6 +64,12 @@ export default function PerformanceCalculationStatus() {
   };
 
   const handleManualTrigger = async (targetWeek: 'current' | 'previous') => {
+    // Spam prevention - don't allow if already calculating
+    if (isCalculating) {
+      showNotification('warning', 'A calculation is already in progress. Please wait.');
+      return;
+    }
+
     setIsCalculating(true);
     try {
       const today = new Date();
@@ -98,6 +104,11 @@ export default function PerformanceCalculationStatus() {
   };
 
   const handlePreviousWeekClick = () => {
+    // Spam prevention - don't allow if already calculating
+    if (isCalculating) {
+      showNotification('warning', 'A calculation is already in progress. Please wait.');
+      return;
+    }
     setShowPreviousWeekModal(true);
   };
 
@@ -182,14 +193,16 @@ export default function PerformanceCalculationStatus() {
             onClick={() => handleManualTrigger('current')}
             disabled={isCalculating || !currentWeekCanCalculate || isLoadingData}
             title={
-              isLoadingData
-                ? 'Loading data availability...'
-                : !currentWeekCanCalculate
-                  ? 'Insufficient attendance data for this week'
-                  : 'Calculate current week performance'
+              isCalculating
+                ? 'Calculation in progress... Please wait'
+                : isLoadingData
+                  ? 'Loading data availability...'
+                  : !currentWeekCanCalculate
+                    ? 'Insufficient attendance data for this week'
+                    : 'Calculate current week performance'
             }
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              currentWeekCanCalculate && !isLoadingData
+              !isCalculating && currentWeekCanCalculate && !isLoadingData
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-gray-400 text-white cursor-not-allowed'
             } disabled:opacity-50`}
@@ -204,11 +217,17 @@ export default function PerformanceCalculationStatus() {
           <button
             onClick={handlePreviousWeekClick}
             disabled={isCalculating || isLoadingData}
-            title={isLoadingData ? 'Loading data availability...' : 'Review previous week data before calculating'}
+            title={
+              isCalculating
+                ? 'Calculation in progress... Please wait'
+                : isLoadingData
+                  ? 'Loading data availability...'
+                  : 'Review previous week data before calculating'
+            }
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isLoadingData
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-gray-600 text-white hover:bg-gray-700'
+              !isCalculating && !isLoadingData
+                ? 'bg-gray-600 text-white hover:bg-gray-700'
+                : 'bg-gray-400 text-white cursor-not-allowed'
             } disabled:opacity-50`}
           >
             {isCalculating ? (

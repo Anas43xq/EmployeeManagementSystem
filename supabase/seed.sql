@@ -115,10 +115,10 @@ INSERT INTO public.leaves (employee_id, leave_type, start_date, end_date, days_c
 SELECT id, 'annual', '2026-02-14', '2026-02-14', 1, 'Valentine day off', 'rejected' FROM public.employees WHERE email = 'w.taylor@DevTeamHub.com';
 
 -- ============================================================================
--- ATTENDANCE - Mixed statuses
+-- ATTENDANCE - Mixed statuses (comprehensive 2-week coverage)
 -- ============================================================================
 
--- Past 7 days attendance for most employees (present)
+-- CURRENT WEEK (Monday-Friday): Past 7 days attendance for most employees (present)
 INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
 SELECT e.id, d::date, '09:00', '17:00', 'present'
 FROM public.employees e
@@ -129,11 +129,35 @@ WHERE e.status = 'active' AND e.email NOT IN (
 )
 ON CONFLICT (employee_id, date) DO NOTHING;
 
+-- PREVIOUS WEEK (8-14 days ago): Comprehensive attendance data for all employees
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '09:00', '17:00', 'present'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 14, CURRENT_DATE - 8, '1 day') d
+WHERE e.status = 'active' AND e.email NOT IN ('l.rodriguez@DevTeamHub.com', 'w.taylor@DevTeamHub.com', 'k.walker@DevTeamHub.com')
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- PREVIOUS WEEK: Late arrivals for these employees
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '10:15', '17:30', 'late'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 14, CURRENT_DATE - 8, '1 day') d
+WHERE e.email = 'l.rodriguez@DevTeamHub.com'
+ON CONFLICT (employee_id, date) DO NOTHING;
+
 -- Auth user attendance (past 5 days - present)
 INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
 SELECT e.id, d::date, '08:45', '17:15', 'present'
 FROM public.employees e
 CROSS JOIN generate_series(CURRENT_DATE - 5, CURRENT_DATE - 1, '1 day') d
+WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
+ON CONFLICT (employee_id, date) DO NOTHING;
+
+-- Auth users for previous week (complete 7-day coverage)
+INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
+SELECT e.id, d::date, '08:45', '17:15', 'present'
+FROM public.employees e
+CROSS JOIN generate_series(CURRENT_DATE - 14, CURRENT_DATE - 8, '1 day') d
 WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam96@gmail.com')
 ON CONFLICT (employee_id, date) DO NOTHING;
 
@@ -147,7 +171,7 @@ WHERE e.email IN ('anas.essam.work@gmail.com', 'essamanas86@gmail.com', 'tvissam
   'd.brown@DevTeamHub.com', 'j.lewis@DevTeamHub.com', 'b.young@DevTeamHub.com')
 ON CONFLICT (employee_id, date) DO NOTHING;
 
--- Late arrivals (multiple days)
+-- Late arrivals in current week (multiple days)
 INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
 SELECT e.id, d::date, '10:15', '17:30', 'late'
 FROM public.employees e
@@ -155,7 +179,7 @@ CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE - 1, '1 day') d
 WHERE e.email = 'l.rodriguez@DevTeamHub.com'
 ON CONFLICT (employee_id, date) DO NOTHING;
 
--- Late arrivals for w.taylor
+-- Late arrivals for w.taylor in current week
 INSERT INTO public.attendance (employee_id, date, check_in, check_out, status)
 SELECT e.id, d::date, '09:45', '17:00', 'late'
 FROM public.employees e
