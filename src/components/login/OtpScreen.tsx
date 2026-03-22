@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { sendLoginOtp, verifyLoginOtp } from '../../services/loginAttempts';
-import { Mail, Clock, Info } from 'lucide-react';
+import { Mail, Clock } from 'lucide-react';
 
 interface OtpScreenProps {
   email: string;
