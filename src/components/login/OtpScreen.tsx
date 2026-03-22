@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { sendLoginOtp, verifyLoginOtp } from '../../services/loginAttempts';
-import { Mail, Clock } from 'lucide-react';
+import { Mail, Clock, Info } from 'lucide-react';
 
 interface OtpScreenProps {
   email: string;
@@ -46,7 +46,17 @@ export default function OtpScreen({ email, onBack }: OtpScreenProps) {
     const result = await verifyLoginOtp(email, otpCode);
 
     if (result.error || !result.success) {
-      setOtpError(result.error || t('auth.otpVerificationFailed'));
+      // Check if it's an OTP rate limit error
+      const errorMsg = result.error?.toLowerCase() || '';
+      if (errorMsg.includes('too many') || errorMsg.includes('rate limit')) {
+        setOtpError(
+          t('auth.otpRateLimitExceeded', {
+            defaultValue: 'Too many OTP attempts. Please try again later.',
+          })
+        );
+      } else {
+        setOtpError(result.error || t('auth.otpVerificationFailed'));
+      }
       setOtpLoading(false);
       return;
     }
@@ -107,6 +117,16 @@ export default function OtpScreen({ email, onBack }: OtpScreenProps) {
             <p className="text-sm text-red-700">{otpError}</p>
           </div>
         )}
+
+        {/* Info: No progressive delays during OTP phase */}
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+          <Info className="w-4 h-4 mt-0.5 text-blue-600 flex-shrink-0" />
+          <p className="text-xs text-blue-700">
+            {t('auth.otpNoDelayInfo', {
+              defaultValue: 'OTP verification attempts do not have timed delays. You can retry as often as needed within the rate limits.',
+            })}
+          </p>
+        </div>
 
         {/* OTP form */}
         <form onSubmit={handleOtpSubmit} className="space-y-4">

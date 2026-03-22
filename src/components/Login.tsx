@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { sendLoginOtp } from '../services/loginAttempts';
+import { sendLoginOtp, checkIpMacLimits, getLoginAttemptStatus } from '../services/loginAttempts';
 import { isWebAuthnSupported } from '../services/passkeys';
-import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Clock } from 'lucide-react';
 import OtpScreen from './login/OtpScreen';
 import PasskeyScreen from './login/PasskeyScreen';
 import ForgotPasswordScreen from './login/ForgotPasswordScreen';
@@ -22,6 +22,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [warnMessage, setWarnMessage] = useState('');
   const [otpEmail, setOtpEmail] = useState('');
+  const [delayCountdown, setDelayCountdown] = useState(0);
+  const [ipMacLimitMessage, setIpMacLimitMessage] = useState('');
+  const delayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
@@ -52,6 +55,24 @@ export default function Login() {
     setPasskeySupported(isWebAuthnSupported());
   }, []);
 
+  // Countdown timer effect for progressive delays
+  useEffect(() => {
+    if (delayCountdown > 0) {
+      delayIntervalRef.current = setInterval(() => {
+        setDelayCountdown((prev) => {
+          if (prev <= 1) {
+            if (delayIntervalRef.current) clearInterval(delayIntervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (delayIntervalRef.current) clearInterval(delayIntervalRef.current);
+    };
+  }, [delayCountdown]);
+
   // Trigger OTP flow: send OTP then switch to OTP screen
   const triggerOtpFlow = async (targetEmail: string) => {
     const { error: sendError } = await sendLoginOtp(targetEmail);
@@ -69,9 +90,39 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setWarnMessage('');
+    setIpMacLimitMessage('');
     setLoading(true);
 
     try {
+      // Check IP/MAC rate limit first (5 attempts per 5 minutes)
+      const ipMacStatus = await checkIpMacLimits(email);
+      if (!ipMacStatus.allowed) {
+        const minutes = Math.ceil(ipMacStatus.secondsUntilReset / 60);
+        setIpMacLimitMessage(
+          t('auth.ipMacLimitExceeded', {
+            minutes,
+            defaultValue: `Too many login attempts from this device. Please try again in ${minutes} minute(s).`,
+          })
+        );
+        setError(t('auth.tooManyAttempts', { defaultValue: 'Too many login attempts. Please try again later.' }));
+        setLoading(false);
+        return;
+      }
+
+      // Check if user is in progressive delay window
+      const attemptStatus = await getLoginAttemptStatus(email);
+      if (attemptStatus.secondsUntilRetry > 0) {
+        setDelayCountdown(attemptStatus.secondsUntilRetry);
+        setError(
+          t('auth.progressiveDelayActive', {
+            seconds: attemptStatus.secondsUntilRetry,
+            defaultValue: `Please wait ${attemptStatus.secondsUntilRetry} seconds before retrying.`,
+          })
+        );
+        setLoading(false);
+        return;
+      }
+
       await signIn(email, password);
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
@@ -175,6 +226,13 @@ export default function Login() {
           </div>
         )}
 
+        {ipMacLimitMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
+            <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span className="text-sm">{ipMacLimitMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -224,10 +282,19 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || delayCountdown > 0}
+            className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? t('auth.signingIn') : t('auth.signIn')}
+            {delayCountdown > 0 ? (
+              <>
+                <Clock className="w-4 h-4" />
+                {t('auth.retryIn', { seconds: delayCountdown, defaultValue: `Retry in ${delayCountdown}s` })}
+              </>
+            ) : loading ? (
+              t('auth.signingIn')
+            ) : (
+              t('auth.signIn')
+            )}
           </button>
         </form>
 

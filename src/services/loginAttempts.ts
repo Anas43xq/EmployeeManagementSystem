@@ -1,20 +1,22 @@
 /**
  * loginAttempts.ts
- * Server-side login attempt tracking with OTP trigger.
+ * Server-side login attempt tracking with OTP trigger + progressive delays.
  *
  * All pre-auth operations go through SECURITY DEFINER RPCs so they bypass RLS
  * (the user has no session yet when these run).
  *
  * Flow:
- *   1. pre_auth_login_check   — resolve email → status
- *   2. record_failed_login    — increment counter, auto-set OTP window at 5
+ *   1. pre_auth_login_check    — resolve email → status + delay info
+ *   2. record_failed_login     — increment counter, set progressive delay, auto-set OTP window at 5
  *   3. sendLoginOtp            — send OTP email via Supabase Auth
- *   4. verifyLoginOtp          — verify OTP, reset counter on success
+ *   4. verifyLoginOtp          — verify OTP, reset counter on success (resets delays too)
  *   5. resetLoginAttempts      — zero-out (called post-auth)
+ *   6. checkIpMacLimits        — validate IP/device combo hasn't hit 5 per 5 min
  */
 
 import { supabase } from './supabase';
 import { logActivity } from './activityLog';
+import { getMacProxy } from '../utils/ipMacUtils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = supabase as any;
@@ -30,9 +32,33 @@ export interface LoginAttemptStatus {
   requiresOtp: boolean;
   otpExpiresAt: string | null;
   otpSecondsLeft: number;
+  delayUntil: string | null;
+  secondsUntilRetry: number;
+}
+
+export interface IpMacLimitStatus {
+  allowed: boolean;
+  failedAttempts: number;
+  attemptsRemaining: number;
+  limit: number;
+  windowMinutes: number;
+  windowResetAt: string | null;
+  secondsUntilReset: number;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/**
+ * Calculate progressive delay in seconds based on attempt count
+ * 1st attempt: 0s, 2nd: 5s, 3rd: 15s, 4th+: 30s
+ */
+export function getProgressiveDelaySeconds(attemptCount: number): number {
+  if (attemptCount < 2) return 0;
+  if (attemptCount === 2) return 5;
+  if (attemptCount === 3) return 15;
+  return 30; // 4th attempt and beyond
+}
+
 function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatus {
   if (!data) {
     return {
@@ -42,6 +68,8 @@ function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatu
       requiresOtp: false,
       otpExpiresAt: null,
       otpSecondsLeft: 0,
+      delayUntil: null,
+      secondsUntilRetry: 0,
     };
   }
   return {
@@ -51,6 +79,31 @@ function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatu
     requiresOtp: (data.requires_otp as boolean) ?? false,
     otpExpiresAt: (data.otp_expires_at as string) ?? null,
     otpSecondsLeft: (data.otp_seconds_left as number) ?? 0,
+    delayUntil: (data.delay_until as string) ?? null,
+    secondsUntilRetry: (data.seconds_until_retry as number) ?? 0,
+  };
+}
+
+function parseIpMacLimitResult(data: Record<string, unknown> | null): IpMacLimitStatus {
+  if (!data) {
+    return {
+      allowed: true,
+      failedAttempts: 0,
+      attemptsRemaining: 5,
+      limit: 5,
+      windowMinutes: 5,
+      windowResetAt: null,
+      secondsUntilReset: 0,
+    };
+  }
+  return {
+    allowed: (data.allowed as boolean) ?? true,
+    failedAttempts: (data.failed_attempts as number) ?? 0,
+    attemptsRemaining: (data.attempts_remaining as number) ?? 5,
+    limit: (data.limit as number) ?? 5,
+    windowMinutes: (data.window_minutes as number) ?? 5,
+    windowResetAt: (data.window_reset_at as string) ?? null,
+    secondsUntilReset: (data.seconds_until_reset as number) ?? 0,
   };
 }
 
@@ -146,6 +199,7 @@ export async function verifyLoginOtp(
 /**
  * Reset the counter after a successful login or OTP verification.
  * Called post-auth, so the user has a session (but the RPC also accepts anon).
+ * This also clears any progressive delay that was set.
  */
 export async function resetLoginAttempts(userId: string): Promise<void> {
   const { error } = await rpc.rpc('reset_login_attempts_rpc', {
@@ -154,5 +208,30 @@ export async function resetLoginAttempts(userId: string): Promise<void> {
 
   if (error) {
     // non-critical: counter reset failure should not interrupt the login flow
+  }
+}
+
+/**
+ * Check if IP/MAC combo has exceeded rate limit (5 attempts per 5 minutes).
+ * Should be called before password attempt to validate device is not spamming.
+ */
+export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus> {
+  try {
+    const macProxy = await getMacProxy();
+    const { data, error } = await rpc.rpc('check_ip_mac_limits', {
+      p_ip_address: macProxy.ipAddress,
+      p_user_agent: macProxy.userAgent,
+      p_email: email,
+    });
+
+    if (error) {
+      // On error, assume allowed (fail-open for UX, not security-critical since server validates)
+      return parseIpMacLimitResult(null);
+    }
+
+    return parseIpMacLimitResult(data);
+  } catch (_err: unknown) {
+    // Network error or other issue, assume allowed
+    return parseIpMacLimitResult(null);
   }
 }

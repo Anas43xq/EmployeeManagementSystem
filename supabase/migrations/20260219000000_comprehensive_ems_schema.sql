@@ -1,43 +1,7 @@
--- ============================================================
--- STAFFHUB - EMPLOYEE MANAGEMENT SYSTEM
--- Database Schema v3.5
--- Project: Senior Graduation Project - DevTeam Hub
--- Date: February 2026
--- ============================================================
--- CONTENTS:
---   1.  Cleanup              - drop all existing objects safely
---   2.  Extensions           - pgcrypto, pg_cron
---   3.  Sequences            - employee number auto-increment
---   4.  Helper Functions     - notify_role_users, get_role_user_emails,
---                              generate_employee_number, update_updated_at
---   5.  Core Tables          - departments, employees, users
---   6.  Leave Tables         - leaves, leave_balances
---   7.  Attendance           - attendance
---   8.  Passkeys             - WebAuthn credentials (passwordless login)
---   8b. Login Attempts       - failed login tracking with escalating lockout
---   9.  Payroll Tables       - payrolls, bonuses, deductions
---   10. Communication        - notifications, activity_logs, user_preferences
---   11. Announcements        - announcements
---   12. Tasks                - employee_tasks
---   13. Warnings             - employee_warnings
---   14. Complaints           - employee_complaints
---   15. Performance          - employee_performance, employee_of_week
---   16. Indexes              - all performance indexes grouped by table
---   17. Triggers             - updated_at, email sync, new user setup, leave overlap
---   18. RLS Enable           - enable row level security on all tables
---   19. RLS Helper Functions - get_user_role, get_user_employee_id, get_user_email
---   20. RLS Policies         - all access control policies per table
---   21. Business Logic       - working days, leave overlap, performance, payroll
---   22. Realtime             - replica identity + supabase_realtime publication
---   23. Storage              - employee-photos bucket + storage policies
---   24. Seed Data            - moved to supabase/seed.sql (loaded by db reset)
---   25. Cron Jobs            - automated weekly performance + employee of week
---   26. Session Token Funcs  - get/set/clear_own_session_token (single-session enforcement)
--- ============================================================
+-- StaffHub Employee Management System | Schema v3.5 | Feb 2026
+-- See: supabase/DATABASE_SCHEMA_GUIDE.md for detailed documentation
 
--- 1. CLEANUP
-
--- Drop all RLS policies dynamically
+-- CLEANUP
 DO $$ 
 DECLARE
   r RECORD;
@@ -47,7 +11,6 @@ BEGIN
   END LOOP;
 END $$;
 
--- Drop triggers safely
 DO $$
 BEGIN
   DROP TRIGGER IF EXISTS update_departments_updated_at_trigger ON public.departments;
@@ -73,7 +36,7 @@ BEGIN
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
--- Drop tables 1
+-- Drop all existing tables in dependency order
 DROP TABLE IF EXISTS public.employee_of_week CASCADE;
 DROP TABLE IF EXISTS public.employee_performance CASCADE;
 DROP TABLE IF EXISTS public.employee_complaints CASCADE;
@@ -86,6 +49,7 @@ DROP TABLE IF EXISTS public.user_preferences CASCADE;
 DROP TABLE IF EXISTS public.deductions CASCADE;
 DROP TABLE IF EXISTS public.bonuses CASCADE;
 DROP TABLE IF EXISTS public.payrolls CASCADE;
+DROP TABLE IF EXISTS public.login_attempt_limits CASCADE;
 DROP TABLE IF EXISTS public.login_attempts CASCADE;
 DROP TABLE IF EXISTS public.passkeys CASCADE;
 DROP TABLE IF EXISTS public.attendance CASCADE;
@@ -94,35 +58,13 @@ DROP TABLE IF EXISTS public.leaves CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 DROP TABLE IF EXISTS public.employees CASCADE;
 DROP TABLE IF EXISTS public.departments CASCADE;
-
--- Drop tables 2
-DROP TABLE IF EXISTS public.employee_of_week CASCADE;
-DROP TABLE IF EXISTS public.employee_performance CASCADE;
-DROP TABLE IF EXISTS public.employee_complaints CASCADE;
-DROP TABLE IF EXISTS public.employee_warnings CASCADE;
-DROP TABLE IF EXISTS public.employee_tasks CASCADE;
-DROP TABLE IF EXISTS public.activity_logs CASCADE;
-DROP TABLE IF EXISTS public.notifications CASCADE;
-DROP TABLE IF EXISTS public.announcements CASCADE;
-DROP TABLE IF EXISTS public.user_preferences CASCADE;
-DROP TABLE IF EXISTS public.deductions CASCADE;
-DROP TABLE IF EXISTS public.bonuses CASCADE;
-DROP TABLE IF EXISTS public.payrolls CASCADE;
-DROP TABLE IF EXISTS public.login_attempts CASCADE;
-DROP TABLE IF EXISTS public.passkeys CASCADE;
-DROP TABLE IF EXISTS public.attendance CASCADE;
-DROP TABLE IF EXISTS public.leave_balances CASCADE;
-DROP TABLE IF EXISTS public.leaves CASCADE;
-DROP TABLE IF EXISTS public.users CASCADE;
-DROP TABLE IF EXISTS public.employees CASCADE;
-DROP TABLE IF EXISTS public.departments CASCADE;
-
--- Drop legacy tables
 DROP TABLE IF EXISTS performance_reviews CASCADE;
 DROP TABLE IF EXISTS payroll CASCADE;
 
--- Drop sequences and functions
+-- Drop sequences
 DROP SEQUENCE IF EXISTS employee_number_seq CASCADE;
+
+-- Drop functions
 DROP FUNCTION IF EXISTS generate_employee_number() CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS sync_auth_email_from_employee() CASCADE;
@@ -145,22 +87,24 @@ DROP FUNCTION IF EXISTS get_role_user_emails(TEXT[], UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.get_own_session_token() CASCADE;
 DROP FUNCTION IF EXISTS public.set_own_session_token(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.clear_own_session_token() CASCADE;
+DROP FUNCTION IF EXISTS public.get_progressive_delay_seconds(INT) CASCADE;
+DROP FUNCTION IF EXISTS public.get_seconds_until_retry(TIMESTAMPTZ) CASCADE;
+DROP FUNCTION IF EXISTS public.cleanup_expired_login_limits() CASCADE;
+DROP FUNCTION IF EXISTS public.cleanup_old_login_attempts() CASCADE;
+DROP FUNCTION IF EXISTS public.pre_auth_login_check(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
 
--- =============================================
 -- EXTENSIONS
--- =============================================
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
 GRANT USAGE ON SCHEMA cron TO postgres;
 
--- =============================================
 -- SEQUENCES
--- =============================================
 CREATE SEQUENCE IF NOT EXISTS employee_number_seq START 1;
 
--- =============================================
 -- HELPER FUNCTIONS
--- =============================================
 
 -- Generate employee number (EMP001, EMP002, etc.)
 CREATE OR REPLACE FUNCTION generate_employee_number()
@@ -230,11 +174,8 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[], UUID) TO authenticated;
 
--- =============================================
 -- SESSION TOKEN FUNCTIONS
---   SECURITY DEFINER so any authenticated user can read/write their own
---   current_session_token regardless of their role (bypasses RLS).
--- =============================================
+-- SECURITY DEFINER so any authenticated user can read/write their own token
 
 CREATE OR REPLACE FUNCTION public.get_own_session_token()
 RETURNS TEXT
@@ -1792,6 +1733,318 @@ RETURNS TIMESTAMPTZ AS $$
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 GRANT EXECUTE ON FUNCTION get_last_performance_calculation_time() TO authenticated;
+
+-- PROGRESSIVE LOGIN DELAYS + IP/MAC RATE LIMITING
+-- Add delay_until column for progressive delays (0s → 5s → 15s → 30s)
+ALTER TABLE public.login_attempts
+ADD COLUMN IF NOT EXISTS delay_until TIMESTAMPTZ DEFAULT NULL;
+
+-- Track IP/MAC device rate limit (5 per 5 min)
+CREATE TABLE IF NOT EXISTS public.login_attempt_limits (
+  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  ip_address          TEXT        NOT NULL,
+  user_agent          TEXT        NOT NULL,
+  failed_attempts     INT         NOT NULL DEFAULT 0,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_attempt_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  window_start_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(ip_address, user_agent)
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempt_limits_ip_ua 
+  ON public.login_attempt_limits(ip_address, user_agent);
+CREATE INDEX IF NOT EXISTS idx_login_attempt_limits_window_start 
+  ON public.login_attempt_limits(window_start_at);
+
+-- Helper: Get progressive delay seconds (0/5/15/30)
+CREATE OR REPLACE FUNCTION public.get_progressive_delay_seconds(attempt_count INT)
+RETURNS INT
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  RETURN CASE
+    WHEN attempt_count < 2 THEN 0
+    WHEN attempt_count = 2 THEN 5
+    WHEN attempt_count = 3 THEN 15
+    WHEN attempt_count >= 4 THEN 30
+    ELSE 30
+  END;
+END;
+$$;
+
+-- Helper: Calculate seconds until retry allowed
+CREATE OR REPLACE FUNCTION public.get_seconds_until_retry(delay_until_ts TIMESTAMPTZ)
+RETURNS INT
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  IF delay_until_ts IS NULL THEN RETURN 0; END IF;
+  RETURN GREATEST(0, EXTRACT(EPOCH FROM (delay_until_ts - now()))::INT);
+END;
+$$;
+
+-- Helper: Cleanup expired IP/MAC limit records (lazy cleanup)
+CREATE OR REPLACE FUNCTION public.cleanup_expired_login_limits()
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.login_attempt_limits
+  WHERE window_start_at + INTERVAL '5 minutes' < now();
+END;
+$$;
+
+-- Helper: Cleanup old login_attempts (24+ hours)
+CREATE OR REPLACE FUNCTION public.cleanup_old_login_attempts()
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM public.login_attempts
+  WHERE updated_at + INTERVAL '24 hours' < now();
+END;
+$$;
+
+-- RPC: Check if user can attempt login (delay + OTP status)
+CREATE OR REPLACE FUNCTION public.pre_auth_login_check(p_email TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_user_id           UUID;
+  v_record            RECORD;
+  v_failed            INT;
+  v_remaining         INT;
+  v_requires          BOOLEAN;
+  v_seconds           INT;
+  v_delay_until       TIMESTAMPTZ;
+  v_seconds_until_retry INT;
+  v_threshold         INT := 5;
+BEGIN
+  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object(
+      'user_id', NULL, 'failed_attempts', 0, 'attempts_remaining', v_threshold,
+      'requires_otp', false, 'otp_expires_at', NULL, 'otp_seconds_left', 0,
+      'delay_until', NULL, 'seconds_until_retry', 0
+    );
+  END IF;
+
+  SELECT * INTO v_record FROM public.login_attempts WHERE user_id = v_user_id;
+
+  v_failed              := COALESCE(v_record.failed_attempts, 0);
+  v_remaining           := GREATEST(0, v_threshold - v_failed);
+  v_requires            := v_failed >= v_threshold;
+  v_seconds             := 0;
+  v_delay_until         := v_record.delay_until;
+  v_seconds_until_retry := COALESCE(public.get_seconds_until_retry(v_delay_until), 0);
+
+  IF v_requires AND v_record.otp_expires_at IS NOT NULL THEN
+    v_seconds := GREATEST(0, EXTRACT(EPOCH FROM (v_record.otp_expires_at - now()))::INT);
+  END IF;
+
+  RETURN jsonb_build_object(
+    'user_id', v_user_id, 'failed_attempts', v_failed, 'attempts_remaining', v_remaining,
+    'requires_otp', v_requires, 'otp_expires_at', v_record.otp_expires_at,
+    'otp_seconds_left', v_seconds, 'delay_until', v_delay_until,
+    'seconds_until_retry', v_seconds_until_retry
+  );
+END;
+$$;
+
+-- RPC: Record failed login & calculate delay
+CREATE OR REPLACE FUNCTION public.record_failed_login(p_email TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_user_id           UUID;
+  v_new_fails         INT;
+  v_remaining         INT;
+  v_requires          BOOLEAN;
+  v_seconds           INT := 0;
+  v_threshold         INT := 5;
+  v_otp_minutes       INT := 10;
+  v_otp_expires       TIMESTAMPTZ;
+  v_now               TIMESTAMPTZ := now();
+  v_delay_seconds     INT;
+  v_delay_until       TIMESTAMPTZ;
+  v_seconds_until_retry INT;
+BEGIN
+  PERFORM public.cleanup_expired_login_limits();
+
+  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object(
+      'user_id', NULL, 'failed_attempts', 0, 'attempts_remaining', v_threshold,
+      'requires_otp', false, 'otp_expires_at', NULL, 'otp_seconds_left', 0,
+      'delay_until', NULL, 'seconds_until_retry', 0
+    );
+  END IF;
+
+  INSERT INTO public.login_attempts (user_id, failed_attempts, last_attempt_at)
+  VALUES (v_user_id, 1, v_now)
+  ON CONFLICT (user_id) DO UPDATE
+    SET failed_attempts = login_attempts.failed_attempts + 1,
+        last_attempt_at = v_now, updated_at = v_now
+    RETURNING failed_attempts INTO v_new_fails;
+
+  v_delay_seconds := public.get_progressive_delay_seconds(v_new_fails);
+  
+  IF v_new_fails < v_threshold THEN
+    v_delay_until := v_now + (v_delay_seconds || ' seconds')::INTERVAL;
+  ELSE
+    v_delay_until := NULL;
+  END IF;
+
+  IF v_new_fails = v_threshold THEN
+    v_otp_expires := v_now + (v_otp_minutes || ' minutes')::INTERVAL;
+    UPDATE public.login_attempts
+    SET otp_sent_at = v_now, otp_expires_at = v_otp_expires, 
+        delay_until = v_delay_until, updated_at = v_now
+    WHERE user_id = v_user_id;
+  ELSE
+    UPDATE public.login_attempts
+    SET delay_until = v_delay_until, updated_at = v_now
+    WHERE user_id = v_user_id;
+    
+    SELECT otp_expires_at INTO v_otp_expires FROM public.login_attempts WHERE user_id = v_user_id;
+  END IF;
+
+  v_remaining := GREATEST(0, v_threshold - v_new_fails);
+  v_requires  := v_new_fails >= v_threshold;
+  v_seconds_until_retry := COALESCE(public.get_seconds_until_retry(v_delay_until), 0);
+
+  IF v_requires AND v_otp_expires IS NOT NULL THEN
+    v_seconds := GREATEST(0, EXTRACT(EPOCH FROM (v_otp_expires - v_now))::INT);
+  END IF;
+
+  BEGIN
+    INSERT INTO public.activity_logs (user_id, action, entity_type, entity_id, details)
+    VALUES (v_user_id, 'user_login_failed', 'user', v_user_id,
+      jsonb_build_object(
+        'email', p_email, 
+        'failed_attempts', v_new_fails, 
+        'requires_otp', v_requires,
+        'delay_seconds', v_delay_seconds,
+        'seconds_until_retry', v_seconds_until_retry
+      ));
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  RETURN jsonb_build_object(
+    'user_id', v_user_id, 'failed_attempts', v_new_fails, 'attempts_remaining', v_remaining,
+    'requires_otp', v_requires, 'otp_expires_at', v_otp_expires, 'otp_seconds_left', v_seconds,
+    'delay_until', v_delay_until, 'seconds_until_retry', v_seconds_until_retry
+  );
+END;
+$$;
+
+-- RPC: Check IP/MAC device rate limit (5 per 5 min)
+CREATE OR REPLACE FUNCTION public.check_ip_mac_limits(
+  p_ip_address TEXT,
+  p_user_agent TEXT,
+  p_email TEXT DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_now               TIMESTAMPTZ := now();
+  v_failed            INT;
+  v_remaining         INT;
+  v_allowed           BOOLEAN;
+  v_limit             INT := 5;
+  v_window_minutes    INT := 5;
+  v_window_reset_at   TIMESTAMPTZ;
+BEGIN
+  PERFORM public.cleanup_expired_login_limits();
+
+  INSERT INTO public.login_attempt_limits (ip_address, user_agent, failed_attempts, last_attempt_at, window_start_at)
+  VALUES (p_ip_address, p_user_agent, 1, v_now, v_now)
+  ON CONFLICT (ip_address, user_agent) DO UPDATE
+    SET failed_attempts = login_attempt_limits.failed_attempts + 1,
+        last_attempt_at = v_now, updated_at = v_now
+    WHERE window_start_at + (v_window_minutes || ' minutes')::INTERVAL > v_now
+  RETURNING failed_attempts INTO v_failed;
+
+  IF v_failed IS NULL THEN
+    SELECT failed_attempts INTO v_failed FROM public.login_attempt_limits
+    WHERE ip_address = p_ip_address AND user_agent = p_user_agent;
+  END IF;
+
+  v_failed    := COALESCE(v_failed, 0);
+  v_remaining := GREATEST(0, v_limit - v_failed);
+  v_allowed   := v_failed < v_limit;
+  
+  SELECT window_start_at + (v_window_minutes || ' minutes')::INTERVAL 
+  INTO v_window_reset_at
+  FROM public.login_attempt_limits
+  WHERE ip_address = p_ip_address AND user_agent = p_user_agent;
+
+  IF NOT v_allowed AND p_email IS NOT NULL THEN
+    BEGIN
+      INSERT INTO public.activity_logs (user_id, action, entity_type, entity_id, details)
+      SELECT u.id, 'ip_mac_limit_exceeded', 'user', u.id,
+        jsonb_build_object(
+          'ip_address', p_ip_address,
+          'failed_attempts', v_failed,
+          'limit', v_limit,
+          'window_minutes', v_window_minutes
+        )
+      FROM auth.users u WHERE email = lower(p_email)
+      LIMIT 1;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'allowed', v_allowed,
+    'failed_attempts', v_failed,
+    'attempts_remaining', v_remaining,
+    'limit', v_limit,
+    'window_minutes', v_window_minutes,
+    'window_reset_at', v_window_reset_at,
+    'seconds_until_reset', GREATEST(0, EXTRACT(EPOCH FROM (v_window_reset_at - v_now))::INT)
+  );
+END;
+$$;
+
+-- RPC: Reset delays on successful login
+CREATE OR REPLACE FUNCTION public.reset_login_attempts_rpc(p_user_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.login_attempts
+  SET failed_attempts = 0, last_attempt_at = NULL,
+      otp_sent_at = NULL, otp_expires_at = NULL, 
+      delay_until = NULL, updated_at = now()
+  WHERE user_id = p_user_id;
+END;
+$$;
+
+-- Grant execute on RPC functions
+GRANT EXECUTE ON FUNCTION public.check_ip_mac_limits(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_progressive_delay_seconds(INT) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.get_seconds_until_retry(TIMESTAMPTZ) TO authenticated, anon;
 
 -- =============================================
 -- SCHEMA COMPLETE
