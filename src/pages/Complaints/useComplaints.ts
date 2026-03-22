@@ -9,7 +9,7 @@ import {
   createComplaint,
   updateComplaintStatus,
   deleteComplaint,
-} from '../../services/performanceQueries';
+} from '../../services/complaints';
 import { notifyHRAndAdmins, createNotification } from '../../services/dbNotifications';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
 import { initialComplaintFormData } from './types';

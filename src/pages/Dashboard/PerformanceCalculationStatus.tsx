@@ -5,7 +5,7 @@ import { supabase } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Card } from '../../components/ui';
 import DataAvailabilityModal from '../../components/DataAvailabilityModal';
-import { getWeeklyDataAvailability } from '../../services/performanceQueries';
+import { getWeeklyDataAvailability } from '../../services/performance';
 
 interface DataAvailability {
   days_with_data: number;

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from './Navbar';
 import NotificationCenter from './NotificationCenter';
-import { getMyTotalPoints } from '../services/performanceQueries';
+import { getMyTotalPoints } from '../services/performance';
 import {
   Briefcase, LogOut, Menu, X, Globe, Star,
   LayoutDashboard, Users, Building2, Clock, Calendar,

@@ -11,7 +11,7 @@ import {
   updateTaskStatus,
   deleteTask,
   createTaskNotification,
-} from '../../services/performanceQueries';
+} from '../../services/tasks';
 import { notifyHRAndAdmins } from '../../services/dbNotifications';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';

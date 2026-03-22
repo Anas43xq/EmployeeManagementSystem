@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Trophy, Star, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Card } from '../../components/ui';
-import { getEmployeeOfWeek } from '../../services/performanceQueries';
+import { getEmployeeOfWeek } from '../../services/performance';
 import type { EmployeeOfWeek } from '../../types';
 
 export default function EmployeeOfWeekWidget() {

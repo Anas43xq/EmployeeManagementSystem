@@ -11,7 +11,7 @@ import {
   resolveWarning,
   deleteWarning,
   createWarningNotification,
-} from '../../services/performanceQueries';
+} from '../../services/warnings';
 import type { EmployeeWarning, WarningStatus, WarningFormData } from './types';
 import { initialWarningFormData } from './types';
 import type { EmployeeBasic } from '../../types';

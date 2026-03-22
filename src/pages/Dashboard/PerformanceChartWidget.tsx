@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, Award, Users } from 'lucide-react';
 import { Card } from '../../components/ui';
-import { getTopPerformers } from '../../services/performanceQueries';
+import { getTopPerformers } from '../../services/performance';
 import type { EmployeePerformance } from '../../types';
 
 export default function PerformanceChartWidget() {
