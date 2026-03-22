@@ -6,12 +6,14 @@
  * (the user has no session yet when these run).
  *
  * Flow:
- *   1. pre_auth_login_check    — resolve email → status + delay info
- *   2. record_failed_login     — increment counter, set progressive delay, auto-set OTP window at 5
- *   3. sendLoginOtp            — send OTP email via Supabase Auth
- *   4. verifyLoginOtp          — verify OTP, reset counter on success (resets delays too)
- *   5. resetLoginAttempts      — zero-out (called post-auth)
- *   6. checkIpMacLimits        — validate IP/device combo hasn't hit 5 per 5 min
+ *   1. pre_auth_login_check      — resolve email → status + delay info
+ *   2. record_failed_login       — increment counter, set progressive delay, auto-set OTP window at 5
+ *   3. sendLoginOtp              — send OTP email via Supabase Auth + validate cooldown
+ *   4. verifyLoginOtp            — verify OTP, reset counter on success (resets delays too)
+ *   5. resetLoginAttempts        — zero-out (called post-auth)
+ *   6. checkIpMacLimits          — validate IP/device combo hasn't hit 5 per 5 min
+ *   7. validateOtpRequestCooldown — check if 60 seconds passed since last OTP request
+ *   8. getOtpRequestCooldownRemaining — returns seconds until next OTP request allowed
  */
 
 import { supabase } from './supabase';
@@ -23,6 +25,8 @@ const rpc = supabase as any;
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 export const OTP_TRIGGER_THRESHOLD = 5;
+export const OTP_VERIFICATION_ATTEMPTS_MAX = 5;
+export const OTP_REQUEST_COOLDOWN_SECONDS = 60;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface LoginAttemptStatus {
@@ -142,9 +146,19 @@ export async function recordFailedAttempt(email: string): Promise<LoginAttemptSt
 
 /**
  * Send an OTP email and refresh the expiry window in the DB.
+ * Validates cooldown (60 seconds) before sending.
  */
 export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
   try {
+    // Validate cooldown on server side first
+    const cooldownStatus = await validateOtpRequestCooldown(email);
+    if (!cooldownStatus.allowed) {
+      const minutes = Math.ceil(cooldownStatus.secondsRemaining / 60) || 1;
+      return { 
+        error: `Please wait ${minutes} minute(s) before requesting a new code.` 
+      };
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
@@ -155,6 +169,7 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
     }
 
     // Refresh OTP expiry window via RPC (no session needed)
+    // This also resets verification attempts and updates last_otp_request_at
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
@@ -233,5 +248,52 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
   } catch (_err: unknown) {
     // Network error or other issue, assume allowed
     return parseIpMacLimitResult(null);
+  }
+}
+
+/**
+ * Validate OTP request cooldown (60 seconds between requests).
+ * Returns allowed status and seconds remaining in cooldown window.
+ */
+export async function validateOtpRequestCooldown(
+  email: string
+): Promise<{ allowed: boolean; secondsRemaining: number; cooldownSeconds: number }> {
+  try {
+    const { data, error } = await rpc.rpc('validate_otp_request_cooldown', {
+      p_email: email,
+    });
+
+    if (error) {
+      // On error, assume allowed (fail-open)
+      return { allowed: true, secondsRemaining: 0, cooldownSeconds: OTP_REQUEST_COOLDOWN_SECONDS };
+    }
+
+    return {
+      allowed: (data?.allowed as boolean) ?? true,
+      secondsRemaining: (data?.seconds_remaining as number) ?? 0,
+      cooldownSeconds: (data?.cooldown_seconds as number) ?? OTP_REQUEST_COOLDOWN_SECONDS,
+    };
+  } catch (_err: unknown) {
+    return { allowed: true, secondsRemaining: 0, cooldownSeconds: OTP_REQUEST_COOLDOWN_SECONDS };
+  }
+}
+
+/**
+ * Get OTP request cooldown remaining seconds.
+ * Simplified version that only returns the countdown.
+ */
+export async function getOtpRequestCooldownRemaining(email: string): Promise<number> {
+  try {
+    const { data, error } = await rpc.rpc('get_otp_request_cooldown_remaining', {
+      p_email: email,
+    });
+
+    if (error) {
+      return 0;
+    }
+
+    return (data as number) ?? 0;
+  } catch (_err: unknown) {
+    return 0;
   }
 }

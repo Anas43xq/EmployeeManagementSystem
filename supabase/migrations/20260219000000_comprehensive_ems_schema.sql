@@ -92,6 +92,8 @@ DROP FUNCTION IF EXISTS public.pre_auth_login_check(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.validate_otp_request_cooldown(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.get_otp_request_cooldown_remaining(TEXT) CASCADE;
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
@@ -228,6 +230,39 @@ GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
 -- LOGIN ATTEMPT RPC FUNCTIONS (SECURITY DEFINER)
 -- =============================================
 
+CREATE OR REPLACE FUNCTION public.get_otp_request_cooldown_remaining(p_email TEXT)
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_user_id UUID;
+  v_last_request TIMESTAMPTZ;
+  v_cooldown_seconds INT := 60;
+  v_seconds_remaining INT;
+BEGIN
+  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
+  
+  IF v_user_id IS NULL THEN
+    RETURN 0;
+  END IF;
+  
+  SELECT last_otp_request_at INTO v_last_request 
+  FROM public.login_attempts 
+  WHERE user_id = v_user_id;
+  
+  IF v_last_request IS NULL THEN
+    RETURN 0;
+  END IF;
+  
+  v_seconds_remaining := GREATEST(0, EXTRACT(EPOCH FROM (v_last_request + (v_cooldown_seconds || ' seconds')::INTERVAL - now()))::INT);
+  RETURN v_seconds_remaining;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_otp_request_cooldown_remaining(TEXT) TO anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.refresh_otp_expiry(p_email TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -241,7 +276,11 @@ BEGIN
   SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
   IF v_user_id IS NOT NULL THEN
     UPDATE public.login_attempts
-    SET otp_sent_at = v_now, otp_expires_at = v_now + INTERVAL '10 minutes', updated_at = v_now
+    SET otp_sent_at = v_now, 
+        otp_expires_at = v_now + INTERVAL '10 minutes',
+        otp_verification_attempts = 0,
+        last_otp_request_at = v_now,
+        updated_at = v_now
     WHERE user_id = v_user_id;
   END IF;
 END;
@@ -379,15 +418,17 @@ CREATE TABLE public.passkeys (
 -- =============================================
 
 CREATE TABLE public.login_attempts (
-  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id             UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  failed_attempts     INT         NOT NULL DEFAULT 0,
-  last_attempt_at     TIMESTAMPTZ,
-  otp_sent_at         TIMESTAMPTZ,
-  otp_expires_at      TIMESTAMPTZ,
-  delay_until         TIMESTAMPTZ DEFAULT NULL,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                 UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  failed_attempts         INT         NOT NULL DEFAULT 0,
+  last_attempt_at         TIMESTAMPTZ,
+  otp_sent_at             TIMESTAMPTZ,
+  otp_expires_at          TIMESTAMPTZ,
+  otp_verification_attempts INT       NOT NULL DEFAULT 0,
+  last_otp_request_at     TIMESTAMPTZ,
+  delay_until             TIMESTAMPTZ DEFAULT NULL,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id)
 );
 
@@ -1627,6 +1668,8 @@ BEGIN
     v_otp_expires := v_now + (v_otp_minutes || ' minutes')::INTERVAL;
     UPDATE public.login_attempts
     SET otp_sent_at = v_now, otp_expires_at = v_otp_expires, 
+        otp_verification_attempts = 0,
+        last_otp_request_at = v_now,
         delay_until = v_delay_until, updated_at = v_now
     WHERE user_id = v_user_id;
   ELSE
@@ -1747,8 +1790,49 @@ BEGIN
   UPDATE public.login_attempts
   SET failed_attempts = 0, last_attempt_at = NULL,
       otp_sent_at = NULL, otp_expires_at = NULL, 
+      otp_verification_attempts = 0,
+      last_otp_request_at = NULL,
       delay_until = NULL, updated_at = now()
   WHERE user_id = p_user_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_otp_request_cooldown(p_email TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_user_id UUID;
+  v_last_request TIMESTAMPTZ;
+  v_cooldown_seconds INT := 60;
+  v_seconds_remaining INT;
+  v_is_allowed BOOLEAN;
+BEGIN
+  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
+  
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('allowed', true, 'seconds_remaining', 0);
+  END IF;
+  
+  SELECT last_otp_request_at INTO v_last_request 
+  FROM public.login_attempts 
+  WHERE user_id = v_user_id;
+  
+  IF v_last_request IS NULL THEN
+    v_seconds_remaining := 0;
+    v_is_allowed := true;
+  ELSE
+    v_seconds_remaining := GREATEST(0, EXTRACT(EPOCH FROM (v_last_request + (v_cooldown_seconds || ' seconds')::INTERVAL - now()))::INT);
+    v_is_allowed := v_seconds_remaining = 0;
+  END IF;
+  
+  RETURN jsonb_build_object(
+    'allowed', v_is_allowed,
+    'seconds_remaining', v_seconds_remaining,
+    'cooldown_seconds', v_cooldown_seconds
+  );
 END;
 $$;
 
@@ -1758,6 +1842,8 @@ GRANT EXECUTE ON FUNCTION public.get_seconds_until_retry(TIMESTAMPTZ) TO authent
 GRANT EXECUTE ON FUNCTION public.pre_auth_login_check(TEXT)     TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.record_failed_login(TEXT)      TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.reset_login_attempts_rpc(UUID) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.validate_otp_request_cooldown(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_otp_request_cooldown_remaining(TEXT) TO anon, authenticated;
 
 -- =============================================
 -- SCHEMA COMPLETE

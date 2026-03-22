@@ -94,7 +94,13 @@
     "retryIn": "Retry in {{seconds}}s",
     "ipMacLimitExceeded": "Too many login attempts from this device. Please try again in {{minutes}} minute(s).",
     "otpRateLimitExceeded": "Too many OTP verification attempts. Please try again later.",
-    "otpNoDelayInfo": "OTP verification attempts do not have timed delays. You can retry as often as needed within the rate limits."
+    "otpNoDelayInfo": "OTP verification attempts do not have timed delays. You can retry as often as needed within the rate limits.",
+    "otpRequestCooldown": "Please wait {{seconds}} seconds before requesting a new code",
+    "otpTooManyVerifyAttempts": "Too many verification attempts. Request a new code to continue.",
+    "otpRequestNewCodeRequired": "Request a new verification code to retry",
+    "otpBackWarning": "Your verification code is still active. Returning to login won't cancel it — you'll need to verify or wait for it to expire.",
+    "backWarningTitle": "Are you sure?",
+    "cancel": "Cancel"
   },
   "nav": {
     "dashboard": "Dashboard",
