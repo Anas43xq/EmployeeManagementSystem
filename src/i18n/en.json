@@ -680,7 +680,11 @@
     "deductionsBreakdown": "Deductions Breakdown",
     "summary": "Summary",
     "generating": "Generating...",
-    "approving": "Approving..."
+    "approving": "Approving...",
+    "generatePayrollTitle": "Generate Monthly Payroll",
+    "generatingFor": "Generating for",
+    "generateDescription": "Generate payroll for all active employees. This will calculate salaries including bonuses, deductions, attendance, and leaves.",
+    "generate": "Generate Payroll"
   },
   "tasks": {
     "title": "Tasks",
