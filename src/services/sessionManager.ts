@@ -175,7 +175,7 @@ export async function getFreshAccessToken(): Promise<string | null> {
       return null;
     }
     
-    if (refreshData.session) {
+    if (refreshData && refreshData.session) {
       return refreshData.session.access_token;
     }
     

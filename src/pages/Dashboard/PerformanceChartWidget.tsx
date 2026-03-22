@@ -39,7 +39,10 @@ export default function PerformanceChartWidget() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-6 h-6 text-primary-600" />
-          <h2 className="text-xl font-bold text-gray-900">{t('performance.topPerformers')}</h2>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">{t('performance.topPerformers')}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t('performance.rankedByPoints')}</p>
+          </div>
         </div>
         <span className="text-sm text-gray-500">{t('performance.thisWeek')}</span>
       </div>
@@ -127,18 +130,18 @@ export default function PerformanceChartWidget() {
 
       {/* Legend */}
       <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex justify-center gap-6 text-xs text-gray-500">
+        <div className="flex flex-wrap justify-center gap-6 text-xs text-gray-600">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span>{t('performance.tasksCompleted')}</span>
+            <span>{t('performance.tasksCompletedContribution')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-red-500 rounded"></div>
-            <span>{t('performance.tasksOverdue')}</span>
+            <span>{t('performance.tasksOverdueContribution')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-primary-500 rounded"></div>
-            <span>{t('performance.attendanceDays')}</span>
+            <span>{t('performance.attendanceDaysContribution')}</span>
           </div>
         </div>
       </div>

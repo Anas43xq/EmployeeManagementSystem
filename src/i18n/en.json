@@ -866,6 +866,10 @@
     "limitedRecords": "This week has limited attendance records. Performance calculation will be based on {{days}} day{{plural}} of data. Continue?",
     "fullDataAvailable": "Complete week data is available. You can safely calculate performance for this week.",
     "noAttendanceData": "No attendance data found for this week. Performance cannot be calculated without attendance records.",
-    "proceed": "Proceed"
+    "proceed": "Proceed",
+    "rankedByPoints": "Ranked by total performance points",
+    "tasksCompletedContribution": "Tasks Completed (adds points)",
+    "tasksOverdueContribution": "Tasks Overdue (deducts points)",
+    "attendanceDaysContribution": "Attendance Days (adds points)"
   }
 }
