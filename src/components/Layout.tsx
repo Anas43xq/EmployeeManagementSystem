@@ -254,7 +254,7 @@ export default function Layout() {
         </header>
 
         {/* Page content — padding-top on desktop accounts for fixed navbar height */}
-        <main className="flex-1 p-3 sm:p-6 overflow-x-hidden lg:pt-[calc(var(--navbar-height,56px)+24px)]">
+        <main className="flex-1 p-3 sm:p-6 overflow-x-hidden lg:pt-16">
           <Outlet />
         </main>
       </div>

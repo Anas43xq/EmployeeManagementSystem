@@ -266,7 +266,7 @@ export default function Navbar({ onSignOut, totalPoints }: { onSignOut: () => vo
     <nav
       ref={navRef}
       dir={isRTL ? 'rtl' : 'ltr'}
-      className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ease-in-out ${
+      className={`fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-200 shadow-sm transition-transform duration-300 ease-in-out ${
         visible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
