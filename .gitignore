@@ -42,3 +42,4 @@ PROJECT_PLAN.md
 PROJECT_PLAN.html
 PRE_SUBMISSION_CHECKLIST.md
 supabase/migrations/20260219000000_comprehensive_ems_schema.sql
+supabase/DATABASE_SCHEMA_GUIDE.md
