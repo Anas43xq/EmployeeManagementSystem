@@ -36,7 +36,6 @@ BEGIN
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
--- Drop all existing tables in dependency order
 DROP TABLE IF EXISTS public.employee_of_week CASCADE;
 DROP TABLE IF EXISTS public.employee_performance CASCADE;
 DROP TABLE IF EXISTS public.employee_complaints CASCADE;
@@ -61,10 +60,8 @@ DROP TABLE IF EXISTS public.departments CASCADE;
 DROP TABLE IF EXISTS performance_reviews CASCADE;
 DROP TABLE IF EXISTS payroll CASCADE;
 
--- Drop sequences
 DROP SEQUENCE IF EXISTS employee_number_seq CASCADE;
 
--- Drop functions
 DROP FUNCTION IF EXISTS generate_employee_number() CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS sync_auth_email_from_employee() CASCADE;
@@ -96,17 +93,12 @@ DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
 
--- EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
 GRANT USAGE ON SCHEMA cron TO postgres;
 
--- SEQUENCES
 CREATE SEQUENCE IF NOT EXISTS employee_number_seq START 1;
 
--- HELPER FUNCTIONS
-
--- Generate employee number (EMP001, EMP002, etc.)
 CREATE OR REPLACE FUNCTION generate_employee_number()
 RETURNS TEXT AS $$
 BEGIN
@@ -114,7 +106,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
--- Auto-update updated_at column
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -123,8 +114,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
--- Notify users with specific roles (bypasses RLS for staffâ†’admin/HR notifications)
--- p_exclude_user_id: skip this user so people are not notified about their own actions
+-- Progressive login delay: 0s → 5s → 15s → 30s
+CREATE OR REPLACE FUNCTION public.get_progressive_delay_seconds(attempt_count INT)
+RETURNS INT LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE
+    WHEN attempt_count < 2 THEN 0
+    WHEN attempt_count = 2 THEN 5
+    WHEN attempt_count = 3 THEN 15
+    ELSE 30
+  END;
+$$;
+
+-- Seconds remaining until a delay_until timestamp passes
+CREATE OR REPLACE FUNCTION public.get_seconds_until_retry(delay_until_ts TIMESTAMPTZ)
+RETURNS INT LANGUAGE sql STABLE AS $$
+  SELECT COALESCE(GREATEST(0, EXTRACT(EPOCH FROM (delay_until_ts - now()))::INT), 0);
+$$;
+
 CREATE OR REPLACE FUNCTION public.notify_role_users(
   p_title TEXT,
   p_message TEXT,
@@ -149,8 +155,6 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.notify_role_users(TEXT, TEXT, TEXT, TEXT[], UUID) TO authenticated;
 
--- Get email addresses of users with specific roles (bypasses RLS for email notifications)
--- p_exclude_user_id: skip this user so they don't get emailed about their own actions
 CREATE OR REPLACE FUNCTION public.get_role_user_emails(
   p_roles TEXT[] DEFAULT ARRAY['admin', 'hr'],
   p_exclude_user_id UUID DEFAULT NULL
@@ -173,9 +177,6 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_role_user_emails(TEXT[], UUID) TO authenticated;
-
--- SESSION TOKEN FUNCTIONS
--- SECURITY DEFINER so any authenticated user can read/write their own token
 
 CREATE OR REPLACE FUNCTION public.get_own_session_token()
 RETURNS TEXT
@@ -226,132 +227,7 @@ GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
 -- =============================================
 -- LOGIN ATTEMPT RPC FUNCTIONS (SECURITY DEFINER)
 -- =============================================
--- These run pre-auth (anon) so they bypass RLS.
 
--- 1. pre_auth_login_check — resolve email → user_id, return attempt status
-CREATE OR REPLACE FUNCTION public.pre_auth_login_check(p_email TEXT)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, auth
-AS $$
-DECLARE
-  v_user_id     UUID;
-  v_record      RECORD;
-  v_failed      INT;
-  v_remaining   INT;
-  v_requires    BOOLEAN;
-  v_seconds     INT;
-  v_threshold   INT := 5;
-BEGIN
-  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
-
-  IF v_user_id IS NULL THEN
-    RETURN jsonb_build_object(
-      'user_id', NULL, 'failed_attempts', 0, 'attempts_remaining', v_threshold,
-      'requires_otp', false, 'otp_expires_at', NULL, 'otp_seconds_left', 0
-    );
-  END IF;
-
-  SELECT * INTO v_record FROM public.login_attempts WHERE user_id = v_user_id;
-
-  v_failed    := COALESCE(v_record.failed_attempts, 0);
-  v_remaining := GREATEST(0, v_threshold - v_failed);
-  v_requires  := v_failed >= v_threshold;
-  v_seconds   := 0;
-
-  IF v_requires AND v_record.otp_expires_at IS NOT NULL THEN
-    v_seconds := GREATEST(0, EXTRACT(EPOCH FROM (v_record.otp_expires_at - now()))::INT);
-  END IF;
-
-  RETURN jsonb_build_object(
-    'user_id', v_user_id, 'failed_attempts', v_failed, 'attempts_remaining', v_remaining,
-    'requires_otp', v_requires, 'otp_expires_at', v_record.otp_expires_at,
-    'otp_seconds_left', v_seconds
-  );
-END;
-$$;
-
--- 2. record_failed_login — increment counter, set OTP window at threshold
-CREATE OR REPLACE FUNCTION public.record_failed_login(p_email TEXT)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, auth
-AS $$
-DECLARE
-  v_user_id      UUID;
-  v_new_fails    INT;
-  v_remaining    INT;
-  v_requires     BOOLEAN;
-  v_seconds      INT := 0;
-  v_threshold    INT := 5;
-  v_otp_minutes  INT := 10;
-  v_otp_expires  TIMESTAMPTZ;
-  v_now          TIMESTAMPTZ := now();
-BEGIN
-  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
-
-  IF v_user_id IS NULL THEN
-    RETURN jsonb_build_object(
-      'user_id', NULL, 'failed_attempts', 0, 'attempts_remaining', v_threshold,
-      'requires_otp', false, 'otp_expires_at', NULL, 'otp_seconds_left', 0
-    );
-  END IF;
-
-  INSERT INTO public.login_attempts (user_id, failed_attempts, last_attempt_at)
-  VALUES (v_user_id, 1, v_now)
-  ON CONFLICT (user_id) DO UPDATE
-    SET failed_attempts = login_attempts.failed_attempts + 1,
-        last_attempt_at = v_now, updated_at = v_now
-  RETURNING failed_attempts INTO v_new_fails;
-
-  IF v_new_fails = v_threshold THEN
-    v_otp_expires := v_now + (v_otp_minutes || ' minutes')::INTERVAL;
-    UPDATE public.login_attempts
-    SET otp_sent_at = v_now, otp_expires_at = v_otp_expires, updated_at = v_now
-    WHERE user_id = v_user_id;
-  ELSE
-    SELECT otp_expires_at INTO v_otp_expires FROM public.login_attempts WHERE user_id = v_user_id;
-  END IF;
-
-  v_remaining := GREATEST(0, v_threshold - v_new_fails);
-  v_requires  := v_new_fails >= v_threshold;
-
-  IF v_requires AND v_otp_expires IS NOT NULL THEN
-    v_seconds := GREATEST(0, EXTRACT(EPOCH FROM (v_otp_expires - v_now))::INT);
-  END IF;
-
-  BEGIN
-    INSERT INTO public.activity_logs (user_id, action, entity_type, entity_id, details)
-    VALUES (v_user_id, 'user_login_failed', 'user', v_user_id,
-      jsonb_build_object('email', p_email, 'failed_attempts', v_new_fails, 'requires_otp', v_requires));
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-
-  RETURN jsonb_build_object(
-    'user_id', v_user_id, 'failed_attempts', v_new_fails, 'attempts_remaining', v_remaining,
-    'requires_otp', v_requires, 'otp_expires_at', v_otp_expires, 'otp_seconds_left', v_seconds
-  );
-END;
-$$;
-
--- 3. reset_login_attempts_rpc — zero counters (called post-auth)
-CREATE OR REPLACE FUNCTION public.reset_login_attempts_rpc(p_user_id UUID)
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  UPDATE public.login_attempts
-  SET failed_attempts = 0, last_attempt_at = NULL,
-      otp_sent_at = NULL, otp_expires_at = NULL, updated_at = now()
-  WHERE user_id = p_user_id;
-END;
-$$;
-
--- 4. refresh_otp_expiry — refresh OTP window after resend
 CREATE OR REPLACE FUNCTION public.refresh_otp_expiry(p_email TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -371,16 +247,12 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.pre_auth_login_check(TEXT)     TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.record_failed_login(TEXT)      TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.reset_login_attempts_rpc(UUID) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.refresh_otp_expiry(TEXT)       TO anon, authenticated;
 
 -- =============================================
 -- CORE TABLES
--- =============================================
+-- =============================================}
 
--- Departments
 CREATE TABLE public.departments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -391,7 +263,6 @@ CREATE TABLE public.departments (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Employees
 CREATE TABLE public.employees (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   employee_number TEXT UNIQUE NOT NULL DEFAULT generate_employee_number(),
@@ -420,11 +291,9 @@ CREATE TABLE public.employees (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Add department head FK after employees exists
 ALTER TABLE public.departments ADD CONSTRAINT fk_department_head 
   FOREIGN KEY (head_id) REFERENCES public.employees(id) ON DELETE SET NULL;
 
--- Users (links to auth.users)
 CREATE TABLE public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('admin', 'hr', 'staff')),
@@ -473,7 +342,6 @@ CREATE TABLE public.leave_balances (
 );
 
 -- =============================================
--- ATTENDANCE
 -- =============================================
 
 CREATE TABLE public.attendance (
@@ -514,12 +382,25 @@ CREATE TABLE public.login_attempts (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id             UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   failed_attempts     INT         NOT NULL DEFAULT 0,
-  last_attempt_at     TIMESTAMPTZ,                      -- timestamp of last failed attempt
-  otp_sent_at         TIMESTAMPTZ,                      -- when OTP was last sent
-  otp_expires_at      TIMESTAMPTZ,                      -- OTP expiry (10 min from send)
+  last_attempt_at     TIMESTAMPTZ,
+  otp_sent_at         TIMESTAMPTZ,
+  otp_expires_at      TIMESTAMPTZ,
+  delay_until         TIMESTAMPTZ DEFAULT NULL,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id)
+);
+
+CREATE TABLE public.login_attempt_limits (
+  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  ip_address          TEXT        NOT NULL,
+  user_agent          TEXT        NOT NULL,
+  failed_attempts     INT         NOT NULL DEFAULT 0,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_attempt_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  window_start_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(ip_address, user_agent)
 );
 
 -- =============================================
@@ -611,7 +492,6 @@ CREATE TABLE public.user_preferences (
 );
 
 -- =============================================
--- ANNOUNCEMENTS
 -- =============================================
 
 CREATE TABLE public.announcements (
@@ -627,7 +507,6 @@ CREATE TABLE public.announcements (
 );
 
 -- =============================================
--- EMPLOYEE TASKS
 -- =============================================
 
 CREATE TABLE public.employee_tasks (
@@ -647,7 +526,6 @@ CREATE TABLE public.employee_tasks (
 );
 
 -- =============================================
--- EMPLOYEE WARNINGS
 -- =============================================
 
 CREATE TABLE public.employee_warnings (
@@ -666,7 +544,6 @@ CREATE TABLE public.employee_warnings (
 );
 
 -- =============================================
--- EMPLOYEE COMPLAINTS
 -- =============================================
 
 CREATE TABLE public.employee_complaints (
@@ -726,67 +603,50 @@ CREATE TABLE public.employee_of_week (
 -- INDEXES (Optimized for common queries)
 -- =============================================
 
--- Core table indexes
 CREATE INDEX idx_employees_department ON public.employees(department_id);
 CREATE INDEX idx_employees_status ON public.employees(status);
 CREATE INDEX idx_employees_email ON public.employees(email);
 
--- Leave indexes
-CREATE INDEX idx_leaves_employee ON public.leaves(employee_id);
 CREATE INDEX idx_leaves_status ON public.leaves(status);
 CREATE INDEX idx_leaves_employee_status ON public.leaves(employee_id, status);
 CREATE INDEX idx_leave_balances_employee ON public.leave_balances(employee_id);
 
--- Attendance indexes
-CREATE INDEX idx_attendance_employee ON public.attendance(employee_id);
 CREATE INDEX idx_attendance_date ON public.attendance(date);
 CREATE INDEX idx_attendance_employee_date ON public.attendance(employee_id, date DESC);
 
--- Notification indexes
 CREATE INDEX idx_notifications_user ON public.notifications(user_id);
 CREATE INDEX idx_notifications_read ON public.notifications(is_read);
 CREATE INDEX idx_notifications_realtime ON public.notifications(user_id, is_read, created_at DESC);
 
--- Activity log indexes
 CREATE INDEX idx_activity_logs_user ON public.activity_logs(user_id);
 CREATE INDEX idx_activity_logs_created ON public.activity_logs(created_at DESC);
 
--- Announcement indexes
 CREATE INDEX idx_announcements_active ON public.announcements(is_active) WHERE is_active = true;
 CREATE INDEX idx_announcements_created ON public.announcements(created_at DESC);
 
--- Task indexes
-CREATE INDEX idx_employee_tasks_employee ON public.employee_tasks(employee_id);
 CREATE INDEX idx_employee_tasks_status ON public.employee_tasks(status);
 CREATE INDEX idx_employee_tasks_deadline ON public.employee_tasks(deadline);
 CREATE INDEX idx_employee_tasks_assigned_by ON public.employee_tasks(assigned_by);
 
--- Warning indexes
-CREATE INDEX idx_employee_warnings_employee ON public.employee_warnings(employee_id);
 CREATE INDEX idx_employee_warnings_status ON public.employee_warnings(status);
 CREATE INDEX idx_employee_warnings_severity ON public.employee_warnings(severity);
 
--- Complaint indexes
 CREATE INDEX idx_employee_complaints_employee ON public.employee_complaints(employee_id);
 CREATE INDEX idx_employee_complaints_status ON public.employee_complaints(status);
 CREATE INDEX idx_employee_complaints_assigned ON public.employee_complaints(assigned_to);
 
--- Performance indexes
-CREATE INDEX idx_employee_performance_employee ON public.employee_performance(employee_id);
 CREATE INDEX idx_employee_performance_period ON public.employee_performance(period_start, period_end);
 CREATE INDEX idx_employee_performance_emp_period ON public.employee_performance(employee_id, period_start DESC);
 CREATE INDEX idx_employee_of_week_week ON public.employee_of_week(week_start);
 CREATE INDEX idx_employee_of_week_employee ON public.employee_of_week(employee_id);
 
--- Passkey indexes
 CREATE INDEX idx_passkeys_user ON public.passkeys(user_id);
 CREATE INDEX idx_passkeys_credential ON public.passkeys(credential_id);
 
--- Login attempts indexes
-CREATE INDEX idx_login_attempts_user_id      ON public.login_attempts(user_id);
-CREATE INDEX idx_login_attempts_otp_expiry   ON public.login_attempts(user_id, otp_expires_at);
+CREATE INDEX idx_login_attempts_otp_expiry      ON public.login_attempts(user_id, otp_expires_at);
+CREATE INDEX idx_login_attempt_limits_ip_ua     ON public.login_attempt_limits(ip_address, user_agent);
+CREATE INDEX idx_login_attempt_limits_window    ON public.login_attempt_limits(window_start_at);
 
--- Payroll indexes
 CREATE INDEX idx_payrolls_employee ON public.payrolls(employee_id);
 CREATE INDEX idx_payrolls_period ON public.payrolls(period_year, period_month);
 CREATE INDEX idx_payrolls_status ON public.payrolls(status);
@@ -802,32 +662,25 @@ CREATE INDEX idx_deductions_payroll ON public.deductions(payroll_id);
 -- ADDITIONAL OPTIMIZED INDEXES
 -- =============================================
 
--- Used in RLS policies
 CREATE INDEX idx_users_employee_id ON public.users(employee_id);
 CREATE INDEX idx_users_role ON public.users(role);
 
--- Used in performance calculation (attendance aggregation)
 CREATE INDEX idx_attendance_employee_date_status 
   ON public.attendance(employee_id, date, status);
 
--- Used in performance calculation (task aggregation)
 CREATE INDEX idx_employee_tasks_employee_deadline_status 
   ON public.employee_tasks(employee_id, deadline, status);
 
--- Used in performance calculation (warning aggregation)
 CREATE INDEX idx_employee_warnings_employee_created_status 
   ON public.employee_warnings(employee_id, created_at, status)
   WHERE status IN ('active', 'acknowledged');
 
--- Used in payroll queries with status filter
 CREATE INDEX idx_payrolls_employee_year_month_status 
   ON public.payrolls(employee_id, period_year, period_month, status);
 
--- Used in leave queries with date ranges
 CREATE INDEX idx_leaves_employee_dates_status 
   ON public.leaves(employee_id, start_date, end_date, status);
 
--- Optimized for unread notification queries
 CREATE INDEX idx_notifications_user_unread 
   ON public.notifications(user_id, created_at DESC) 
   WHERE is_read = false;
@@ -904,8 +757,6 @@ CREATE TRIGGER update_login_attempts_updated_at_trigger
 -- EMAIL SYNC TRIGGERS
 -- =============================================
 
--- Sync auth.users email when employee email changes
--- OPTIMIZED: Removed redundant email check (trigger WHEN clause already filters)
 CREATE OR REPLACE FUNCTION sync_auth_email_from_employee()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -942,23 +793,19 @@ DECLARE
   matched_employee_id UUID;
   user_role TEXT;
 BEGIN
-  -- Find matching employee by email (REQUIRED)
-  SELECT id INTO matched_employee_id FROM public.employees WHERE email = NEW.email LIMIT 1;
+    SELECT id INTO matched_employee_id FROM public.employees WHERE email = NEW.email LIMIT 1;
   
   IF matched_employee_id IS NULL THEN
     RAISE EXCEPTION 'Cannot create user: No employee found with email %. Create employee record first.', NEW.email;
   END IF;
   
-  -- Get role from metadata or default to 'staff'
-  user_role := COALESCE(NEW.raw_app_meta_data->>'role', NEW.raw_user_meta_data->>'role', 'staff');
+    user_role := COALESCE(NEW.raw_app_meta_data->>'role', NEW.raw_user_meta_data->>'role', 'staff');
   
-  -- Create public.users record
-  INSERT INTO public.users (id, role, employee_id, created_at, updated_at)
+    INSERT INTO public.users (id, role, employee_id, created_at, updated_at)
   VALUES (NEW.id, user_role, matched_employee_id, now(), now())
   ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, employee_id = EXCLUDED.employee_id, updated_at = now();
   
-  -- Create default user preferences
-  INSERT INTO public.user_preferences (user_id, email_leave_approvals, email_attendance_reminders)
+    INSERT INTO public.user_preferences (user_id, email_leave_approvals, email_attendance_reminders)
   VALUES (NEW.id, true, true)
   ON CONFLICT (user_id) DO NOTHING;
   
@@ -970,7 +817,6 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_auth_user();
 
--- Handle auth user email changes
 CREATE OR REPLACE FUNCTION handle_auth_user_email_change()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -1022,8 +868,6 @@ ALTER TABLE public.employee_of_week ENABLE ROW LEVEL SECURITY;
 -- RLS HELPER FUNCTIONS (OPTIMIZED)
 -- =============================================
 
--- Get user role (STABLE for performance)
--- OPTIMIZED: Early return when JWT role exists and is non-empty
 CREATE OR REPLACE FUNCTION get_user_role()
 RETURNS TEXT AS $$
 DECLARE
@@ -1040,15 +884,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, auth;
 
--- Get user's employee_id
--- OPTIMIZED: Pure SQL function for better performance
 CREATE OR REPLACE FUNCTION get_user_employee_id()
 RETURNS UUID AS $$
   SELECT employee_id FROM public.users WHERE id = auth.uid() LIMIT 1;
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, auth;
 
--- Get user email
--- OPTIMIZED: Pure SQL function for better performance
 CREATE OR REPLACE FUNCTION get_user_email()
 RETURNS TEXT AS $$
   SELECT e.email 
@@ -1066,7 +906,6 @@ GRANT EXECUTE ON FUNCTION public.get_user_email() TO authenticated;
 -- RLS POLICIES
 -- =============================================
 
--- USERS
 CREATE POLICY "users_select_policy" ON public.users FOR SELECT TO authenticated
   USING (
     (select get_user_role()) IN ('admin', 'hr')
@@ -1079,7 +918,6 @@ CREATE POLICY "users_update_admin" ON public.users FOR UPDATE TO authenticated
 CREATE POLICY "users_delete_admin" ON public.users FOR DELETE TO authenticated
   USING ((select get_user_role()) = 'admin');
 
--- DEPARTMENTS
 CREATE POLICY "departments_select_all" ON public.departments FOR SELECT TO authenticated USING (true);
 CREATE POLICY "departments_insert_admin_hr" ON public.departments FOR INSERT TO authenticated
   WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
@@ -1088,7 +926,6 @@ CREATE POLICY "departments_update_admin_hr" ON public.departments FOR UPDATE TO 
 CREATE POLICY "departments_delete_admin" ON public.departments FOR DELETE TO authenticated
   USING ((select get_user_role()) = 'admin');
 
--- EMPLOYEES
 CREATE POLICY "employees_select_all" ON public.employees FOR SELECT TO authenticated USING (true);
 CREATE POLICY "employees_insert_admin_hr" ON public.employees FOR INSERT TO authenticated
   WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
@@ -1097,7 +934,6 @@ CREATE POLICY "employees_update_admin_hr" ON public.employees FOR UPDATE TO auth
 CREATE POLICY "employees_delete_admin" ON public.employees FOR DELETE TO authenticated
   USING ((select get_user_role()) = 'admin');
 
--- LEAVES
 CREATE POLICY "leaves_select_own_or_admin_hr" ON public.leaves FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "leaves_insert_own" ON public.leaves FOR INSERT TO authenticated
@@ -1107,7 +943,6 @@ CREATE POLICY "leaves_update_admin_hr" ON public.leaves FOR UPDATE TO authentica
 CREATE POLICY "leaves_delete_admin_hr" ON public.leaves FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- LEAVE BALANCES
 CREATE POLICY "leave_balances_select_policy" ON public.leave_balances FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "leave_balances_insert_admin_hr" ON public.leave_balances FOR INSERT TO authenticated
@@ -1117,7 +952,6 @@ CREATE POLICY "leave_balances_update_admin_hr" ON public.leave_balances FOR UPDA
 CREATE POLICY "leave_balances_delete_admin_hr" ON public.leave_balances FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- ATTENDANCE
 CREATE POLICY "attendance_select_own_or_admin_hr" ON public.attendance FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "attendance_insert_own_or_admin_hr" ON public.attendance FOR INSERT TO authenticated
@@ -1127,7 +961,6 @@ CREATE POLICY "attendance_update_policy" ON public.attendance FOR UPDATE TO auth
 CREATE POLICY "attendance_delete_admin_hr" ON public.attendance FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- NOTIFICATIONS
 CREATE POLICY "notifications_select_own" ON public.notifications FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
 CREATE POLICY "notifications_update_own" ON public.notifications FOR UPDATE TO authenticated
@@ -1137,13 +970,11 @@ CREATE POLICY "notifications_insert_all" ON public.notifications FOR INSERT TO a
 CREATE POLICY "notifications_delete_own" ON public.notifications FOR DELETE TO authenticated
   USING (user_id = (select auth.uid()));
 
--- ACTIVITY LOGS
 CREATE POLICY "activity_logs_select_admin" ON public.activity_logs FOR SELECT TO authenticated
   USING ((select get_user_role()) = 'admin');
 CREATE POLICY "activity_logs_insert_all" ON public.activity_logs FOR INSERT TO authenticated
   WITH CHECK (user_id = (select auth.uid()) OR (select get_user_role()) = 'admin');
 
--- USER PREFERENCES
 CREATE POLICY "user_preferences_select_own" ON public.user_preferences FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
 CREATE POLICY "user_preferences_insert_own" ON public.user_preferences FOR INSERT TO authenticated
@@ -1153,7 +984,6 @@ CREATE POLICY "user_preferences_update_own" ON public.user_preferences FOR UPDAT
 CREATE POLICY "user_preferences_delete_admin" ON public.user_preferences FOR DELETE TO authenticated
   USING ((select get_user_role()) = 'admin');
 
--- ANNOUNCEMENTS
 CREATE POLICY "announcements_select_policy" ON public.announcements FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR (is_active = true AND (expires_at IS NULL OR expires_at > now())));
 CREATE POLICY "announcements_insert_admin_hr" ON public.announcements FOR INSERT TO authenticated
@@ -1163,13 +993,11 @@ CREATE POLICY "announcements_update_admin_hr" ON public.announcements FOR UPDATE
 CREATE POLICY "announcements_delete_admin_hr" ON public.announcements FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- PASSKEYS
 CREATE POLICY "passkeys_select_own" ON public.passkeys FOR SELECT TO authenticated USING (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_insert_own" ON public.passkeys FOR INSERT TO authenticated WITH CHECK (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_update_own" ON public.passkeys FOR UPDATE TO authenticated USING (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_delete_own" ON public.passkeys FOR DELETE TO authenticated USING (user_id = (select auth.uid()));
 
--- LOGIN ATTEMPTS
 CREATE POLICY "login_attempts_select_own" ON public.login_attempts FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
 CREATE POLICY "login_attempts_upsert_own" ON public.login_attempts FOR ALL TO authenticated
@@ -1177,7 +1005,6 @@ CREATE POLICY "login_attempts_upsert_own" ON public.login_attempts FOR ALL TO au
 CREATE POLICY "login_attempts_select_admin_hr" ON public.login_attempts FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- PAYROLLS
 CREATE POLICY "payrolls_select_policy" ON public.payrolls FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "payrolls_insert_admin_hr" ON public.payrolls FOR INSERT TO authenticated
@@ -1187,7 +1014,6 @@ CREATE POLICY "payrolls_update_admin_hr" ON public.payrolls FOR UPDATE TO authen
 CREATE POLICY "payrolls_delete_admin_hr" ON public.payrolls FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- BONUSES
 CREATE POLICY "bonuses_select_policy" ON public.bonuses FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "bonuses_insert_admin_hr" ON public.bonuses FOR INSERT TO authenticated
@@ -1197,7 +1023,6 @@ CREATE POLICY "bonuses_update_admin_hr" ON public.bonuses FOR UPDATE TO authenti
 CREATE POLICY "bonuses_delete_admin_hr" ON public.bonuses FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- DEDUCTIONS
 CREATE POLICY "deductions_select_policy" ON public.deductions FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "deductions_insert_admin_hr" ON public.deductions FOR INSERT TO authenticated
@@ -1207,7 +1032,6 @@ CREATE POLICY "deductions_update_admin_hr" ON public.deductions FOR UPDATE TO au
 CREATE POLICY "deductions_delete_admin_hr" ON public.deductions FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- EMPLOYEE TASKS
 CREATE POLICY "tasks_select_policy" ON public.employee_tasks FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "tasks_insert_admin_hr" ON public.employee_tasks FOR INSERT TO authenticated
@@ -1218,8 +1042,6 @@ CREATE POLICY "tasks_update_policy" ON public.employee_tasks FOR UPDATE TO authe
 CREATE POLICY "tasks_delete_admin_hr" ON public.employee_tasks FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- EMPLOYEE WARNINGS
--- FIXED: Removed conflicting ALL policy, using granular per-operation policies
 CREATE POLICY "warnings_select_policy" ON public.employee_warnings FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "warnings_insert_admin_hr" ON public.employee_warnings FOR INSERT TO authenticated
@@ -1230,8 +1052,6 @@ CREATE POLICY "warnings_update_policy" ON public.employee_warnings FOR UPDATE TO
 CREATE POLICY "warnings_delete_admin_hr" ON public.employee_warnings FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- EMPLOYEE COMPLAINTS
--- FIXED: Removed conflicting ALL policy, using granular per-operation policies
 CREATE POLICY "complaints_select_policy" ON public.employee_complaints FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "complaints_insert_policy" ON public.employee_complaints FOR INSERT TO authenticated
@@ -1241,8 +1061,6 @@ CREATE POLICY "complaints_update_admin_hr" ON public.employee_complaints FOR UPD
 CREATE POLICY "complaints_delete_admin_hr" ON public.employee_complaints FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- EMPLOYEE PERFORMANCE
--- FIXED: Removed conflicting ALL policy, using granular per-operation policies
 CREATE POLICY "performance_select_policy" ON public.employee_performance FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));
 CREATE POLICY "performance_insert_admin_hr" ON public.employee_performance FOR INSERT TO authenticated
@@ -1252,7 +1070,6 @@ CREATE POLICY "performance_update_admin_hr" ON public.employee_performance FOR U
 CREATE POLICY "performance_delete_admin_hr" ON public.employee_performance FOR DELETE TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
 
--- EMPLOYEE OF WEEK
 CREATE POLICY "employee_of_week_select_all" ON public.employee_of_week FOR SELECT TO authenticated USING (true);
 CREATE POLICY "employee_of_week_insert_admin_hr" ON public.employee_of_week FOR INSERT TO authenticated
   WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
@@ -1268,27 +1085,15 @@ CREATE POLICY "employee_of_week_delete_admin_hr" ON public.employee_of_week FOR 
 -- Calculate working days (Mon–Fri) between two dates, inclusive
 CREATE OR REPLACE FUNCTION calculate_working_days(p_start_date DATE, p_end_date DATE)
 RETURNS INTEGER AS $$
-DECLARE
-  v_working_days INTEGER := 0;
-  v_current_date DATE := p_start_date;
-BEGIN
-  WHILE v_current_date <= p_end_date LOOP
-    -- EXTRACT(DOW ...) returns 0 = Sunday, 6 = Saturday
-    IF EXTRACT(DOW FROM v_current_date) NOT IN (0, 6) THEN
-      v_working_days := v_working_days + 1;
-    END IF;
-    v_current_date := v_current_date + INTERVAL '1 day';
-  END LOOP;
-  RETURN GREATEST(1, v_working_days);
-END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public;
+  SELECT GREATEST(1, COUNT(*)::INTEGER)
+  FROM generate_series(p_start_date, p_end_date, '1 day'::INTERVAL) d
+  WHERE EXTRACT(DOW FROM d) NOT IN (0, 6);
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 GRANT EXECUTE ON FUNCTION calculate_working_days(DATE, DATE) TO authenticated;
 
 -- =============================================
--- LEAVE OVERLAP PREVENTION
--- Prevents employees from having overlapping leave periods
--- Also recalculates days_count as working days (Mon–Fri)
+-- LEAVE OVERLAP PREVENTION(Mon–Fri)
 -- =============================================
 
 CREATE OR REPLACE FUNCTION check_leave_overlap()
@@ -1297,13 +1102,11 @@ DECLARE
   v_conflict_count INTEGER;
   v_conflict_details TEXT;
 BEGIN
-  -- Only enforce for relevant statuses
-  IF NEW.status NOT IN ('approved', 'pending') THEN
+    IF NEW.status NOT IN ('approved', 'pending') THEN
     RETURN NEW;
   END IF;
 
-  -- Recalculate days_count as working days so the DB is always correct
-  NEW.days_count := calculate_working_days(NEW.start_date, NEW.end_date);
+    NEW.days_count := calculate_working_days(NEW.start_date, NEW.end_date);
 
   SELECT COUNT(*),
          STRING_AGG(
@@ -1348,8 +1151,7 @@ DECLARE
 BEGIN
   p_week_end := p_week_start + INTERVAL '6 days';
 
-  -- Single INSERT using CTEs - processes ALL employees at once
-  INSERT INTO public.employee_performance (
+    INSERT INTO public.employee_performance (
     employee_id, period_start, period_end,
     attendance_score, task_score, warning_deduction, total_score,
     tasks_completed, tasks_overdue,
@@ -1372,8 +1174,7 @@ BEGIN
     WHERE e.status = 'active'
     GROUP BY e.id
   ),
-  -- Task aggregation for all active employees at once
-  task_agg AS (
+    task_agg AS (
     SELECT 
       e.id AS employee_id,
       COALESCE(SUM(
@@ -1396,8 +1197,7 @@ BEGIN
     WHERE e.status = 'active'
     GROUP BY e.id
   ),
-  -- Warning aggregation for all active employees at once
-  warning_agg AS (
+    warning_agg AS (
     SELECT 
       e.id AS employee_id,
       COALESCE(SUM(
@@ -1468,15 +1268,13 @@ BEGIN
   ORDER BY ep.total_score DESC, e.hire_date ASC LIMIT 1;
 
   IF v_top_employee_id IS NOT NULL THEN
-    -- Check if there are other employees with the same score
-    SELECT COUNT(*) INTO v_tied_count
+        SELECT COUNT(*) INTO v_tied_count
     FROM public.employee_performance ep
     JOIN public.employees e ON e.id = ep.employee_id
     WHERE ep.period_start = p_week_start AND ep.period_end = p_week_end 
       AND e.status = 'active' AND ep.total_score = v_top_score;
 
-    -- Generate appropriate reason text
-    IF v_tied_count > 1 THEN
+        IF v_tied_count > 1 THEN
       v_reason := 'Tied for highest score (' || v_top_score || ' points) with ' || (v_tied_count - 1) || ' other(s), selected based on earliest hire date';
     ELSE
       v_reason := 'Highest performance score (' || v_top_score || ' points) for the week';
@@ -1500,14 +1298,12 @@ DECLARE
 BEGIN
   p_week_end := p_week_start + INTERVAL '6 days';
 
-  -- Count distinct days with attendance records in the week
-  SELECT COUNT(DISTINCT DATE(a.date))
+    SELECT COUNT(DISTINCT DATE(a.date))
   INTO v_days_with_data
   FROM public.attendance a
   WHERE a.date BETWEEN p_week_start AND p_week_end;
 
-  -- Return object with days_with_data and has_sufficient_data (1+ days = sufficient)
-  v_result := jsonb_build_object(
+    v_result := jsonb_build_object(
     'days_with_data', COALESCE(v_days_with_data, 0),
     'total_days', 7,
     'has_sufficient_data', COALESCE(v_days_with_data, 0) >= 1
@@ -1543,8 +1339,7 @@ BEGIN
   
   v_daily_salary := v_base_salary / NULLIF(v_working_days, 0);
   
-  -- OPTIMIZED: date BETWEEN is index-friendly, unlike EXTRACT(month/year FROM date)
-  SELECT 
+    SELECT 
     COUNT(*) FILTER (WHERE status = 'late'), 
     COUNT(*) FILTER (WHERE status = 'absent')
   INTO v_late_days, v_absent_days
@@ -1559,7 +1354,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
--- OPTIMIZED: Uses daterange overlap operator and index-friendly queries
 CREATE OR REPLACE FUNCTION calculate_leave_deductions(p_employee_id UUID, p_month INTEGER, p_year INTEGER)
 RETURNS NUMERIC AS $$
 DECLARE
@@ -1581,8 +1375,7 @@ BEGIN
   
   v_daily_salary := v_base_salary / NULLIF(v_working_days, 0);
   
-  -- OPTIMIZED: Uses daterange overlap operator for cleaner date range check
-  SELECT COALESCE(SUM(
+    SELECT COALESCE(SUM(
     CASE 
       WHEN l.leave_type = 'annual' THEN GREATEST(0, l.days_count - COALESCE(lb.annual_total - lb.annual_used, 0))
       WHEN l.leave_type = 'sick' THEN GREATEST(0, l.days_count - COALESCE(lb.sick_total - lb.sick_used, 0))
@@ -1608,7 +1401,6 @@ $$ LANGUAGE plpgsql SET search_path = public;
 -- REALTIME CONFIGURATION
 -- =============================================
 
--- Set REPLICA IDENTITY to DEFAULT for all tables
 ALTER TABLE public.notifications REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.announcements REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.users REPLICA IDENTITY DEFAULT;
@@ -1631,32 +1423,15 @@ ALTER TABLE public.passkeys REPLICA IDENTITY DEFAULT;
 ALTER TABLE public.login_attempts REPLICA IDENTITY FULL;
 ALTER TABLE public.leave_balances REPLICA IDENTITY FULL;
 
--- Add tables to realtime publication
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notifications') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'leaves') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.leaves;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_complaints') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_complaints;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_warnings') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_warnings;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'employee_tasks') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.employee_tasks;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'users') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.users;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'leave_balances') THEN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_balances;
-    END IF;
+    ALTER PUBLICATION supabase_realtime ADD TABLE
+      public.notifications, public.leaves, public.employee_complaints,
+      public.employee_warnings, public.employee_tasks,
+      public.users, public.leave_balances;
   END IF;
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- =============================================
@@ -1667,7 +1442,6 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES ('employee-photos', 'employee-photos', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies
 DO $$
 BEGIN
   DROP POLICY IF EXISTS "Authenticated users can upload employee photos" ON storage.objects;
@@ -1686,12 +1460,10 @@ CREATE POLICY "Authenticated users can delete employee photos" ON storage.object
 CREATE POLICY "Public read access for employee photos" ON storage.objects FOR SELECT TO public
   USING (bucket_id = 'employee-photos');
 
-
 -- =============================================
 -- PERFORMANCE CALCULATION – CRON JOBS
 -- =============================================
 
--- Safely unschedule existing jobs before recreating (idempotent)
 DO $$
 BEGIN
   PERFORM cron.unschedule('weekly-performance-calculation');
@@ -1704,7 +1476,6 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
--- Run performance calculation every Monday at 00:05 UTC
 SELECT cron.schedule(
   'weekly-performance-calculation',
   '5 0 * * 1',
@@ -1715,7 +1486,6 @@ SELECT cron.schedule(
   $$
 );
 
--- Run employee-of-week selection every Monday at 00:10 UTC
 SELECT cron.schedule(
   'weekly-employee-of-week',
   '10 0 * * 1',
@@ -1726,7 +1496,6 @@ SELECT cron.schedule(
   $$
 );
 
--- Helper to retrieve the last time performance was calculated (used in the admin UI)
 CREATE OR REPLACE FUNCTION get_last_performance_calculation_time()
 RETURNS TIMESTAMPTZ AS $$
   SELECT MAX(calculated_at) FROM public.employee_performance;
@@ -1734,59 +1503,6 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 GRANT EXECUTE ON FUNCTION get_last_performance_calculation_time() TO authenticated;
 
--- PROGRESSIVE LOGIN DELAYS + IP/MAC RATE LIMITING
--- Add delay_until column for progressive delays (0s → 5s → 15s → 30s)
-ALTER TABLE public.login_attempts
-ADD COLUMN IF NOT EXISTS delay_until TIMESTAMPTZ DEFAULT NULL;
-
--- Track IP/MAC device rate limit (5 per 5 min)
-CREATE TABLE IF NOT EXISTS public.login_attempt_limits (
-  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  ip_address          TEXT        NOT NULL,
-  user_agent          TEXT        NOT NULL,
-  failed_attempts     INT         NOT NULL DEFAULT 0,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_attempt_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  window_start_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at          TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(ip_address, user_agent)
-);
-
-CREATE INDEX IF NOT EXISTS idx_login_attempt_limits_ip_ua 
-  ON public.login_attempt_limits(ip_address, user_agent);
-CREATE INDEX IF NOT EXISTS idx_login_attempt_limits_window_start 
-  ON public.login_attempt_limits(window_start_at);
-
--- Helper: Get progressive delay seconds (0/5/15/30)
-CREATE OR REPLACE FUNCTION public.get_progressive_delay_seconds(attempt_count INT)
-RETURNS INT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-BEGIN
-  RETURN CASE
-    WHEN attempt_count < 2 THEN 0
-    WHEN attempt_count = 2 THEN 5
-    WHEN attempt_count = 3 THEN 15
-    WHEN attempt_count >= 4 THEN 30
-    ELSE 30
-  END;
-END;
-$$;
-
--- Helper: Calculate seconds until retry allowed
-CREATE OR REPLACE FUNCTION public.get_seconds_until_retry(delay_until_ts TIMESTAMPTZ)
-RETURNS INT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-BEGIN
-  IF delay_until_ts IS NULL THEN RETURN 0; END IF;
-  RETURN GREATEST(0, EXTRACT(EPOCH FROM (delay_until_ts - now()))::INT);
-END;
-$$;
-
--- Helper: Cleanup expired IP/MAC limit records (lazy cleanup)
 CREATE OR REPLACE FUNCTION public.cleanup_expired_login_limits()
 RETURNS VOID
 LANGUAGE plpgsql
@@ -1799,7 +1515,6 @@ BEGIN
 END;
 $$;
 
--- Helper: Cleanup old login_attempts (24+ hours)
 CREATE OR REPLACE FUNCTION public.cleanup_old_login_attempts()
 RETURNS VOID
 LANGUAGE plpgsql
@@ -1812,7 +1527,6 @@ BEGIN
 END;
 $$;
 
--- RPC: Check if user can attempt login (delay + OTP status)
 CREATE OR REPLACE FUNCTION public.pre_auth_login_check(p_email TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1862,7 +1576,6 @@ BEGIN
 END;
 $$;
 
--- RPC: Record failed login & calculate delay
 CREATE OR REPLACE FUNCTION public.record_failed_login(p_email TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1953,7 +1666,6 @@ BEGIN
 END;
 $$;
 
--- RPC: Check IP/MAC device rate limit (5 per 5 min)
 CREATE OR REPLACE FUNCTION public.check_ip_mac_limits(
   p_ip_address TEXT,
   p_user_agent TEXT,
@@ -2025,7 +1737,6 @@ BEGIN
 END;
 $$;
 
--- RPC: Reset delays on successful login
 CREATE OR REPLACE FUNCTION public.reset_login_attempts_rpc(p_user_id UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -2041,12 +1752,13 @@ BEGIN
 END;
 $$;
 
--- Grant execute on RPC functions
 GRANT EXECUTE ON FUNCTION public.check_ip_mac_limits(TEXT, TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_progressive_delay_seconds(INT) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.get_seconds_until_retry(TIMESTAMPTZ) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.pre_auth_login_check(TEXT)     TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_failed_login(TEXT)      TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.reset_login_attempts_rpc(UUID) TO anon, authenticated;
 
 -- =============================================
 -- SCHEMA COMPLETE
 -- =============================================
-

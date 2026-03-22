@@ -117,17 +117,6 @@ export default function OtpScreen({ email, onBack }: OtpScreenProps) {
             <p className="text-sm text-red-700">{otpError}</p>
           </div>
         )}
-
-        {/* Info: No progressive delays during OTP phase */}
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-          <Info className="w-4 h-4 mt-0.5 text-blue-600 flex-shrink-0" />
-          <p className="text-xs text-blue-700">
-            {t('auth.otpNoDelayInfo', {
-              defaultValue: 'OTP verification attempts do not have timed delays. You can retry as often as needed within the rate limits.',
-            })}
-          </p>
-        </div>
-
         {/* OTP form */}
         <form onSubmit={handleOtpSubmit} className="space-y-4">
           <input
