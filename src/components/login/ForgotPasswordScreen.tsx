@@ -1,44 +1,29 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase } from '../../services/supabase';
+import { useForgotPassword, getDirectionClass } from '../../hooks/useAuthHooks';
 import { ArrowLeft, Briefcase } from 'lucide-react';
 
 interface ForgotPasswordScreenProps {
   onBack: () => void;
+  resetPassword: (email: string, redirectUrl: string) => Promise<{ error?: Error | null }>;
 }
 
-export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenProps) {
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [error, setError] = useState('');
-
+export default function ForgotPasswordScreen({ onBack, resetPassword }: ForgotPasswordScreenProps) {
   const { showNotification } = useNotification();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const { email, setEmail, loading, error, submit } = useForgotPassword({
+    onBack,
+    resetPassword,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setResetLoading(true);
-
-    try {
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const redirectUrl = `${appUrl}/reset-password`;
-
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: redirectUrl,
-      });
-
-      if (resetError) throw resetError;
-
+    if (await submit(email)) {
       showNotification('success', t('auth.resetEmailSent'));
-      onBack();
-    } catch (err: Error | unknown) {
-      setError((err instanceof Error ? err.message : typeof err === 'object' && err && 'message' in err ? String(err.message) : '') || t('auth.resetEmailFailed'));
+    } else {
       showNotification('error', t('auth.resetEmailFailed'));
-    } finally {
-      setResetLoading(false);
     }
   };
 
@@ -47,7 +32,7 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
         <button
           onClick={onBack}
-          className={`flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}
+          className={getDirectionClass(isRTL, 'flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors space-x-2', 'flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors space-x-reverse space-x-2')}
         >
           <ArrowLeft className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
           <span>{t('auth.backToSignIn')}</span>
@@ -59,12 +44,8 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-          {t('auth.resetPassword')}
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          {t('auth.resetPasswordDesc')}
-        </p>
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">{t('auth.resetPassword')}</h1>
+        <p className="text-center text-gray-600 mb-8">{t('auth.resetPasswordDesc')}</p>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -72,7 +53,7 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
           </div>
         )}
 
-        <form onSubmit={handleForgotPassword} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-2">
               {t('auth.emailAddress')}
@@ -80,8 +61,8 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
             <input
               id="reset-email"
               type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             />
@@ -89,10 +70,10 @@ export default function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenPro
 
           <button
             type="submit"
-            disabled={resetLoading}
+            disabled={loading}
             className="w-full bg-primary-900 text-white py-3 rounded-lg font-medium hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {resetLoading ? t('common.sending') : t('auth.sendResetLink')}
+            {loading ? t('common.sending') : t('auth.sendResetLink')}
           </button>
         </form>
       </div>
