@@ -216,13 +216,11 @@ export function useForgotPassword({ onBack, resetPassword }: UseForgotPasswordPr
  * Passkey login hook
  */
 interface UsePasskeyLoginProps {
-  onBack: () => void;
   authenticate: (email: string) => Promise<{ success: boolean; error?: string }>;
   onSuccess: () => void;
 }
 
 export function usePasskeyLogin({
-  onBack,
   authenticate,
   onSuccess,
 }: UsePasskeyLoginProps) {

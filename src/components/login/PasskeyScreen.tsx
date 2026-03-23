@@ -15,7 +15,6 @@ export default function PasskeyScreen({ onBack, authenticate, onSuccess }: Passk
   const isRTL = i18n.language === 'ar';
 
   const { email, setEmail, loading, error, login } = usePasskeyLogin({
-    onBack,
     authenticate,
     onSuccess,
   });

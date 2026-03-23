@@ -22,7 +22,7 @@ async function sendNotificationEmail(
   title: string,
   message: string,
   type: NotificationType
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: unknown }> {
   try {
     const { data: userData, error: userError } = await db
       .from('users')
@@ -31,11 +31,11 @@ async function sendNotificationEmail(
       .single();
 
     if (userError) {
-      return false;
+      return { success: false };
     }
 
     if (!userData?.employee_id) {
-      return false;
+      return { success: false };
     }
 
     const { data: employee, error: empError } = await db
@@ -45,23 +45,35 @@ async function sendNotificationEmail(
       .single();
 
     if (empError) {
-      return false;
+      return { success: false };
     }
 
     if (!employee?.email) {
-      return false;
+      return { success: false };
     }
+
+    // Map internal NotificationType to email notification types
+    // Most types map directly; for others, use 'general'
+    const emailTypeMap: Record<NotificationType, string> = {
+      'leave': 'leave',
+      'attendance': 'general',
+      'system': 'general',
+      'warning': 'warning',
+      'task': 'task',
+      'complaint': 'complaint',
+      'performance': 'performance',
+    };
 
     const sent = await sendEmailNotification({
       to: employee.email,
       subject: title,
       body: message,
-      type,
+      type: emailTypeMap[type] as any, // Safe cast - emailTypeMap covers all types
     });
 
     return sent;
-  } catch {
-    return false;
+  } catch (err) {
+    return { success: false, error: err };
   }
 }
 
@@ -91,7 +103,8 @@ export async function createNotification(
     }
 
     if (sendEmail) {
-      emailSent = await sendNotificationEmail(userId, title, message, type);
+      const emailResult = await sendNotificationEmail(userId, title, message, type);
+      emailSent = emailResult.success;
     }
   } catch {
     // ignore
@@ -169,12 +182,23 @@ export async function notifyHRAndAdmins(
         const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', emailRpcParams);
 
         if (!emailError && emailData) {
+          // Map internal NotificationType to email types for consistency
+          const emailTypeMap: Record<NotificationType, string> = {
+            'leave': 'leave',
+            'attendance': 'general',
+            'system': 'general',
+            'warning': 'warning',
+            'task': 'task',
+            'complaint': 'complaint',
+            'performance': 'performance',
+          };
+
           for (const row of emailData as unknown as { user_id: string; email: string }[]) {
             await sendEmailNotification({
               to: row.email,
               subject: title,
               body: message,
-              type,
+              type: emailTypeMap[type] as any, // Safe cast
             });
           }
         }
