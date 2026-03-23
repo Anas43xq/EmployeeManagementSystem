@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { UserRole } from '../../services/dashboardConfig';
+import type { UserRole } from '../../services/auth/authHelpers';
 import type { Stats, RecentActivity, DepartmentData, LeaveStatusData } from './types';
 
 export function useDashboard() {

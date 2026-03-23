@@ -32,10 +32,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 Text.ts
+structure.txt
 
 FEATURES.md
 DOCUMENTATION.md
-git-push.ps1
+scripts/git-push.ps1
 supabase/.temp/
 DATABASE_SCHEMA.md
 PROJECT_PLAN.md

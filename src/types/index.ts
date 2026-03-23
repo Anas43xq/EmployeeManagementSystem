@@ -1,3 +1,5 @@
+export type { DatabaseClient, AuthClient, NotificationClient, ServiceConfig } from './interfaces';
+
 export interface Qualification {
   degree: string;
   institution: string;

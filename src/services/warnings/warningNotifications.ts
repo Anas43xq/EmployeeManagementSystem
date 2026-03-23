@@ -1,4 +1,4 @@
-import { createNotification } from '../dbNotifications';
+import { createNotification } from '../notifications/dbNotifications';
 
 export async function createWarningNotification(userId: string, severity: string) {
   return await createNotification(

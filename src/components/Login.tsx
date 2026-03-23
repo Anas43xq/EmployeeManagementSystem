@@ -15,7 +15,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/loginAttempts';
+import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session/loginAttempts';
 import { isWebAuthnSupported, authenticateWithPasskey } from '../services/passkeys';
 import { supabase } from '../services/supabase';
 
@@ -62,7 +62,7 @@ export default function Login() {
   // Route user if already logged in
   useEffect(() => {
     if (user) {
-      navigate(user.is_active === false ? '/deactivated' : '/dashboard', { replace: true });
+      navigate(user.isActive === false ? '/deactivated' : '/dashboard', { replace: true });
     }
   }, [user, navigate]);
 

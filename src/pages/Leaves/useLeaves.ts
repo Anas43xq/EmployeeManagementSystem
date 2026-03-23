@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase, db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { createNotification, notifyHRAndAdmins } from '../../services/dbNotifications';
+import { createNotification, notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
 import { logActivity } from '../../services/activityLog';
 import { calculateWorkingDays } from '../../utils/dateUtils';
 import type { Leave, LeaveBalance, LeaveFormData, LeaveConflict } from './types';

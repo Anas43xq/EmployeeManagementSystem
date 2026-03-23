@@ -2,15 +2,15 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback } f
 import { User } from '@supabase/supabase-js';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth, updateLastActivity, clearLastActivity } from '../services/sessionManager';
-import { getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/loginAttempts';
-import { clearAllCache } from '../services/apiCache';
-import { isRefreshTokenError, isTransientError } from '../services/authHelpers';
+import { clearAuthState, resetSessionHealth, updateLastActivity, clearLastActivity } from '../services/session/sessionManager';
+import { getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session/loginAttempts';
+import { clearAllCache } from '../services/shared/cacheManager';
+import { isRefreshTokenError, isAuthTransientError } from '../services/auth/authHelpers';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
 
-export type { AuthUser } from '../services/authHelpers';
-import type { AuthUser, UserRole } from '../services/authHelpers';
+export type { AuthUser } from '../services/auth/authHelpers';
+import type { AuthUser, UserRole } from '../services/auth/authHelpers';
 
 // -- User data cache -----------------------------------------------------------
 const userDataCache = new Map<string, { data: AuthUser; timestamp: number }>();
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        return { id: authUser.id, email: authUser.email || '', role: role || 'staff', employeeId: null, is_active: false };
+        return { id: authUser.id, email: authUser.email || '', role: role || 'staff', employeeId: null, isActive: false };
       }
       // Banned users are signed out; deactivated users stay to see the Deactivated screen.
       if (data?.banned_at !== null && data?.banned_at !== undefined) {
@@ -68,13 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: authUser.email || '',
         role: data?.role || role || 'staff',
         employeeId: data?.employee_id || null,
-        is_active: data?.is_active ?? false,
+        isActive: data?.is_active ?? false,
       };
       userDataCache.set(authUser.id, { data: userData, timestamp: Date.now() });
       return userData;
     } catch (_error) {
       if ((_error as Error).message === 'Your account has been banned') throw _error;
-      return { id: authUser.id, email: authUser.email || '', role: 'staff', employeeId: null, is_active: false };
+      return { id: authUser.id, email: authUser.email || '', role: 'staff', employeeId: null, isActive: false };
     } finally {
       loadingUserRef.current = null;
     }
@@ -139,9 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return;
         }
-        if (isTransientError(error)) return;
+        if (isAuthTransientError(error)) return;
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        if (isTransientError(refreshError) || refreshData?.session) return;
+        if (isAuthTransientError(refreshError) || refreshData?.session) return;
         if (isRefreshTokenError(refreshError) && mounted) { clearCache(); setUser(null); }
       } catch (_err) {
         if (isRefreshTokenError(_err as Error) && mounted) { clearCache(); setUser(null); }
@@ -173,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, [clearCache]);
   const handleDeactivate = useCallback(() => {
-    setUser(prev => prev ? { ...prev, is_active: false } : prev);
+    setUser(prev => prev ? { ...prev, isActive: false } : prev);
   }, []);
   useSessionEnforcement({ userId: user?.id, onForceLogout: handleForceLogout, onDeactivate: handleDeactivate });
 

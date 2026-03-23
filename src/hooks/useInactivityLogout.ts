@@ -6,8 +6,8 @@ import {
   getLastActivity,
   getInactivityTimeoutMs,
   clearLastActivity,
-} from '../services/sessionManager';
-import type { AuthUser } from '../services/authHelpers';
+} from '../services/session/sessionManager';
+import type { AuthUser } from '../services/auth/authHelpers';
 
 export function useInactivityLogout(user: AuthUser | null, onLogout: () => void) {
   const isLoggingOutRef = useRef(false);

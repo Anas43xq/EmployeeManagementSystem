@@ -12,7 +12,7 @@ import {
   deleteTask,
   createTaskNotification,
 } from '../../services/tasks';
-import { notifyHRAndAdmins } from '../../services/dbNotifications';
+import { notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';
 import type { EmployeeBasic } from '../../types';

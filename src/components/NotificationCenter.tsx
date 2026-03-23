@@ -9,7 +9,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   deleteNotification,
-} from '../services/dbNotifications';
+} from '../services/notifications/dbNotifications';
 
 export default function NotificationCenter() {
   const { t } = useTranslation();
