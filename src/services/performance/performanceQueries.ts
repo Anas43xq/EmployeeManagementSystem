@@ -1,5 +1,6 @@
 import { db, supabase } from '../supabase';
-import type { EmployeePerformance, EmployeeOfWeek } from '../../types';
+import type { EmployeePerformance } from '../../types';
+import { mapEmployeeOfWeekRecord } from '../../utils/employeeMappers';
 
 export async function getPerformanceRecords(filters?: {
   employeeId?: string;
@@ -112,7 +113,7 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   if (error) {
     return null;
   }
-  return data?.[0] as EmployeeOfWeek | null;
+  return data?.[0] ? mapEmployeeOfWeekRecord(data[0]) : null;
 }
 
 export async function getEmployeeOfWeekHistory(limit: number = 10) {
@@ -126,7 +127,7 @@ export async function getEmployeeOfWeekHistory(limit: number = 10) {
     .limit(limit);
 
   if (error) throw error;
-  return data as EmployeeOfWeek[];
+  return (data || []).map(mapEmployeeOfWeekRecord);
 }
 
 export async function setEmployeeOfWeek(
@@ -156,7 +157,7 @@ export async function setEmployeeOfWeek(
     .single();
 
   if (error) throw error;
-  return data as EmployeeOfWeek;
+  return mapEmployeeOfWeekRecord(data);
 }
 
 export async function getMyTotalPoints(employeeId: string): Promise<number> {
@@ -202,4 +203,26 @@ export async function getWeeklyDataAvailability(weekStart: string) {
       has_sufficient_data: false,
     };
   }
+}
+
+export async function getLastPerformanceCalculationTime(): Promise<string | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)('get_last_performance_calculation_time');
+  if (error || !data) {
+    return null;
+  }
+
+  return data as string;
+}
+
+export async function calculateWeeklyPerformance(weekStart: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.rpc as any)('calculate_weekly_performance', { p_week_start: weekStart });
+  if (error) throw error;
+}
+
+export async function selectEmployeeOfWeek(weekStart: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.rpc as any)('select_employee_of_week', { p_week_start: weekStart });
+  if (error) throw error;
 }

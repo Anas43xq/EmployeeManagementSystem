@@ -1,11 +1,22 @@
 import { supabase, db } from '../supabase';
 import type { Database } from '../../types/database';
 import { sendEmailNotification } from './index';
+import { NOTIFICATION_TYPES, type NotificationEmailType } from './notificationConfig';
 
 export type NotificationType = 'leave' | 'attendance' | 'system' | 'warning' | 'task' | 'complaint' | 'performance';
 
 type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+
+const EMAIL_TYPE_MAP: Record<NotificationType, NotificationEmailType> = {
+  leave: NOTIFICATION_TYPES.LEAVE_PENDING,
+  attendance: NOTIFICATION_TYPES.GENERAL,
+  system: NOTIFICATION_TYPES.GENERAL,
+  warning: NOTIFICATION_TYPES.WARNING_ISSUED,
+  task: NOTIFICATION_TYPES.TASK_ASSIGNED,
+  complaint: NOTIFICATION_TYPES.COMPLAINT_FILED,
+  performance: NOTIFICATION_TYPES.PERFORMANCE_UPDATE,
+};
 
 export interface DbNotification {
   id: string;
@@ -54,21 +65,11 @@ async function sendNotificationEmail(
 
     // Map internal NotificationType to email notification types
     // Most types map directly; for others, use 'general'
-    const emailTypeMap: Record<NotificationType, string> = {
-      'leave': 'leave',
-      'attendance': 'general',
-      'system': 'general',
-      'warning': 'warning',
-      'task': 'task',
-      'complaint': 'complaint',
-      'performance': 'performance',
-    };
-
     const sent = await sendEmailNotification({
       to: employee.email,
       subject: title,
       body: message,
-      type: emailTypeMap[type] as any, // Safe cast - emailTypeMap covers all types
+      type: EMAIL_TYPE_MAP[type],
     });
 
     return sent;
@@ -183,22 +184,12 @@ export async function notifyHRAndAdmins(
 
         if (!emailError && emailData) {
           // Map internal NotificationType to email types for consistency
-          const emailTypeMap: Record<NotificationType, string> = {
-            'leave': 'leave',
-            'attendance': 'general',
-            'system': 'general',
-            'warning': 'warning',
-            'task': 'task',
-            'complaint': 'complaint',
-            'performance': 'performance',
-          };
-
           for (const row of emailData as unknown as { user_id: string; email: string }[]) {
             await sendEmailNotification({
               to: row.email,
               subject: title,
               body: message,
-              type: emailTypeMap[type] as any, // Safe cast
+              type: EMAIL_TYPE_MAP[type],
             });
           }
         }
@@ -294,4 +285,41 @@ export async function deleteNotification(notificationId: string): Promise<void> 
     }
   } catch (_err) {
   }
+}
+
+export interface NotificationSubscriptionCallbacks {
+  onInsert: (notification: DbNotification) => void;
+  onUpdate: (notification: DbNotification) => void;
+  onDelete: (oldId: string) => void;
+}
+
+/**
+ * Subscribes to real-time INSERT/UPDATE/DELETE events on the notifications table
+ * for the given user. Returns an unsubscribe function.
+ */
+export function subscribeToUserNotifications(
+  userId: string,
+  callbacks: NotificationSubscriptionCallbacks,
+): () => void {
+  const channelName = `notifications-${userId}-${Date.now()}`;
+  const channel = supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => callbacks.onInsert(payload.new as DbNotification),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => callbacks.onUpdate(payload.new as DbNotification),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => callbacks.onDelete((payload.old as { id: string }).id),
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
 }

@@ -1,19 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { usePayroll } from './usePayroll';
 import PayslipModal from './PayslipModal';
-import { StatsCard, Button, StatusBadge, Modal, PageHeader, EmptyState, Card } from '../../components/ui';
+import { PayrollTableCard } from './PayrollTableCard';
+import { StatsCard, Button, Modal, PageHeader } from '../../components/ui';
 import { formatCurrency, getMonthName } from '../../services/payroll';
-import {
-  Calculator,
-  DollarSign,
-  FileText,
-  CheckCircle,
-  Play,
-  Filter,
-  Users,
-  Eye,
-  Banknote,
-} from 'lucide-react';
+import { Calculator, DollarSign, FileText, CheckCircle, Play, Users } from 'lucide-react';
 
 export default function PayrollDashboard() {
   const { t } = useTranslation();
@@ -24,13 +15,14 @@ export default function PayrollDashboard() {
     approving,
     paying,
     selectedMonth,
-    setSelectedMonth,
+    handleMonthChange,
     selectedYear,
-    setSelectedYear,
+    handleYearChange,
     statusFilter,
-    setStatusFilter,
+    handleStatusFilterChange,
     isGenerateModalOpen,
-    setIsGenerateModalOpen,
+    openGenerateModal,
+    closeGenerateModal,
     selectedPayrolls,
     isPayslipModalOpen,
     viewingPayroll,
@@ -58,7 +50,7 @@ export default function PayrollDashboard() {
           <Button
             variant="primary"
             icon={<Play className="w-4 h-4" />}
-            onClick={() => setIsGenerateModalOpen(true)}
+            onClick={openGenerateModal}
           >
             {t('payroll.generatePayroll', 'Generate Payroll')}
           </Button>
@@ -74,196 +66,31 @@ export default function PayrollDashboard() {
         <StatsCard label={t('payroll.totalAmount', 'Total Amount')} value={formatCurrency(stats.totalAmount)} Icon={Calculator} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" className="p-2 sm:p-4" valueClassName="text-sm sm:text-lg font-bold text-gray-900 truncate" />
       </div>
 
-      {/* Payroll Table */}
-      <Card>
-        <div className="p-3 sm:p-4 border-b border-gray-200">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500 shrink-0" />
-                <span className="text-xs sm:text-sm font-medium text-gray-700">{t('common.filters', 'Filters')}:</span>
-              </div>
-
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="flex-1 min-w-[100px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                  <option key={month} value={month}>{getMonthName(month)}</option>
-                ))}
-              </select>
-
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="flex-1 min-w-[80px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="flex-1 min-w-[100px] px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">{t('payroll.allStatuses', 'All Statuses')}</option>
-                <option value="draft">{t('payroll.draft', 'Draft')}</option>
-                <option value="approved">{t('payroll.approved', 'Approved')}</option>
-                <option value="paid">{t('payroll.paid', 'Paid')}</option>
-              </select>
-            </div>
-
-            {selectedPayrolls.length > 0 && (
-              <div className="flex items-center gap-2">
-                {selectedPayrolls.some(id => payrolls.find(p => p.id === id)?.status === 'draft') && (
-                  <Button
-                    variant="primary"
-                    onClick={handleApproveSelected}
-                    loading={approving}
-                    icon={<CheckCircle className="w-4 h-4" />}
-                  >
-                    {t('payroll.approve', 'Approve')}
-                  </Button>
-                )}
-                {selectedPayrolls.some(id => payrolls.find(p => p.id === id)?.status === 'approved') && (
-                  <Button
-                    variant="primary"
-                    onClick={handleMarkAsPaid}
-                    loading={paying}
-                    icon={<Banknote className="w-4 h-4" />}
-                  >
-                    {t('payroll.markAsPaid', 'Mark as Paid')}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="p-4">
-          {selectedPayrolls.length === 0 && stats.draft > 0 && (
-            <div className="mb-4">
-              <Button variant="secondary" onClick={selectAllDraftPayrolls}>
-                {t('payroll.selectAllDraft', 'Select All Draft Records')}
-              </Button>
-            </div>
-          )}
-
-          {selectedPayrolls.length === 0 && stats.approved > 0 && (
-            <div className="mb-4">
-              <Button variant="secondary" onClick={selectAllApprovedPayrolls}>
-                {t('payroll.selectAllApproved', 'Select All Approved Records')}
-              </Button>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">{t('payroll.loading', 'Loading payroll records...')}</p>
-            </div>
-          ) : payrolls.length === 0 ? (
-            <EmptyState
-              title={t('payroll.noRecords', 'No Payroll Records')}
-              message={t('payroll.noRecordsDesc', 'No payroll records found for the selected period. Generate payroll to get started.')}
-              icon={Calculator}
-              action={
-                <Button
-                  variant="primary"
-                  icon={<Play className="w-4 h-4" />}
-                  onClick={() => setIsGenerateModalOpen(true)}
-                >
-                  {t('payroll.generateFirst', 'Generate Your First Payroll')}
-                </Button>
-              }
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={selectedPayrolls.length === payrolls.filter(p => p.status === 'draft').length && payrolls.filter(p => p.status === 'draft').length > 0}
-                        onChange={selectAllDraftPayrolls}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                      />
-                    </th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.employee', 'Employee')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.period', 'Period')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.baseSalary', 'Base Salary')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.bonuses', 'Bonuses')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.deductions', 'Deductions')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.netSalary', 'Net Salary')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('payroll.status', 'Status')}</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700">{t('common.actions', 'Actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payrolls.map((payroll) => (
-                    <tr key={payroll.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedPayrolls.includes(payroll.id)}
-                          onChange={() => togglePayrollSelection(payroll.id)}
-                          disabled={payroll.status === 'paid'}
-                          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                      </td>
-                      <td className="py-3 px-3">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {payroll.employees.first_name} {payroll.employees.last_name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {payroll.employees.employee_number} • {payroll.employees.position}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 text-sm">
-                        {getMonthName(payroll.period_month)} {payroll.period_year}
-                      </td>
-                      <td className="py-3 px-3 text-sm font-medium">
-                        {formatCurrency(payroll.base_salary)}
-                      </td>
-                      <td className="py-3 px-3 text-sm text-blue-600 font-medium">
-                        +{formatCurrency(payroll.total_bonuses)}
-                      </td>
-                      <td className="py-3 px-3 text-sm text-red-600 font-medium">
-                        -{formatCurrency(payroll.total_deductions)}
-                      </td>
-                      <td className="py-3 px-3 text-sm font-bold">
-                        {formatCurrency(payroll.net_salary)}
-                      </td>
-                      <td className="py-3 px-3">
-                        <StatusBadge status={payroll.status} />
-                      </td>
-                      <td className="py-3 px-3">
-                        <Button
-                          variant="secondary"
-                          icon={<Eye className="w-4 h-4" />}
-                          onClick={() => openPayslipModal(payroll)}
-                        >
-                          {t('payroll.viewPayslip', 'View Payslip')}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </Card>
+      <PayrollTableCard
+        payrolls={payrolls}
+        loading={loading}
+        approving={approving}
+        paying={paying}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        statusFilter={statusFilter}
+        selectedPayrolls={selectedPayrolls}
+        stats={stats}
+        handleMonthChange={handleMonthChange}
+        handleYearChange={handleYearChange}
+        handleStatusFilterChange={handleStatusFilterChange}
+        handleApproveSelected={handleApproveSelected}
+        handleMarkAsPaid={handleMarkAsPaid}
+        selectAllDraftPayrolls={selectAllDraftPayrolls}
+        selectAllApprovedPayrolls={selectAllApprovedPayrolls}
+        togglePayrollSelection={togglePayrollSelection}
+        openPayslipModal={openPayslipModal}
+        openGenerateModal={openGenerateModal}
+      />
 
       {/* Generate Modal */}
-      <Modal show={isGenerateModalOpen} onClose={() => setIsGenerateModalOpen(false)}>
-        <Modal.Header onClose={() => setIsGenerateModalOpen(false)}>
+      <Modal show={isGenerateModalOpen} onClose={closeGenerateModal}>
+        <Modal.Header onClose={closeGenerateModal}>
           {t('payroll.generatePayrollTitle', 'Generate Monthly Payroll')}
         </Modal.Header>
         <Modal.Body>
@@ -280,22 +107,10 @@ export default function PayrollDashboard() {
               </p>
             </div>
             <div className="flex space-x-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setIsGenerateModalOpen(false)}
-                className="flex-1"
-              >
+              <Button type="button" variant="secondary" onClick={closeGenerateModal} className="flex-1">
                 {t('common.cancel', 'Cancel')}
               </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleGeneratePayroll}
-                loading={generating}
-                icon={<Calculator className="w-4 h-4" />}
-                className="flex-1"
-              >
+              <Button type="button" variant="primary" onClick={handleGeneratePayroll} loading={generating} icon={<Calculator className="w-4 h-4" />} className="flex-1">
                 {t('payroll.generate', 'Generate Payroll')}
               </Button>
             </div>

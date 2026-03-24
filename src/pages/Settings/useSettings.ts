@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { db } from '../../services/supabase';
-import type { Database } from '../../types/database';
-
-type UserPreferences = Database['public']['Tables']['user_preferences']['Row'];
+import { signOutCurrentSession } from '../../services/session/sessionManager';
+import {
+  getUserNotificationPreferences,
+  saveUserNotificationPreferences,
+  requestUserEmailUpdate,
+  type NotificationPreferenceState,
+} from '../../services/settings';
 
 export function useSettings() {
   const { t } = useTranslation();
@@ -16,7 +19,7 @@ export function useSettings() {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState(user?.email || '');
   const [updatingEmail, setUpdatingEmail] = useState(false);
-  const [notificationPrefs, setNotificationPrefs] = useState({
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferenceState>({
     leave_approvals: true,
     attendance_reminders: true,
     warnings: true,
@@ -29,22 +32,15 @@ export function useSettings() {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await db
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) return;
+      const data = await getUserNotificationPreferences(user.id);
 
       if (data) {
-        const prefs = data as UserPreferences;
         setNotificationPrefs({
-          leave_approvals: prefs.email_leave_approvals ?? true,
-          attendance_reminders: prefs.email_attendance_reminders ?? true,
-          warnings: prefs.email_warnings ?? true,
-          tasks: prefs.email_tasks ?? true,
-          complaints: prefs.email_complaints ?? true,
+          leave_approvals: data.email_leave_approvals ?? true,
+          attendance_reminders: data.email_attendance_reminders ?? true,
+          warnings: data.email_warnings ?? true,
+          tasks: data.email_tasks ?? true,
+          complaints: data.email_complaints ?? true,
         });
       }
     } catch {
@@ -66,19 +62,7 @@ export function useSettings() {
 
     setSavingPrefs(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('user_preferences') as any)
-        .upsert({
-          user_id: user.id,
-          email_leave_approvals: notificationPrefs.leave_approvals,
-          email_attendance_reminders: notificationPrefs.attendance_reminders,
-          email_warnings: notificationPrefs.warnings,
-          email_tasks: notificationPrefs.tasks,
-          email_complaints: notificationPrefs.complaints,
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await saveUserNotificationPreferences(user.id, notificationPrefs);
       showNotification('success', t('settings.prefsSaved'));
     } catch {
       showNotification('error', 'Failed to save preferences');
@@ -106,14 +90,8 @@ export function useSettings() {
     setUpdatingEmail(true);
     try {
       const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      const { error } = await db.auth.updateUser(
-        { email: newEmail },
-        { emailRedirectTo: `${appUrl}/settings` }
-      );
-
-      if (error) throw error;
-
-      await db.auth.signOut();
+      await requestUserEmailUpdate(newEmail, `${appUrl}/settings`);
+      await signOutCurrentSession();
       navigate('/login', { state: { successMessage: t('settings.emailChangeRequest') } });
     } catch (_error: unknown) {
       if ((_error as Error)?.message?.includes('same')) {

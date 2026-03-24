@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase, db } from '../../services/supabase';
+import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
 import { logActivity } from '../../services/activityLog';
 import {
   getWarnings,
@@ -11,11 +11,14 @@ import {
   resolveWarning,
   deleteWarning,
   createWarningNotification,
+  subscribeToWarningChanges,
 } from '../../services/warnings';
+import { fetchActiveEmployeesWithDefaults, getUserAccountIdForEmployee } from '../../services/employees';
 import type { EmployeeWarning, WarningStatus, WarningFormData } from './types';
 import { initialWarningFormData } from './types';
 import type { EmployeeBasic } from '../../types';
 
+/** Manages warning records, employee lookups, and warning resolution workflows. */
 export function useWarnings() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -25,8 +28,7 @@ export function useWarnings() {
   const [warnings, setWarnings] = useState<EmployeeWarning[]>([]);
   const [employees, setEmployees] = useState<(EmployeeBasic & { employee_number: string })[]>([]);
   const [filter, setFilter] = useState<'all' | WarningStatus>('all');
-  const [showModal, setShowModal] = useState(false);
-  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [activeModal, setActiveModal] = useState<'create' | 'resolve' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<WarningFormData>(initialWarningFormData);
   const [selectedWarning, setSelectedWarning] = useState<EmployeeWarning | null>(null);
@@ -48,17 +50,11 @@ export function useWarnings() {
 
   const loadEmployees = useCallback(async () => {
     if (isStaff) return;
-    
     try {
-      const { data, error } = await db
-        .from('employees')
-        .select('id, first_name, last_name, employee_number')
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (error) throw error;
-      setEmployees(data || []);
-    } catch (_error) {
+      const data = await fetchActiveEmployeesWithDefaults(true);
+      setEmployees(data as (EmployeeBasic & { employee_number: string })[]);
+    } catch {
+      // silent
     }
   }, [isStaff]);
 
@@ -71,24 +67,9 @@ export function useWarnings() {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('warnings-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employee_warnings',
-        },
-        () => {
-          loadWarnings();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeToWarningChanges(() => {
+      loadWarnings();
+    });
   }, [user, loadWarnings]);
 
   const filteredWarnings = warnings.filter(warning => {
@@ -98,12 +79,18 @@ export function useWarnings() {
 
   const handleOpenModal = () => {
     setFormData(initialWarningFormData);
-    setShowModal(true);
+    setActiveModal('create');
   };
 
   const handleCloseModal = () => {
-    setShowModal(false);
+    setActiveModal(null);
     setFormData(initialWarningFormData);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedWarning(null);
+    setResolutionNotes('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,21 +105,18 @@ export function useWarnings() {
         severity: formData.severity,
       });
 
-      const { data: targetUser, error: userLookupError } = await db
-        .from('users')
-        .select('id')
-        .eq('employee_id', formData.employee_id)
-        .maybeSingle() as { data: { id: string } | null; error: unknown };
+      const targetUserId = await getUserAccountIdForEmployee(formData.employee_id);
 
-      if (!userLookupError && targetUser) {
-        await createWarningNotification(targetUser.id, formData.severity);
+      if (targetUserId) {
+        await createWarningNotification(targetUserId, formData.severity);
       }
 
       showNotification('success', t('warnings.createSuccess'));
       handleCloseModal();
       loadWarnings();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('warnings.createFailed')));
+      logError(extractError(_error), 'useWarnings.handleSubmit');
+      showNotification('error', getErrorMessage(_error, t('warnings.createFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -147,14 +131,15 @@ export function useWarnings() {
       showNotification('success', t('warnings.acknowledged'));
       loadWarnings();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('warnings.acknowledgeFailed')));
+      logError(extractError(_error), 'useWarnings.handleAcknowledge');
+      showNotification('error', getErrorMessage(_error, t('warnings.acknowledgeFailed')));
     }
   };
 
   const handleOpenResolveModal = (warning: EmployeeWarning) => {
     setSelectedWarning(warning);
     setResolutionNotes('');
-    setShowResolveModal(true);
+    setActiveModal('resolve');
   };
 
   const handleResolve = async () => {
@@ -169,12 +154,11 @@ export function useWarnings() {
         });
       }
       showNotification('success', t('warnings.resolved'));
-      setShowResolveModal(false);
-      setSelectedWarning(null);
-      setResolutionNotes('');
+      closeModal();
       loadWarnings();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('warnings.resolveFailed')));
+      logError(extractError(_error), 'useWarnings.handleResolve');
+      showNotification('error', getErrorMessage(_error, t('warnings.resolveFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +173,8 @@ export function useWarnings() {
       showNotification('success', t('warnings.deleteSuccess'));
       loadWarnings();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('warnings.deleteFailed')));
+      logError(extractError(_error), 'useWarnings.handleDelete');
+      showNotification('error', getErrorMessage(_error, t('warnings.deleteFailed')));
     }
   };
 
@@ -199,9 +184,7 @@ export function useWarnings() {
     employees,
     filter,
     setFilter,
-    showModal,
-    showResolveModal,
-    setShowResolveModal,
+    activeModal,
     formData,
     setFormData,
     submitting,
@@ -209,6 +192,7 @@ export function useWarnings() {
     setResolutionNotes,
     isStaff,
     user,
+    selectedWarning,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
@@ -216,6 +200,7 @@ export function useWarnings() {
     handleOpenResolveModal,
     handleResolve,
     handleDelete,
+    closeModal,
   };
 }
 

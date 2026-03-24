@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
+import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
 import {
   generateMonthlyPayroll,
   getPayrollRecords,
@@ -17,6 +18,9 @@ import {
   type DeductionData,
 } from '../../services/payroll';
 
+const MIN_PAYROLL_YEAR = 2020;
+
+/** Manages payroll records, bulk actions, and payslip modal state for the payroll dashboard. */
 export function usePayroll() {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
@@ -84,6 +88,27 @@ export function usePayroll() {
     setDeductions([]);
   };
 
+  const openGenerateModal = () => {
+    setIsGenerateModalOpen(true);
+  };
+
+  const closeGenerateModal = () => {
+    setIsGenerateModalOpen(false);
+    setSelectedPayrolls([]);
+  };
+
+  const handleMonthChange = (month: number) => {
+    setSelectedMonth(month);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+  };
+
   const handleDownloadPDF = () => {
     if (!viewingPayroll) return;
     try {
@@ -95,7 +120,7 @@ export function usePayroll() {
   };
 
   const handleGeneratePayroll = async () => {
-    if (selectedMonth < 1 || selectedMonth > 12 || selectedYear < 2020) {
+    if (selectedMonth < 1 || selectedMonth > 12 || selectedYear < MIN_PAYROLL_YEAR) {
       showNotification('error', t('payroll.invalidPeriod', 'Please select a valid month and year'));
       return;
     }
@@ -112,13 +137,14 @@ export function usePayroll() {
             employee_count: result.results?.length ?? 0,
           });
         }
-        setIsGenerateModalOpen(false);
+        closeGenerateModal();
         loadPayrollRecords();
       } else {
         throw new Error(result.message);
       }
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('payroll.generationFailed', 'Failed to generate payroll')));
+      logError(extractError(_error), 'usePayroll.handleGeneratePayroll');
+      showNotification('error', getErrorMessage(_error, t('payroll.generationFailed', 'Failed to generate payroll')));
     } finally {
       setGenerating(false);
     }
@@ -147,8 +173,9 @@ export function usePayroll() {
       } else {
         throw new Error('Failed to approve payrolls');
       }
-    } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      showNotification('error', (_error as Error).message || t('payroll.approvalFailed', 'Failed to approve payroll records'));
+    } catch (_error: unknown) {
+      logError(extractError(_error), 'usePayroll.handleApproveSelected');
+      showNotification('error', getErrorMessage(_error, t('payroll.approvalFailed', 'Failed to approve payroll records')));
     } finally {
       setApproving(false);
     }
@@ -203,8 +230,9 @@ export function usePayroll() {
       } else {
         throw new Error('Failed to mark payrolls as paid');
       }
-    } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      showNotification('error', (_error as Error).message || t('payroll.markAsPaidFailed', 'Failed to mark payroll records as paid'));
+    } catch (_error: unknown) {
+      logError(extractError(_error), 'usePayroll.handleMarkAsPaid');
+      showNotification('error', getErrorMessage(_error, t('payroll.markAsPaidFailed', 'Failed to mark payroll records as paid')));
     } finally {
       setPaying(false);
     }
@@ -225,13 +253,12 @@ export function usePayroll() {
     approving,
     paying,
     selectedMonth,
-    setSelectedMonth,
+    handleMonthChange,
     selectedYear,
-    setSelectedYear,
+    handleYearChange,
     statusFilter,
-    setStatusFilter,
+    handleStatusFilterChange,
     isGenerateModalOpen,
-    setIsGenerateModalOpen,
     selectedPayrolls,
     isPayslipModalOpen,
     viewingPayroll,
@@ -239,9 +266,10 @@ export function usePayroll() {
     deductions,
     loadingPayslipDetails,
     stats,
-
     openPayslipModal,
     closePayslipModal,
+    openGenerateModal,
+    closeGenerateModal,
     handleDownloadPDF,
     handleGeneratePayroll,
     handleApproveSelected,

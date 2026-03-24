@@ -7,6 +7,8 @@ import { PageSpinner, PageHeader, Card, Button, StatusBadge } from '../../compon
 import PasskeyManagement from '../../components/PasskeyManagement';
 import { useEmployeeProfile } from '../../hooks/useEmployeeProfile';
 
+const fieldLabel = 'text-sm text-gray-500';
+
 export default function Profile() {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ export default function Profile() {
               {employee ? `${employee.first_name} ${employee.last_name}` : user?.email}
             </h2>
             {employee && <p className="text-gray-600">{employee.position}</p>}
-            {employee && <p className="text-sm text-gray-500">{employee.employee_number}</p>}
+            {employee && <p className={fieldLabel}>{employee.employee_number}</p>}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
               <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${
                 user?.role === 'admin' ? 'bg-purple-100 text-purple-800' :
@@ -79,21 +81,21 @@ export default function Profile() {
               <div className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.email')}</p>
+                  <p className={fieldLabel}>{t('employees.email')}</p>
                   <p className="font-medium break-all">{employee.email}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Phone className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.phone')}</p>
+                  <p className={fieldLabel}>{t('employees.phone')}</p>
                   <p className="font-medium">{employee.phone || t('common.na')}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Calendar className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.dateOfBirth')}</p>
+                  <p className={fieldLabel}>{t('employees.dateOfBirth')}</p>
                   <p className="font-medium">
                     {employee.date_of_birth ? format(new Date(employee.date_of_birth), 'PPP') : t('common.na')}
                   </p>
@@ -102,7 +104,7 @@ export default function Profile() {
               <div className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.address')}</p>
+                  <p className={fieldLabel}>{t('employees.address')}</p>
                   <p className="font-medium break-words">
                     {employee.address ? `${employee.address}, ${employee.city}, ${employee.state} ${employee.postal_code}` : t('common.na')}
                   </p>
@@ -120,28 +122,28 @@ export default function Profile() {
               <div className="flex items-start space-x-3">
                 <Building2 className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.department')}</p>
+                  <p className={fieldLabel}>{t('employees.department')}</p>
                   <p className="font-medium">{employee.departments?.name || t('common.na')}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Briefcase className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.position')}</p>
+                  <p className={fieldLabel}>{t('employees.position')}</p>
                   <p className="font-medium">{employee.position}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Calendar className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.hireDate')}</p>
+                  <p className={fieldLabel}>{t('employees.hireDate')}</p>
                   <p className="font-medium">
                     {employee.hire_date ? format(new Date(employee.hire_date), 'PPP') : t('common.na')}
                   </p>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500">{t('employees.employmentType')}</p>
+                <p className={fieldLabel}>{t('employees.employmentType')}</p>
                 <p className="font-medium capitalize">{employee.employment_type?.replace('-', ' ') || t('common.na')}</p>
               </div>
             </div>
@@ -154,13 +156,13 @@ export default function Profile() {
             </h3>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">{t('common.name')}</p>
+                <p className={fieldLabel}>{t('common.name')}</p>
                 <p className="font-medium">{employee.emergency_contact_name || t('common.na')}</p>
               </div>
               <div className="flex items-start space-x-3">
                 <Phone className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-sm text-gray-500">{t('employees.emergencyPhone')}</p>
+                  <p className={fieldLabel}>{t('employees.emergencyPhone')}</p>
                   <p className="font-medium">{employee.emergency_contact_phone || t('common.na')}</p>
                 </div>
               </div>

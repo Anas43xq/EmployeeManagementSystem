@@ -1,6 +1,7 @@
 
 import { supabase } from '../supabase';
 
+// Session health lives in local storage so progressive recovery survives tab refreshes.
 const SESSION_HEALTH_KEY = 'ems_session_health';
 const LAST_ACTIVITY_KEY = 'ems_last_activity';
 const MAX_FAILED_ATTEMPTS = 3;
@@ -11,6 +12,32 @@ interface SessionHealth {
   failedAttempts: number;
   lastAttempt: number;
   lastRecovery: number;
+}
+
+export interface SessionEnforcementState {
+  bannedAt: string | null;
+  currentSessionToken: string | null;
+  isActive: boolean | null;
+}
+
+interface SessionEnforcementRow {
+  banned_at?: string | null;
+  current_session_token?: string | null;
+  is_active?: boolean | null;
+}
+
+function toSessionEnforcementState(value: unknown): SessionEnforcementState {
+  if (!value || typeof value !== 'object') {
+    return { bannedAt: null, currentSessionToken: null, isActive: null };
+  }
+
+  const row = value as SessionEnforcementRow;
+
+  return {
+    bannedAt: row.banned_at ?? null,
+    currentSessionToken: row.current_session_token ?? null,
+    isActive: row.is_active ?? null,
+  };
 }
 
 function getSessionHealth(): SessionHealth {
@@ -95,6 +122,44 @@ export async function clearAuthState(): Promise<void> {
     }
   } catch {
   }
+}
+
+export async function signOutCurrentSession(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+export async function getSessionEnforcementState(userId: string): Promise<SessionEnforcementState | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('is_active, banned_at, current_session_token')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return toSessionEnforcementState(data);
+}
+
+export function subscribeToSessionEnforcement(
+  userId: string,
+  onUpdate: (state: SessionEnforcementState) => void,
+): () => void {
+  const channel = supabase
+    .channel(`user-session:${userId}:${Date.now()}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${userId}` },
+      (payload) => {
+        onUpdate(toSessionEnforcementState(payload.new));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export async function getValidAccessToken(): Promise<string | null> {

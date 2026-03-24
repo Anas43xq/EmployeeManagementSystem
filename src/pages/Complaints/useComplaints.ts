@@ -2,15 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase, db } from '../../services/supabase';
 import { logActivity } from '../../services/activityLog';
 import {
   getComplaints,
   createComplaint,
   updateComplaintStatus,
   deleteComplaint,
+  subscribeToComplaintChanges,
 } from '../../services/complaints';
 import { notifyHRAndAdmins, createNotification } from '../../services/notifications/dbNotifications';
+import { getEmployeeNameById, getUserAccountIdForEmployee } from '../../services/employees';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
 import { initialComplaintFormData } from './types';
 
@@ -22,8 +23,7 @@ export function useComplaints() {
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState<EmployeeComplaint[]>([]);
   const [filter, setFilter] = useState<'all' | ComplaintStatus>('all');
-  const [showModal, setShowModal] = useState(false);
-  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [activeModal, setActiveModal] = useState<'create' | 'resolve' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<ComplaintFormData>(initialComplaintFormData);
   const [selectedComplaint, setSelectedComplaint] = useState<EmployeeComplaint | null>(null);
@@ -52,24 +52,9 @@ export function useComplaints() {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('complaints-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employee_complaints',
-        },
-        () => {
-          loadComplaints();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeToComplaintChanges(() => {
+      loadComplaints();
+    });
   }, [user, loadComplaints]);
 
   const filteredComplaints = complaints.filter(complaint => {
@@ -79,12 +64,18 @@ export function useComplaints() {
 
   const handleOpenModal = () => {
     setFormData(initialComplaintFormData);
-    setShowModal(true);
+    setActiveModal('create');
   };
 
   const handleCloseModal = () => {
-    setShowModal(false);
+    setActiveModal(null);
     setFormData(initialComplaintFormData);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedComplaint(null);
+    setResolutionNotes('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,15 +90,7 @@ export function useComplaints() {
       });
 
       // Notify HR/Admin about new complaint with email
-      const { data: employeeData } = await db
-        .from('employees')
-        .select('first_name, last_name')
-        .eq('id', user.employeeId)
-        .single() as { data: { first_name: string; last_name: string } | null };
-
-      const employeeName = employeeData
-        ? `${employeeData.first_name} ${employeeData.last_name}`
-        : 'An employee';
+      const employeeName = (await getEmployeeNameById(user.employeeId)) || 'An employee';
 
       await notifyHRAndAdmins(
         'New Complaint Submitted',
@@ -146,7 +129,7 @@ export function useComplaints() {
     setSelectedComplaint(complaint);
     setResolveAction(action);
     setResolutionNotes('');
-    setShowResolveModal(true);
+    setActiveModal('resolve');
   };
 
   const handleResolve = async () => {
@@ -163,15 +146,11 @@ export function useComplaints() {
         resolution_notes: resolutionNotes,
       });
 
-      const { data: employeeUser, error: userLookupError } = await db
-        .from('users')
-        .select('id')
-        .eq('employee_id', selectedComplaint.employee_id)
-        .maybeSingle() as { data: { id: string } | null; error: unknown };
+      const employeeUserId = await getUserAccountIdForEmployee(selectedComplaint.employee_id);
 
-      if (!userLookupError && employeeUser) {
+      if (employeeUserId) {
         await createNotification(
-          employeeUser.id,
+          employeeUserId,
           'Complaint Status Updated',
           `Your complaint has been ${resolveAction}. ${resolutionNotes ? 'Notes: ' + resolutionNotes : ''}`,
           'complaint',
@@ -180,9 +159,7 @@ export function useComplaints() {
       }
 
       showNotification('success', t(`complaints.${resolveAction}`));
-      setShowResolveModal(false);
-      setSelectedComplaint(null);
-      setResolutionNotes('');
+      closeModal();
       loadComplaints();
     } catch (_error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       showNotification('error', (_error as Error).message || t('complaints.resolveFailed'));
@@ -209,9 +186,7 @@ export function useComplaints() {
     complaints: filteredComplaints,
     filter,
     setFilter,
-    showModal,
-    showResolveModal,
-    setShowResolveModal,
+    activeModal,
     formData,
     setFormData,
     submitting,
@@ -220,6 +195,7 @@ export function useComplaints() {
     resolveAction,
     isStaff,
     user,
+    selectedComplaint,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
@@ -227,6 +203,7 @@ export function useComplaints() {
     handleOpenResolveModal,
     handleResolve,
     handleDelete,
+    closeModal,
   };
 }
 

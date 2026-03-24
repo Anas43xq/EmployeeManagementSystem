@@ -424,12 +424,4 @@ export function getMonthName(month: number): string {
   return monthNames[month - 1] || '';
 }
 
-export function validatePayrollData(data: Partial<PayrollData>): boolean {
-  return !!(
-    data.employee_id &&
-    data.period_month &&
-    data.period_year &&
-    typeof data.base_salary === 'number' &&
-    data.base_salary >= 0
-  );
-}
+

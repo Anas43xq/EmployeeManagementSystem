@@ -13,6 +13,8 @@ export interface AppError {
   originalError?: unknown;
 }
 
+const DEFAULT_ERROR_MESSAGE = 'An unexpected error occurred';
+
 /**
  * Extract and normalize any error type into a consistent AppError format
  * Replaces silent error swallows with consistent error handling
@@ -56,9 +58,15 @@ export function extractError(err: unknown): AppError {
 
   // Fallback for unknown error types
   return {
-    message: 'An unexpected error occurred',
+    message: DEFAULT_ERROR_MESSAGE,
     originalError: err,
   };
+}
+
+/** Returns a normalized human-readable error message. */
+export function getErrorMessage(err: unknown, fallback = DEFAULT_ERROR_MESSAGE): string {
+  const message = extractError(err).message.trim();
+  return message || fallback;
 }
 
 /**
@@ -79,7 +87,7 @@ export function logError(error: AppError, context?: string): void {
  * Determine if error is network-related (transient)
  */
 export function isTransientError(error: AppError | unknown): boolean {
-  const appError = error instanceof Object && 'message' in error ? error as AppError : extractError(error);
+  const appError = extractError(error);
   const message = appError.message.toLowerCase();
   const code = appError.code?.toLowerCase() || '';
 
@@ -98,7 +106,7 @@ export function isTransientError(error: AppError | unknown): boolean {
  * Determine if error requires reauthentication
  */
 export function isAuthError(error: AppError | unknown): boolean {
-  const appError = error instanceof Object && 'message' in error ? error as AppError : extractError(error);
+  const appError = extractError(error);
   const message = appError.message.toLowerCase();
   const status = appError.status;
 

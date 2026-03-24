@@ -48,9 +48,7 @@ export async function registerPasskey(deviceName: string): Promise<PasskeyRegist
 
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (!session) return { success: false, error: 'Not authenticated' };
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

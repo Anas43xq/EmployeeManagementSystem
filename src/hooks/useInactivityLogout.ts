@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
 import {
   updateLastActivity,
   getLastActivity,
   getInactivityTimeoutMs,
   clearLastActivity,
+  signOutCurrentSession,
 } from '../services/session/sessionManager';
 import type { AuthUser } from '../services/auth/authHelpers';
 
@@ -44,7 +44,7 @@ export function useInactivityLogout(user: AuthUser | null, onLogout: () => void)
         clearLastActivity();
 
         try {
-          await supabase.auth.signOut();
+          await signOutCurrentSession();
         } catch {
           // ensure user is cleared even if the network call fails
         }

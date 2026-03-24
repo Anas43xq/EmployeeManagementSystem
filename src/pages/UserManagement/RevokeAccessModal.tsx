@@ -37,7 +37,7 @@ export default function RevokeAccessModal({
           <div className="w-full bg-gray-50 rounded-lg p-3 text-left">
             <p className="font-medium text-gray-900">{userName}</p>
             <p className="text-sm text-gray-600">{userEmail}</p>
-            <p className="text-sm text-gray-500">{selectedUser.employees?.employee_number}</p>
+            <p className="text-sm text-gray-500">{selectedUser.employees?.employeeNumber}</p>
           </div>
           <div className="w-full flex items-start space-x-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-left">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />

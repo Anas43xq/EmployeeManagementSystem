@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import type { Employee } from '../types';
+import { mapEmployeeRecord } from '../utils/employeeMappers';
+import { getEmployeeIdForUser, getEmployeeProfileById } from '../services/employees';
 
 export function useEmployeeProfile() {
   const { user } = useAuth();
@@ -26,30 +27,22 @@ export function useEmployeeProfile() {
       let empId = user?.employeeId ?? null;
 
       if (!empId) {
-        const { data: userData, error: userError } = await db
-          .from('users')
-          .select('employee_id')
-          .eq('id', user!.id)
-          .maybeSingle();
-
-        const userRecord = userData as { employee_id: string } | null;
-        if (userError || !userRecord?.employee_id) {
+        empId = await getEmployeeIdForUser(user!.id);
+        if (!empId) {
           setLoading(false);
           return;
         }
-        empId = userRecord.employee_id;
       }
 
       setEmployeeId(empId);
 
-      const { data, error } = await db
-        .from('employees')
-        .select(`*, departments!department_id (name)`)
-        .eq('id', empId)
-        .maybeSingle();
+      const data = await getEmployeeProfileById(empId);
+      if (!data) {
+        setEmployee(null);
+        return;
+      }
 
-      if (error) throw error;
-      setEmployee(data as Employee);
+      setEmployee(mapEmployeeRecord(data));
     } catch {
       showNotification('error', t('employees.failedToLoadDetails'));
     } finally {

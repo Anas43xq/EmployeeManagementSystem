@@ -15,9 +15,7 @@ export default function Complaints() {
     complaints,
     filter,
     setFilter,
-    showModal,
-    showResolveModal,
-    setShowResolveModal,
+    activeModal,
     formData,
     setFormData,
     submitting,
@@ -32,6 +30,7 @@ export default function Complaints() {
     handleOpenResolveModal,
     handleResolve,
     handleDelete,
+    closeModal,
   } = useComplaints();
 
   if (loading) {
@@ -95,7 +94,7 @@ export default function Complaints() {
       {/* Submit Complaint Modal (for employees) */}
       {isStaff && (
         <ComplaintFormModal
-          show={showModal}
+          show={activeModal === 'create'}
           onClose={handleCloseModal}
           formData={formData}
           setFormData={setFormData}
@@ -106,10 +105,10 @@ export default function Complaints() {
 
       {/* Resolve/Dismiss Complaint Modal (for HR/Admin) */}
       <Modal
-        show={showResolveModal}
-        onClose={() => setShowResolveModal(false)}
+        show={activeModal === 'resolve'}
+        onClose={closeModal}
       >
-        <Modal.Header onClose={() => setShowResolveModal(false)}>
+        <Modal.Header onClose={closeModal}>
           {resolveAction === 'resolved' ? t('complaints.resolveComplaint') : t('complaints.dismissComplaint')}
         </Modal.Header>
         <Modal.Body>
@@ -136,7 +135,7 @@ export default function Complaints() {
         <Modal.Footer>
           <Button
             variant="secondary"
-            onClick={() => setShowResolveModal(false)}
+            onClick={closeModal}
           >
             {t('common.cancel')}
           </Button>

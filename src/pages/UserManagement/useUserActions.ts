@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
+import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../services/activityLog';
+import {
+  grantUserAccess,
+  updateManagedUserRole,
+  revokeManagedUserAccess,
+  requestManagedUserPasswordReset,
+} from '../../services/users';
 import type { User, EmployeeWithoutAccess, GrantAccessFormData, EditUserFormData, BanUserFormData } from './types';
 import { getUserEmail } from './types';
 import { banUser, unbanUser, deactivateUser, activateUser } from './userStatusApi';
@@ -14,25 +20,23 @@ interface UseUserActionsOptions {
   loadEmployeesWithoutAccess: () => Promise<void>;
 }
 
+type ModalType = 'grantAccess' | 'edit' | 'revokeAccess' | 'resetPassword' | 'ban' | 'unban' | null;
+
+/** Manages user-access modals and account administration actions for user management. */
 export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployeesWithoutAccess }: UseUserActionsOptions) {
   const { user: currentUser } = useAuth();
   const { showNotification } = useNotification();
   const { t } = useTranslation();
 
-  // --- Modal state ---
-  const [showGrantAccessModal, setShowGrantAccessModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showRevokeAccessModal, setShowRevokeAccessModal] = useState(false);
-  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
-  const [showBanModal, setShowBanModal] = useState(false);
-  const [showUnbanModal, setShowUnbanModal] = useState(false);
+  // --- Modal state (consolidated) ---
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // --- Form state ---
   const [grantAccessForm, setGrantAccessForm] = useState<GrantAccessFormData>({
-    employee_id: '',
+    employeeId: '',
     password: '',
     role: 'staff',
   });
@@ -46,32 +50,41 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     reason: '',
   });
 
-  // --- Modal openers ---
+  // --- Modal openers (set activeModal instead of individual booleans) ---
+  const openGrantAccessModal = () => {
+    setActiveModal('grantAccess');
+  };
+
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setEditForm({ role: user.role });
-    setShowEditModal(true);
+    setActiveModal('edit');
   };
 
   const openRevokeAccessModal = (user: User) => {
     setSelectedUser(user);
-    setShowRevokeAccessModal(true);
+    setActiveModal('revokeAccess');
   };
 
   const openResetPasswordModal = (user: User) => {
     setSelectedUser(user);
-    setShowResetPasswordModal(true);
+    setActiveModal('resetPassword');
   };
 
   const openBanModal = (user: User) => {
     setSelectedUser(user);
     setBanForm({ banDuration: '24', reason: '' });
-    setShowBanModal(true);
+    setActiveModal('ban');
   };
 
   const openUnbanModal = (user: User) => {
     setSelectedUser(user);
-    setShowUnbanModal(true);
+    setActiveModal('unban');
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedUser(null);
   };
 
   // --- Action handlers ---
@@ -79,7 +92,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     e.preventDefault();
 
     const selectedEmployee = employeesWithoutAccess.find(
-      emp => emp.id === grantAccessForm.employee_id
+      emp => emp.id === grantAccessForm.employeeId
     );
 
     if (!selectedEmployee) {
@@ -89,44 +102,29 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
     setSubmitting(true);
     try {
-      const { data: { session } } = await db.auth.getSession();
-      if (!session) {
-        showNotification('error', 'Not authenticated');
-        return;
-      }
-
-      const { data, error } = await db.functions.invoke('grant-user-access', {
-        body: {
-          email: selectedEmployee.email,
-          password: grantAccessForm.password,
-          role: grantAccessForm.role,
-          employee_id: selectedEmployee.id,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      const data = await grantUserAccess({
+        email: selectedEmployee.email,
+        password: grantAccessForm.password,
+        role: grantAccessForm.role,
+        employeeId: selectedEmployee.id,
       });
-
-      if (error || !data?.success) {
-        showNotification('error', `Failed to grant access: ${error?.message || data?.error}`);
-        throw new Error(error?.message || data?.error);
-      }
 
       showNotification('success', t('userManagement.accessGrantedSuccess'));
       if (data.user && currentUser) {
         logActivity(currentUser.id, 'user_access_granted', 'user', data.user.id, {
-          employee_id: grantAccessForm.employee_id,
+          employee_id: grantAccessForm.employeeId,
           employee_email: selectedEmployee.email,
           role: grantAccessForm.role,
         });
       }
 
-      setShowGrantAccessModal(false);
-      setGrantAccessForm({ employee_id: '', password: '', role: 'staff' });
+      closeModal();
+      setGrantAccessForm({ employeeId: '', password: '', role: 'staff' });
       loadUsers();
       loadEmployeesWithoutAccess();
     } catch (_error: unknown) {
-      showNotification('error', (_error as Error).message || t('userManagement.failedToGrantAccess'));
+      logError(extractError(_error), 'useUserActions.handleGrantAccess');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToGrantAccess')));
     } finally {
       setSubmitting(false);
     }
@@ -138,15 +136,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
     setSubmitting(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('users') as unknown as any)
-        .update({
-          role: editForm.role,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
+      await updateManagedUserRole(selectedUser.id, editForm.role);
 
       showNotification('success', t('userManagement.userUpdated'));
 
@@ -158,11 +148,11 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
         });
       }
 
-      setShowEditModal(false);
-      setSelectedUser(null);
+      closeModal();
       loadUsers();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToUpdate')));
+      logError(extractError(_error), 'useUserActions.handleEditUser');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToUpdate')));
     } finally {
       setSubmitting(false);
     }
@@ -178,28 +168,23 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
     setSubmitting(true);
     try {
-      const { error: dbError } = await db
-        .from('users')
-        .delete()
-        .eq('id', selectedUser.id);
-
-      if (dbError) throw dbError;
+      await revokeManagedUserAccess(selectedUser.id);
 
       showNotification('success', t('userManagement.accessRevoked'));
 
       if (currentUser) {
         logActivity(currentUser.id, 'user_access_revoked', 'user', selectedUser.id, {
           employee_email: getUserEmail(selectedUser),
-          employee_name: `${selectedUser.employees.first_name} ${selectedUser.employees.last_name}`,
+          employee_name: `${selectedUser.employees.firstName} ${selectedUser.employees.lastName}`,
         });
       }
 
-      setShowRevokeAccessModal(false);
-      setSelectedUser(null);
+      closeModal();
       loadUsers();
       loadEmployeesWithoutAccess();
     } catch (_error: unknown) {
-      showNotification('error', (_error as Error).message || t('userManagement.failedToUpdate'));
+      logError(extractError(_error), 'useUserActions.handleRevokeAccess');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToUpdate')));
     } finally {
       setSubmitting(false);
     }
@@ -212,11 +197,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     try {
       const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const userEmail = getUserEmail(selectedUser);
-      const { error } = await db.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${appUrl}/reset-password`,
-      });
-
-      if (error) throw error;
+      await requestManagedUserPasswordReset(userEmail, `${appUrl}/reset-password`);
 
       showNotification('success', t('userManagement.resetEmailSent'));
 
@@ -226,10 +207,10 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
         });
       }
 
-      setShowResetPasswordModal(false);
-      setSelectedUser(null);
+      closeModal();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToResetPassword')));
+      logError(extractError(_error), 'useUserActions.handleResetPassword');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToResetPassword')));
     } finally {
       setSubmitting(false);
     }
@@ -261,11 +242,11 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
         });
       }
 
-      setShowBanModal(false);
-      setSelectedUser(null);
+      closeModal();
       loadUsers();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToBan')));
+      logError(extractError(_error), 'useUserActions.handleBanUser');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToBan')));
     } finally {
       setSubmitting(false);
     }
@@ -290,11 +271,11 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
         });
       }
 
-      setShowUnbanModal(false);
-      setSelectedUser(null);
+      closeModal();
       loadUsers();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToUnban')));
+      logError(extractError(_error), 'useUserActions.handleUnbanUser');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToUnban')));
     } finally {
       setSubmitting(false);
     }
@@ -324,7 +305,8 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
       loadUsers();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToDeactivate')));
+      logError(extractError(_error), 'useUserActions.handleDeactivateUser');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToDeactivate')));
     } finally {
       setSubmitting(false);
     }
@@ -349,28 +331,17 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
 
       loadUsers();
     } catch (_error: unknown) {
-      showNotification('error', ((_error as Error)?.message || t('userManagement.failedToActivate')));
+      logError(extractError(_error), 'useUserActions.handleActivateUser');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToActivate')));
     } finally {
       setSubmitting(false);
     }
   };
 
   return {
-    // Modal state
-    showGrantAccessModal,
-    setShowGrantAccessModal,
-    showEditModal,
-    setShowEditModal,
-    showRevokeAccessModal,
-    setShowRevokeAccessModal,
-    showResetPasswordModal,
-    setShowResetPasswordModal,
-    showBanModal,
-    setShowBanModal,
-    showUnbanModal,
-    setShowUnbanModal,
+    // Modal state (consolidated)
+    activeModal,
     selectedUser,
-    setSelectedUser,
     submitting,
     showPassword,
     setShowPassword,
@@ -383,11 +354,13 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     setBanForm,
     currentUserId: currentUser?.id,
     // Modal openers
+    openGrantAccessModal,
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
     openBanModal,
     openUnbanModal,
+    closeModal,
     // Action handlers
     handleGrantAccess,
     handleEditUser,

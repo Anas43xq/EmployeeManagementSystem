@@ -6,10 +6,12 @@ import type { ActivityAction, EntityType } from '.';
 // Import only the types for now
 describe('activityLog', () => {
   let mockDbClient: Partial<DatabaseClient>;
+  let mockInsert: ReturnType<typeof vi.fn<DatabaseClient['insert']>>;
 
   beforeEach(() => {
+    mockInsert = vi.fn<DatabaseClient['insert']>().mockResolvedValue({ data: null, error: null });
     mockDbClient = {
-      insert: vi.fn().mockResolvedValue({ error: null }),
+      insert: mockInsert,
     };
   });
 
@@ -138,14 +140,18 @@ describe('activityLog', () => {
         details,
       };
 
-      await (mockDbClient.insert as any)(
+      await mockInsert(
         { table: 'activity_logs', data: record }
       );
 
       // Verify insert was called with correct table and record
       expect(mockDbClient.insert).toHaveBeenCalled();
-      const callArg = (mockDbClient.insert as any).mock.calls[0][0];
+      const callArg = mockInsert.mock.calls[0][0];
       expect(callArg.table).toBe('activity_logs');
+      expect(Array.isArray(callArg.data)).toBe(false);
+      if (Array.isArray(callArg.data)) {
+        throw new Error('Expected a single activity log record');
+      }
       expect(callArg.data.user_id).toBe('user-456');
       expect(callArg.data.action).toBe('employee_created');
     });
@@ -174,12 +180,12 @@ describe('activityLog', () => {
         details: null,
       }));
 
-      await (mockDbClient.insert as any)(
+      await mockInsert(
         { table: 'activity_logs', data: records }
       );
 
       expect(mockDbClient.insert).toHaveBeenCalled();
-      const callArg = (mockDbClient.insert as any).mock.calls[0][0];
+      const callArg = mockInsert.mock.calls[0][0];
       expect(Array.isArray(callArg.data)).toBe(true);
       expect(callArg.data).toHaveLength(2);
     });
@@ -204,17 +210,18 @@ describe('activityLog', () => {
   describe('Dependency Injection', () => {
     it('should accept dbClient as parameter for testing', async () => {
       // This demonstrates the DI pattern - tests can pass mock dbClient
+      const testInsert = vi.fn<DatabaseClient['insert']>().mockResolvedValue({ data: null, error: null });
       const testDbClient: Partial<DatabaseClient> = {
-        insert: vi.fn().mockResolvedValue({ error: null }),
+        insert: testInsert,
       };
 
       const activity = {
         user_id: 'test-user',
-        action: 'login',
+        action: 'user_login',
         entity_type: 'user',
       };
 
-      await (testDbClient.insert as any)({
+      await testInsert({
         table: 'activity_logs',
         data: activity,
       });
@@ -224,18 +231,19 @@ describe('activityLog', () => {
     });
 
     it('should handle insert errors from database client', async () => {
-      const errorDbClient: Partial<DatabaseClient> = {
-        insert: vi.fn().mockResolvedValue({
-          error: { message: 'Database constraint violation' },
-        }),
-      };
-
-      const result = await (errorDbClient.insert as any)({
+      const errorInsert = vi.fn<DatabaseClient['insert']>().mockResolvedValue({
+        data: null,
+        error: { message: 'Database constraint violation' },
+      });
+      const result = await errorInsert({
         table: 'activity_logs',
         data: { user_id: 'user-123', action: 'test', entity_type: 'user' },
       });
 
       expect(result.error).toBeDefined();
+      if (!result.error) {
+        throw new Error('Expected insert error');
+      }
       expect(result.error.message).toContain('constraint');
     });
   });

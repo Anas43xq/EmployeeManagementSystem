@@ -1,4 +1,5 @@
-import { db } from '../supabase';
+import { db, supabase } from '../supabase';
+import { applyFilter } from '../shared/queryUtils';
 import type { EmployeeWarning, EmployeeWarningCreate, WarningStatus } from '../../types';
 
 export async function getWarnings(filters?: {
@@ -17,15 +18,9 @@ export async function getWarnings(filters?: {
     `)
     .order('created_at', { ascending: false });
 
-  if (filters?.employeeId) {
-    query = query.eq('employee_id', filters.employeeId);
-  }
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
-  }
-  if (filters?.issuedBy) {
-    query = query.eq('issued_by', filters.issuedBy);
-  }
+  query = applyFilter(query, 'employee_id', filters?.employeeId);
+  query = applyFilter(query, 'status', filters?.status);
+  query = applyFilter(query, 'issued_by', filters?.issuedBy);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -98,4 +93,23 @@ export async function deleteWarning(id: string) {
     .eq('id', id);
 
   if (error) throw error;
+}
+
+export function subscribeToWarningChanges(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`warnings-realtime:${Date.now()}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'employee_warnings',
+      },
+      onChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

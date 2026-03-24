@@ -1,11 +1,41 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { Session, User } from '@supabase/supabase-js';
+
+const createLoginAttemptStatus = (overrides: Partial<{
+  userId: string | null;
+  failedAttempts: number;
+  attemptsRemaining: number;
+  requiresOtp: boolean;
+  otpExpiresAt: string | null;
+  otpSecondsLeft: number;
+  delayUntil: string | null;
+  secondsUntilRetry: number;
+}> = {}) => ({
+  userId: null,
+  failedAttempts: 0,
+  attemptsRemaining: 5,
+  requiresOtp: false,
+  otpExpiresAt: null,
+  otpSecondsLeft: 0,
+  delayUntil: null,
+  secondsUntilRetry: 0,
+  ...overrides,
+});
 
 // Mock all services before importing AuthContext
 vi.mock('../services/supabase', () => ({
   supabase: {
     auth: {
       getSession: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+      onAuthStateChange: vi.fn(() => ({
+        data: {
+          subscription: {
+            id: 'auth-subscription',
+            callback: vi.fn(),
+            unsubscribe: vi.fn(),
+          },
+        },
+      })),
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
     },
@@ -91,8 +121,9 @@ describe('AuthContext', () => {
 
   it('supabase auth.getSession should be mockable', async () => {
     const { supabase } = await import('../services/supabase');
+    const mockedGetSession = vi.mocked(supabase.auth.getSession);
 
-    (supabase.auth.getSession as any).mockResolvedValue({
+    mockedGetSession.mockResolvedValue({
       data: { session: null },
       error: null,
     });
@@ -104,8 +135,9 @@ describe('AuthContext', () => {
 
   it('supabase auth.signOut should be mockable', async () => {
     const { supabase } = await import('../services/supabase');
+    const mockedSignOut = vi.mocked(supabase.auth.signOut);
 
-    (supabase.auth.signOut as any).mockResolvedValue({ error: null });
+    mockedSignOut.mockResolvedValue({ error: null });
 
     const result = await supabase.auth.signOut();
     expect(result.error).toBeNull();
@@ -113,15 +145,28 @@ describe('AuthContext', () => {
 
   it('should support signInWithPassword flow', async () => {
     const { supabase } = await import('../services/supabase');
+    const mockedSignIn = vi.mocked(supabase.auth.signInWithPassword);
 
     const mockUser = {
       id: 'user-123',
       email: 'test@example.com',
       app_metadata: {},
-    };
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    } as User;
 
-    (supabase.auth.signInWithPassword as any).mockResolvedValue({
-      data: { user: mockUser },
+    const mockSession = {
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
+      user: mockUser,
+    } as Session;
+
+    mockedSignIn.mockResolvedValue({
+      data: { user: mockUser, session: mockSession },
       error: null,
     });
 
@@ -135,6 +180,7 @@ describe('AuthContext', () => {
 
   it('should support database user queries', async () => {
     const { db } = await import('../services/supabase');
+    const mockedFrom = vi.mocked(db.from);
 
     const mockSelect = vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
@@ -145,7 +191,7 @@ describe('AuthContext', () => {
       }),
     });
 
-    (db.from as any).mockReturnValue({ select: mockSelect });
+    mockedFrom.mockReturnValue({ select: mockSelect } as never);
 
     const query = db.from('users');
     expect(query.select).toBeDefined();
@@ -153,11 +199,12 @@ describe('AuthContext', () => {
 
   it('getLoginAttemptStatus should be mockable', async () => {
     const { getLoginAttemptStatus } = await import('../services/session/loginAttempts');
+    const mockedGetLoginAttemptStatus = vi.mocked(getLoginAttemptStatus);
 
-    (getLoginAttemptStatus as any).mockResolvedValue({
-      userId: 'user-123',
-      requiresOtp: false,
-      otpSecondsLeft: 0,
+    mockedGetLoginAttemptStatus.mockResolvedValue({
+      ...createLoginAttemptStatus({
+        userId: 'user-123',
+      }),
     });
 
     const result = await getLoginAttemptStatus('test@example.com');
@@ -166,20 +213,23 @@ describe('AuthContext', () => {
 
   it('resetLoginAttempts should be mockable', async () => {
     const { resetLoginAttempts } = await import('../services/session/loginAttempts');
+    const mockedResetLoginAttempts = vi.mocked(resetLoginAttempts);
 
-    (resetLoginAttempts as any).mockResolvedValue({});
+    mockedResetLoginAttempts.mockResolvedValue(undefined);
 
     const result = await resetLoginAttempts('user-123');
-    expect(result).toBeDefined();
+    expect(result).toBeUndefined();
   });
 
   it('recordFailedAttempt should be mockable', async () => {
     const { recordFailedAttempt } = await import('../services/session/loginAttempts');
+    const mockedRecordFailedAttempt = vi.mocked(recordFailedAttempt);
 
-    (recordFailedAttempt as any).mockResolvedValue({
-      requiresOtp: false,
-      attemptsRemaining: 3,
-    });
+    mockedRecordFailedAttempt.mockResolvedValue(
+      createLoginAttemptStatus({
+        attemptsRemaining: 3,
+      })
+    );
 
     const result = await recordFailedAttempt('test@example.com');
     expect(result.attemptsRemaining).toBe(3);
@@ -222,9 +272,18 @@ describe('AuthContext', () => {
 
   it('should support onAuthStateChange subscription', async () => {
     const { supabase } = await import('../services/supabase');
+    const mockedOnAuthStateChange = vi.mocked(supabase.auth.onAuthStateChange);
 
-    (supabase.auth.onAuthStateChange as any).mockImplementation((_cb: any) => {
-      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    mockedOnAuthStateChange.mockImplementation((_cb: unknown) => {
+      return {
+        data: {
+          subscription: {
+            id: 'auth-subscription',
+            callback: vi.fn(),
+            unsubscribe: vi.fn(),
+          },
+        },
+      };
     });
 
     const result = supabase.auth.onAuthStateChange(() => {});
@@ -234,8 +293,9 @@ describe('AuthContext', () => {
 
   it('should support RPC calls for session management', async () => {
     const { supabase } = await import('../services/supabase');
+    const mockedRpc = vi.mocked(supabase.rpc);
 
-    (supabase.rpc as any).mockResolvedValue({ error: null });
+    mockedRpc.mockResolvedValue({ error: null, data: null, count: null, status: 200, statusText: 'OK' });
 
     const result = await supabase.rpc('set_own_session_token', { p_token: 'token' });
     expect(result.error).toBeNull();

@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
 import { logActivity } from '../../services/activityLog';
+import {
+  getAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  toggleAnnouncementActive,
+} from '../../services/announcements';
 import { AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react';
 import type { Announcement } from './types';
 
 export function useAnnouncements() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { pendingDeleteId, deleting, requestDelete, cancelDelete, confirmDelete } = useDeleteConfirmation();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -22,8 +30,6 @@ export function useAnnouncements() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const PRIORITY_CONFIG = {
     low: { label: t('announcements.low'), color: 'bg-gray-100 text-gray-700', icon: Info },
@@ -38,13 +44,8 @@ export function useAnnouncements() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await (db
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false }) as unknown) as { data: Announcement[] | null; error: unknown };
-
-      if (error) throw error;
-      setAnnouncements(data || []);
+      const data = await getAnnouncements();
+      setAnnouncements(data);
     } catch (_) {
       // silently fail
     } finally {
@@ -100,37 +101,22 @@ export function useAnnouncements() {
         title: formData.title.trim(),
         content: formData.content.trim(),
         priority: formData.priority,
-        is_active: formData.is_active,
-        expires_at: formData.expires_at || null,
-        created_by: user?.id,
+        isActive: formData.is_active,
+        expiresAt: formData.expires_at || null,
+        createdBy: user?.id,
       };
 
       if (editingAnnouncement) {
-        const { error } = await (db
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('announcements') as any)
-          .update(announcementData)
-          .eq('id', editingAnnouncement.id);
-
-        if (error) throw error;
-
+        await updateAnnouncement(editingAnnouncement.id, announcementData);
         if (user) {
           logActivity(user.id, 'announcement_updated', 'announcement', editingAnnouncement.id, {
             title: announcementData.title,
           });
         }
       } else {
-        const { data, error } = await (db
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('announcements') as any)
-          .insert(announcementData)
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        if (user && data) {
-          logActivity(user.id, 'announcement_created', 'announcement', data.id, {
+        const createdAnnouncement = await createAnnouncement(announcementData);
+        if (user && createdAnnouncement) {
+          logActivity(user.id, 'announcement_created', 'announcement', createdAnnouncement.id, {
             title: announcementData.title,
           });
         }
@@ -145,57 +131,26 @@ export function useAnnouncements() {
     }
   };
 
-  const requestDelete = (id: string) => {
-    setPendingDeleteId(id);
-  };
-
-  const cancelDelete = () => {
-    setPendingDeleteId(null);
-  };
-
-  const confirmDelete = async () => {
-    if (!pendingDeleteId) return;
-    const id = pendingDeleteId;
-
-    setDeleting(true);
+  const confirmDeleteHandler = async (id: string) => {
     try {
-      const { error } = await (db
-        .from('announcements')
-        .delete()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .eq('id', id) as any);
-
-      if (error) throw error;
-
+      await deleteAnnouncement(id);
       if (user) {
         logActivity(user.id, 'announcement_deleted', 'announcement', id);
       }
-
-      setPendingDeleteId(null);
       loadAnnouncements();
     } catch (_) {
       // Error silently handled
-    } finally {
-      setDeleting(false);
     }
   };
 
   const toggleActive = async (announcement: Announcement) => {
     try {
-      const { error } = await (db
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('announcements') as any)
-        .update({ is_active: !announcement.is_active })
-        .eq('id', announcement.id);
-
-      if (error) throw error;
-
+      await toggleAnnouncementActive(announcement.id, !announcement.is_active);
       if (user) {
         logActivity(user.id, 'announcement_toggled', 'announcement', announcement.id, {
           is_active: !announcement.is_active,
         });
       }
-
       loadAnnouncements();
     } catch (_) {
       // Error silently handled
@@ -218,9 +173,9 @@ export function useAnnouncements() {
     handleSubmit,
     requestDelete,
     cancelDelete,
-    confirmDelete,
     pendingDeleteId,
     deleting,
     toggleActive,
+    handleConfirmDelete: () => confirmDelete(confirmDeleteHandler),
   };
 }

@@ -54,7 +54,7 @@ export default function EditUserModal({
             </div>
             <div>
               <span className="text-xs text-gray-500">{t('userManagement.employeeNumber')}</span>
-              <p className="text-sm text-gray-700">{selectedUser.employees?.employee_number}</p>
+              <p className="text-sm text-gray-700">{selectedUser.employees?.employeeNumber}</p>
             </div>
             {selectedUser.employees?.departments && (
               <div>

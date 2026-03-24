@@ -7,17 +7,16 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': [
-            'react',
-            'react-dom',
-            'react-router-dom',
-          ],
-          'lucide': ['lucide-react'],
+          'router': ['react-router-dom'],
           'supabase': ['@supabase/supabase-js'],
+          'charts': ['recharts'],
+          'i18n': ['i18next', 'react-i18next'],
+          'lucide': ['lucide-react'],
+          'pdf': ['jspdf', 'jspdf-autotable', 'html2canvas'],
         },
       },
     },

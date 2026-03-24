@@ -27,9 +27,7 @@ export function useOtpFlow(): OtpFlowState {
   const triggerOtpFlow = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { error: sendError } = await sendLoginOtp(email);
-      if (sendError) {
-        return { success: false, error: sendError };
-      }
+      if (sendError) return { success: false, error: sendError };
       setOtpEmail(email);
       setIsOtpScreenActive(true);
       return { success: true };

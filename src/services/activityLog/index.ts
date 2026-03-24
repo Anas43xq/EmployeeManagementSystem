@@ -70,6 +70,32 @@ export type EntityType =
   | 'task'
   | 'payroll';
 
+export interface ActivityLogRecord {
+  id: string;
+  action: string;
+  entity_type: string;
+  created_at: string;
+  details?: Record<string, unknown> | null;
+}
+
+function mapActivityLogRecord(record: {
+  id: string;
+  action: string;
+  entity_type: string;
+  created_at: string | null;
+  details: unknown;
+}): ActivityLogRecord {
+  return {
+    id: record.id,
+    action: record.action,
+    entity_type: record.entity_type,
+    created_at: record.created_at ?? '',
+    details: typeof record.details === 'object' && record.details !== null
+      ? (record.details as Record<string, unknown>)
+      : null,
+  };
+}
+
 /**
  * Log single activity - internal DI version
  * @param dbClient - Database client (injected for testability)
@@ -96,7 +122,7 @@ async function logActivityInternal(
       action,
       entity_type: entityType,
       entity_id: entityId || null,
-      details: details as any,
+      details: (details ?? null) as ActivityLogInsert['details'],
     };
 
     const { error } = await dbClient.insert({
@@ -126,6 +152,17 @@ export async function logActivity(
   return logActivityInternal(dbClient, userId, action, entityType, entityId, details);
 }
 
+export async function getRecentActivityLogs(limit = 200): Promise<ActivityLogRecord[]> {
+  const { data, error } = await supabase
+    .from('activity_logs')
+    .select('id, action, entity_type, created_at, details')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []).map(mapActivityLogRecord);
+}
+
 /**
  * Log multiple activities in batch - internal DI version
  * @param dbClient - Database client (injected for testability)
@@ -147,7 +184,7 @@ async function logActivitiesInternal(
       action: a.action,
       entity_type: a.entityType,
       entity_id: a.entityId || null,
-      details: a.details as any,
+      details: (a.details ?? null) as ActivityLogInsert['details'],
     }));
 
     const { error } = await dbClient.insert({

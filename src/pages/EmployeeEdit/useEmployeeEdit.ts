@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
+import {
+  getNextEmployeeNumber,
+  getEmployeeById,
+  createEmployee,
+  updateEmployee,
+} from '../../services/employees';
+import { getDepartments } from '../../services/departments';
 import type { Department, EmployeeFormData, Qualification } from './types';
+import { mapEmployeeRecord } from '../../utils/employeeMappers';
 
 export function useEmployeeEdit() {
   const { id } = useParams<{ id: string }>();
@@ -52,22 +59,8 @@ export function useEmployeeEdit() {
 
   const loadNextEmployeeNumber = async () => {
     try {
-      const { data } = await db
-        .from('employees')
-        .select('employee_number')
-        .order('employee_number', { ascending: false })
-        .limit(1)
-        .maybeSingle() as { data: { employee_number: string } | null; error: unknown };
-
-      let preview = 'EMP001';
-      if (data?.employee_number) {
-        const match = data.employee_number.match(/^EMP(\d+)$/);
-        if (match) {
-          const next = parseInt(match[1], 10) + 1;
-          preview = 'EMP' + String(next).padStart(3, '0');
-        }
-      }
-      setFormData(prev => ({ ...prev, employee_number: preview }));
+      const preview = await getNextEmployeeNumber();
+      setFormData((prev) => ({ ...prev, employee_number: preview }));
     } catch {
       // fallback — DB will assign the real number on save
     } finally {
@@ -77,13 +70,13 @@ export function useEmployeeEdit() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await db
-        .from('departments')
-        .select('id, name')
-        .order('name');
-
-      if (error) throw error;
-      setDepartments(data || []);
+      const data = await getDepartments();
+      setDepartments(
+        data.map((dept) => ({
+          id: dept.id,
+          name: dept.name,
+        }))
+      );
     } catch (_error) {
       showNotification('error', t('employees.failedToLoadDepartments'));
     }
@@ -91,42 +84,37 @@ export function useEmployeeEdit() {
 
   const loadEmployee = async () => {
     try {
-      const { data, error } = await db
-        .from('employees')
-        .select('*')
-        .eq('id', id!)
-        .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
-
-      if (error) throw error;
-
+      const data = await getEmployeeById(id!);
       if (!data) {
         showNotification('error', t('employees.notFound'));
         navigate('/employees');
         return;
       }
 
+      const employee = mapEmployeeRecord(data);
+
       setFormData({
-        employee_number: (data.employee_number as string) || '',
-        first_name: (data.first_name as string) || '',
-        last_name: (data.last_name as string) || '',
-        email: (data.email as string) || '',
-        phone: (data.phone as string) || '',
-        date_of_birth: (data.date_of_birth as string) || '',
-        gender: (data.gender as string) || '',
-        address: (data.address as string) || '',
-        city: (data.city as string) || '',
-        state: (data.state as string) || '',
-        postal_code: (data.postal_code as string) || '',
-        department_id: (data.department_id as string) || '',
-        position: (data.position as string) || '',
-        employment_type: (data.employment_type as string) || 'full-time',
-        status: (data.status as string) || 'active',
-        hire_date: (data.hire_date as string) || '',
-        salary: ((data.salary as number) || 0).toString(),
-        emergency_contact_name: (data.emergency_contact_name as string) || '',
-        emergency_contact_phone: (data.emergency_contact_phone as string) || '',
-        photo_url: (data.photo_url as string) || '',
-        qualifications: (data.qualifications as Qualification[]) || [],
+        employee_number: employee.employee_number,
+        first_name: employee.first_name,
+        last_name: employee.last_name,
+        email: employee.email,
+        phone: employee.phone,
+        date_of_birth: employee.date_of_birth,
+        gender: employee.gender,
+        address: employee.address,
+        city: employee.city,
+        state: employee.state,
+        postal_code: employee.postal_code,
+        department_id: employee.department_id,
+        position: employee.position,
+        employment_type: employee.employment_type || 'full-time',
+        status: employee.status || 'active',
+        hire_date: employee.hire_date,
+        salary: employee.salary.toString(),
+        emergency_contact_name: employee.emergency_contact_name,
+        emergency_contact_phone: employee.emergency_contact_phone,
+        photo_url: employee.photo_url || '',
+        qualifications: employee.qualifications,
       });
     } catch (_error) {
       showNotification('error', t('employees.failedToLoadDetails'));
@@ -177,6 +165,7 @@ export function useEmployeeEdit() {
 
     setSaving(true);
     try {
+      const isNewEmployee = !id || id === 'new';
       const submitData = {
         ...formData,
         salary: formData.salary ? parseFloat(formData.salary) : null,
@@ -184,31 +173,14 @@ export function useEmployeeEdit() {
         updated_at: new Date().toISOString(),
       };
 
-      let error;
       let newEmployeeId = id;
-
-      const isNewEmployee = !id || id === 'new';
-
       if (isNewEmployee) {
         const { employee_number: _preview, ...employeeData } = submitData;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error: insertError } = await (db.from('employees') as any)
-          .insert([employeeData])
-          .select('id, employee_number')
-          .single();
-
-        if (insertError) throw insertError;
-        newEmployeeId = data?.id;
-
+        const createdEmployee = await createEmployee(employeeData);
+        newEmployeeId = createdEmployee.id;
         showNotification('success', t('employees.employeeCreated'));
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: updateError } = await (db.from('employees') as any)
-          .update(submitData)
-          .eq('id', id!);
-
-        error = updateError;
-        if (error) throw error;
+        await updateEmployee(id!, submitData);
         showNotification('success', t('employees.employeeUpdated'));
       }
 

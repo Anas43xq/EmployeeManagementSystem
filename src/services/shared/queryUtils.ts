@@ -2,24 +2,13 @@
  * Shared utility functions used across all query services
  */
 
-/**
- * Get the start date of the week for a given date
- * Week starts on Monday
- */
-export function getWeekStart(date: Date): string {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
-  d.setDate(diff);
-  return d.toISOString().split('T')[0];
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FilterableQuery = any;
 
 /**
- * Get the end date of the week for a given week start
- * Week ends on Sunday
+ * Applies an optional `.eq()` filter to a Supabase query builder.
+ * Returns the query unchanged when value is undefined.
  */
-export function getWeekEnd(weekStart: string): string {
-  const d = new Date(weekStart);
-  d.setDate(d.getDate() + 6);
-  return d.toISOString().split('T')[0];
+export function applyFilter(query: FilterableQuery, column: string, value: string | undefined): FilterableQuery {
+  return value ? query.eq(column, value) : query;
 }

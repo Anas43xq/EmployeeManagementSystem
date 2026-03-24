@@ -2,6 +2,19 @@ import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = '';
+  readonly thresholds = [];
+
+  disconnect() {}
+  observe() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+  unobserve() {}
+}
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();
@@ -23,20 +36,5 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Suppress console errors in tests (optional - comment out if you want to see them)
-// vi.stubGlobal('console', {
-//   log: vi.fn(),
-//   error: vi.fn(),
-//   warn: vi.fn(),
-// });
-
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  takeRecords() {
-    return [];
-  }
-  unobserve() {}
-} as any;
+vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);

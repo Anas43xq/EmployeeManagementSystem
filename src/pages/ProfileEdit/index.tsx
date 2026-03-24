@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
-import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { PageSpinner, Button, Card, FormField } from '../../components/ui';
 import { useEmployeeProfile } from '../../hooks/useEmployeeProfile';
+import { updateEmployeeProfile } from '../../services/employees';
 
 interface ProfileFormData {
   phone: string;
@@ -58,20 +58,15 @@ export default function ProfileEdit() {
 
     setSaving(true);
     try {
-      const { error } = await db
-        .from('employees')
-        .update({
-          phone: formData.phone || null,
-          address: formData.address || null,
-          city: formData.city || null,
-          state: formData.state || null,
-          postal_code: formData.postal_code || null,
-          emergency_contact_name: formData.emergency_contact_name || null,
-          emergency_contact_phone: formData.emergency_contact_phone || null,
-        })
-        .eq('id', employeeId);
-
-      if (error) throw error;
+      await updateEmployeeProfile(employeeId, {
+        phone: formData.phone || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        postal_code: formData.postal_code || null,
+        emergency_contact_name: formData.emergency_contact_name || null,
+        emergency_contact_phone: formData.emergency_contact_phone || null,
+      });
 
       showNotification('success', t('profile.updateSuccess'));
       navigate('/profile');

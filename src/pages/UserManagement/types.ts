@@ -3,21 +3,21 @@ import type { EmployeeSummary } from '../../types';
 export interface User {
   id: string;
   role: 'admin' | 'hr' | 'staff';
-  employee_id: string;
-  created_at: string;
-  updated_at: string;
-  is_active?: boolean;
-  banned_at?: string | null;
-  ban_reason?: string | null;
-  last_sign_in_at?: string;
+  employeeId: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive?: boolean;
+  bannedAt?: string | null;
+  banReason?: string | null;
+  lastSignInAt?: string;
   employees: {
     id: string;
     email: string;
-    first_name: string;
-    last_name: string;
-    employee_number: string;
+    firstName: string;
+    lastName: string;
+    employeeNumber: string;
     position: string;
-    department_id: string;
+    departmentId: string;
     departments?: {
       name: string;
     };
@@ -27,9 +27,9 @@ export interface User {
 export interface EmployeeWithoutAccess {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  employee_number: string;
+  firstName: string;
+  lastName: string;
+  employeeNumber: string;
   position: string;
   status: string;
   departments?: {
@@ -43,7 +43,7 @@ export function getUserEmail(user: User): string {
 
 export function getUserDisplayName(user: User): string {
   if (user.employees) {
-    return `${user.employees.first_name} ${user.employees.last_name}`;
+    return `${user.employees.firstName} ${user.employees.lastName}`;
   }
   return '';
 }
@@ -51,7 +51,7 @@ export function getUserDisplayName(user: User): string {
 export type { EmployeeSummary as Employee };
 
 export interface GrantAccessFormData {
-  employee_id: string;
+  employeeId: string;
   password: string;
   role: 'admin' | 'hr' | 'staff';
 }

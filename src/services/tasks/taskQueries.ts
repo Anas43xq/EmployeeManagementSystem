@@ -1,4 +1,5 @@
-import { db } from '../supabase';
+import { db, supabase } from '../supabase';
+import { applyFilter } from '../shared/queryUtils';
 import type { EmployeeTask, EmployeeTaskCreate, TaskStatus } from '../../types';
 
 export async function getTasks(filters?: {
@@ -17,15 +18,9 @@ export async function getTasks(filters?: {
     `)
     .order('deadline', { ascending: true });
 
-  if (filters?.employeeId) {
-    query = query.eq('employee_id', filters.employeeId);
-  }
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
-  }
-  if (filters?.assignedBy) {
-    query = query.eq('assigned_by', filters.assignedBy);
-  }
+  query = applyFilter(query, 'employee_id', filters?.employeeId);
+  query = applyFilter(query, 'status', filters?.status);
+  query = applyFilter(query, 'assigned_by', filters?.assignedBy);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -96,4 +91,23 @@ export async function deleteTask(id: string) {
     .eq('id', id);
 
   if (error) throw error;
+}
+
+export function subscribeToTaskChanges(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`tasks-realtime:${Date.now()}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'employee_tasks',
+      },
+      onChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

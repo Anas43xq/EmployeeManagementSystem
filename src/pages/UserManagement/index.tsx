@@ -21,18 +21,7 @@ export default function UserManagement() {
     setSearchTerm,
     roleFilter,
     setRoleFilter,
-    showGrantAccessModal,
-    setShowGrantAccessModal,
-    showEditModal,
-    setShowEditModal,
-    showRevokeAccessModal,
-    setShowRevokeAccessModal,
-    showResetPasswordModal,
-    setShowResetPasswordModal,
-    showBanModal,
-    setShowBanModal,
-    showUnbanModal,
-    setShowUnbanModal,
+    activeModal,
     selectedUser,
     submitting,
     showPassword,
@@ -54,11 +43,13 @@ export default function UserManagement() {
     handleUnbanUser,
     handleDeactivateUser,
     handleActivateUser,
+    openGrantAccessModal,
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
     openBanModal,
     openUnbanModal,
+    closeModal,
     filteredUsers,
     stats,
   } = useUserManagement();
@@ -97,8 +88,8 @@ export default function UserManagement() {
         action={
           <Button
             onClick={() => {
-              setGrantAccessForm({ employee_id: '', password: '', role: 'staff' });
-              setShowGrantAccessModal(true);
+              setGrantAccessForm({ employeeId: '', password: '', role: 'staff' });
+              openGrantAccessModal();
             }}
             icon={<UserPlus className="w-5 h-5" />}
             disabled={employeesWithoutAccess.length === 0}
@@ -133,8 +124,8 @@ export default function UserManagement() {
       />
 
       <GrantAccessModal
-        show={showGrantAccessModal}
-        onClose={() => setShowGrantAccessModal(false)}
+        show={activeModal === 'grantAccess'}
+        onClose={closeModal}
         employeesWithoutAccess={employeesWithoutAccess}
         formData={grantAccessForm}
         setFormData={setGrantAccessForm}
@@ -145,47 +136,47 @@ export default function UserManagement() {
       />
 
       <EditUserModal
-        show={showEditModal}
+        show={activeModal === 'edit'}
         selectedUser={selectedUser}
         currentUserId={currentUserId}
         formData={editForm}
         setFormData={setEditForm}
         onSubmit={handleEditUser}
-        onClose={() => setShowEditModal(false)}
+        onClose={closeModal}
         submitting={submitting}
       />
 
       <RevokeAccessModal
-        show={showRevokeAccessModal}
+        show={activeModal === 'revokeAccess'}
         selectedUser={selectedUser}
         onRevoke={handleRevokeAccess}
-        onClose={() => setShowRevokeAccessModal(false)}
+        onClose={closeModal}
         submitting={submitting}
       />
 
       <ResetPasswordModal
-        show={showResetPasswordModal}
+        show={activeModal === 'resetPassword'}
         selectedUser={selectedUser}
         onReset={handleResetPassword}
-        onClose={() => setShowResetPasswordModal(false)}
+        onClose={closeModal}
         submitting={submitting}
       />
 
       <BanUserModal
-        show={showBanModal}
+        show={activeModal === 'ban'}
         user={selectedUser}
         form={banForm}
         onFormChange={setBanForm}
         onConfirm={handleBanUser}
-        onCancel={() => setShowBanModal(false)}
+        onCancel={closeModal}
         submitting={submitting}
       />
 
       <UnbanUserModal
-        show={showUnbanModal}
+        show={activeModal === 'unban'}
         user={selectedUser}
         onConfirm={handleUnbanUser}
-        onCancel={() => setShowUnbanModal(false)}
+        onCancel={closeModal}
         submitting={submitting}
       />
     </div>

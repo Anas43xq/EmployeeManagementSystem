@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
 import { clearAuthState, resetSessionHealth, updateLastActivity, clearLastActivity } from '../services/session/sessionManager';
@@ -11,6 +10,15 @@ import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
 
 export type { AuthUser } from '../services/auth/authHelpers';
 import type { AuthUser, UserRole } from '../services/auth/authHelpers';
+import type { User } from '../services/supabase';
+
+const USER_ROLES: UserRole[] = ['admin', 'hr', 'staff'];
+
+function normalizeUserRole(value: unknown, fallback: UserRole = 'staff'): UserRole {
+  return typeof value === 'string' && USER_ROLES.includes(value as UserRole)
+    ? (value as UserRole)
+    : fallback;
+}
 
 // -- User data cache -----------------------------------------------------------
 const userDataCache = new Map<string, { data: AuthUser; timestamp: number }>();
@@ -47,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     loadingUserRef.current = authUser.id;
     try {
-      const role = (authUser.app_metadata?.role || authUser.user_metadata?.role) as UserRole | undefined;
+      const role = normalizeUserRole(authUser.app_metadata?.role || authUser.user_metadata?.role, 'staff');
       const { data, error } = await db
         .from('users')
         .select('role, employee_id, is_active, banned_at')
@@ -55,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        return { id: authUser.id, email: authUser.email || '', role: role || 'staff', employeeId: null, isActive: false };
+        return { id: authUser.id, email: authUser.email || '', role, employeeId: null, isActive: false };
       }
       // Banned users are signed out; deactivated users stay to see the Deactivated screen.
       if (data?.banned_at !== null && data?.banned_at !== undefined) {
@@ -66,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData: AuthUser = {
         id: authUser.id,
         email: authUser.email || '',
-        role: data?.role || role || 'staff',
+        role: normalizeUserRole(data?.role, role),
         employeeId: data?.employee_id || null,
         isActive: data?.is_active ?? false,
       };

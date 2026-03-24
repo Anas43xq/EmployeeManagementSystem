@@ -2,13 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, X, Info, Calendar, Clock, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
 import {
   DbNotification,
   fetchNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
   deleteNotification,
+  subscribeToUserNotifications,
 } from '../services/notifications/dbNotifications';
 
 export default function NotificationCenter() {
@@ -29,60 +27,24 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     if (!user?.id) return;
+    const userId = user.id;
 
-    // Use unique channel name to prevent StrictMode ghost subscriptions
-    const channelName = `notifications-${user.id}-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newNotif = payload.new as DbNotification;
-          setNotifications((prev) => {
-            // Guard: skip if not for this user (bulk-insert filter leak) or already exists
-            if (newNotif.user_id !== user.id) return prev;
-            if (prev.some(n => n.id === newNotif.id)) return prev;
-            return [newNotif, ...prev];
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === payload.new.id ? (payload.new as DbNotification) : n))
-          );
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeToUserNotifications(userId, {
+      onInsert: (newNotif) => {
+        setNotifications((prev) => {
+          // Guard: skip if not for this user (bulk-insert filter leak) or already exists
+          if (newNotif.user_id !== userId) return prev;
+          if (prev.some(n => n.id === newNotif.id)) return prev;
+          return [newNotif, ...prev];
+        });
+      },
+      onUpdate: (updated) => {
+        setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+      },
+      onDelete: (oldId) => {
+        setNotifications((prev) => prev.filter((n) => n.id !== oldId));
+      },
+    });
   }, [user?.id]);
 
   const handleRemove = async (id: string) => {
@@ -138,9 +100,6 @@ export default function NotificationCenter() {
     if (days < 7) return t('notifications.dAgo', { count: days });
     return date.toLocaleDateString();
   };
-
-  void markNotificationRead;
-  void markAllNotificationsRead;
 
   return (
     <div className="relative">

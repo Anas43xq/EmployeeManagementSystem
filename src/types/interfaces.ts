@@ -63,7 +63,7 @@ export interface DatabaseClient {
    * Direct query builder for complex queries (escape hatch)
    * Allows sophisticated queries without rebuilding entire interface
    */
-  raw(builder: (client: any) => Promise<{ data: unknown; error: AppError | null }>): Promise<{ data: unknown; error: AppError | null }>;
+  raw(builder: (client: unknown) => Promise<{ data: unknown; error: AppError | null }>): Promise<{ data: unknown; error: AppError | null }>;
 }
 
 /**
@@ -89,17 +89,17 @@ export interface AuthClient {
   /**
    * Get current session
    */
-  getSession(): Promise<{ data: any; error: AppError | null }>;
+  getSession(): Promise<{ data: unknown; error: AppError | null }>;
 
   /**
    * Refresh session
    */
-  refreshSession(): Promise<{ data: any; error: AppError | null }>;
+  refreshSession(): Promise<{ data: unknown; error: AppError | null }>;
 
   /**
    * Listen to auth state changes
    */
-  onAuthStateChange(callback: (event: string, session: any) => void): () => void;
+  onAuthStateChange(callback: (event: string, session: unknown) => void): () => void;
 }
 
 /**

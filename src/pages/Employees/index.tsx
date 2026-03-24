@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
-import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Edit, Trash2, Eye, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PageSpinner, PageHeader, Card, Button, Modal, StatusBadge } from '../../components/ui';
+import { PageSpinner, PageHeader, Button, Modal } from '../../components/ui';
 import { logActivity } from '../../services/activityLog';
+import {
+  getEmployeesWithDepartments,
+  getUserAccountIdForEmployee,
+  deactivateEmployee,
+} from '../../services/employees';
 import type { EmployeeListItem } from '../../types';
+import { EmployeeTableCard } from './EmployeeTableCard';
 
 export default function Employees() {
   const [employees, setEmployees] = useState<EmployeeListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [employmentTypeFilter, setEmploymentTypeFilter] = useState('all');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; employee: EmployeeListItem | null; hasAccess: boolean }>({
     open: false,
     employee: null,
@@ -31,18 +33,7 @@ export default function Employees() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await db
-        .from('employees')
-        .select(`
-          *,
-          departments!employees_department_id_fkey (
-            name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setEmployees((data || []) as EmployeeListItem[]);
+      setEmployees(await getEmployeesWithDepartments());
     } catch (_error) {
       showNotification('error', 'Failed to load employees');
     } finally {
@@ -51,16 +42,10 @@ export default function Employees() {
   };
 
   const openDeleteModal = async (employee: EmployeeListItem) => {
-    const { data } = await db
-      .from('users')
-      .select('id')
-      .eq('employee_id', employee.id)
-      .maybeSingle();
-
     setDeleteModal({
       open: true,
       employee,
-      hasAccess: !!data,
+      hasAccess: !!(await getUserAccountIdForEmployee(employee.id)),
     });
   };
 
@@ -69,12 +54,7 @@ export default function Employees() {
 
     setDeleting(true);
     try {
-      const { error } = await db
-        .from('employees')
-        .update({ status: 'inactive' })
-        .eq('id', deleteModal.employee.id);
-
-      if (error) throw error;
+      await deactivateEmployee(deleteModal.employee.id);
 
       showNotification('success', t('employees.deletedSuccess'));
       if (user) {
@@ -91,20 +71,6 @@ export default function Employees() {
       setDeleting(false);
     }
   };
-
-  const filteredEmployees = employees.filter(emp => {
-    const matchesSearch =
-      emp.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employee_number.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'all' || emp.status === statusFilter;
-
-    const matchesEmploymentType = employmentTypeFilter === 'all' || emp.employment_type === employmentTypeFilter;
-
-    return matchesSearch && matchesStatus && matchesEmploymentType;
-  });
 
   if (loading) {
     return <PageSpinner />;
@@ -124,118 +90,7 @@ export default function Employees() {
         }
       />
 
-      <Card>
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder={t('employees.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="flex-1 min-w-[140px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">{t('employees.allStatus')}</option>
-              <option value="active">{t('employees.active')}</option>
-              <option value="inactive">{t('employees.inactive')}</option>
-              <option value="on-leave">{t('employees.onLeave')}</option>
-            </select>
-            <select
-              value={employmentTypeFilter}
-              onChange={(e) => setEmploymentTypeFilter(e.target.value)}
-              className="flex-1 min-w-[140px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">{t('employees.allTypes')}</option>
-              <option value="full-time">{t('employees.fullTime')}</option>
-              <option value="part-time">{t('employees.partTime')}</option>
-              <option value="contract">{t('employees.contract')}</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.employee')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.department')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.position')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.type')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.status')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('employees.actions')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredEmployees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {employee.first_name} {employee.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">{employee.email}</div>
-                      <div className="text-xs text-gray-400">{employee.employee_number}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{employee.departments?.name || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{employee.position}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={employee.employment_type} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={employee.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                      <Link to={`/employees/${employee.id}`} className="text-primary-600 hover:text-primary-900">
-                        <Eye className="w-5 h-5" />
-                      </Link>
-                      <Link to={`/employees/${employee.id}/edit`} className="text-gray-600 hover:text-gray-900">
-                        <Edit className="w-5 h-5" />
-                      </Link>
-                      <button
-                        onClick={() => openDeleteModal(employee)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredEmployees.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">{t('employees.noEmployeesFound')}</p>
-          </div>
-        )}
-      </Card>
+      <EmployeeTableCard employees={employees} onDeleteClick={openDeleteModal} />
 
       <Modal
         show={deleteModal.open}
@@ -252,7 +107,6 @@ export default function Employees() {
                   name: `${deleteModal.employee.first_name} ${deleteModal.employee.last_name}`,
                 })}
               </p>
-
               {deleteModal.hasAccess && (
                 <div className="flex items-start space-x-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                   <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -262,7 +116,6 @@ export default function Employees() {
                   </div>
                 </div>
               )}
-
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-700">{t('employees.deleteWarning')}</p>
               </div>
@@ -270,17 +123,10 @@ export default function Employees() {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setDeleteModal({ open: false, employee: null, hasAccess: false })}
-          >
+          <Button variant="secondary" onClick={() => setDeleteModal({ open: false, employee: null, hasAccess: false })}>
             {t('common.cancel')}
           </Button>
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
+          <Button variant="danger" onClick={handleDelete} disabled={deleting}>
             {deleting ? t('common.deleting') : t('common.delete')}
           </Button>
         </Modal.Footer>

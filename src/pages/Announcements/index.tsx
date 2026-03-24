@@ -23,7 +23,7 @@ export default function Announcements() {
     handleSubmit,
     requestDelete,
     cancelDelete,
-    confirmDelete,
+    handleConfirmDelete,
     pendingDeleteId,
     deleting,
     toggleActive,
@@ -96,7 +96,7 @@ export default function Announcements() {
         </Modal.Body>
         <Modal.Footer>
           <Button type="button" variant="secondary" onClick={cancelDelete}>{t('common.cancel')}</Button>
-          <Button type="button" variant="danger" onClick={confirmDelete} loading={deleting} loadingText={t('common.deleting')}>
+          <Button type="button" variant="danger" onClick={handleConfirmDelete} loading={deleting} loadingText={t('common.deleting')}>
             {t('common.delete')}
           </Button>
         </Modal.Footer>

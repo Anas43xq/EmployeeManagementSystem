@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { PageSpinner, PageHeader, Card, EmptyState, Button } from '../../components/ui';
-import { useLeaves } from './useLeaves';
+import { useLeaveBalance } from './useLeaveBalance';
+import { useLeaveApply } from './useLeaveApply';
+import { useLeaveApproval } from './useLeaveApproval';
+import { useAuth } from '../../contexts/AuthContext';
 import LeaveBalanceCards from './LeaveBalanceCards';
 import LeaveStatusFilter from './LeaveStatusFilter';
 import LeaveCard from './LeaveCard';
@@ -9,28 +12,44 @@ import ApplyLeaveModal from './ApplyLeaveModal';
 
 export default function Leaves() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // Balance hook: staff viewing/managing their balance
+  const { leaveBalance, getAvailableBalance, calculateDays, updateLeaveBalanceField } = useLeaveBalance();
+
+  // Apply hook: any user applying for leave
   const {
-    loading,
-    user,
-    filter,
-    setFilter,
     showApplyModal,
     setShowApplyModal,
-    submitting,
-    leaveBalance,
     formData,
     setFormData,
-    filteredLeaves,
-    handleApplyLeave,
-    handleApprove,
-    handleReject,
-    calculateDays,
-    getAvailableBalance,
+    submitting,
     leaveConflicts,
     checkingConflicts,
     checkLeaveConflicts,
+    handleApplyLeave: handleApplyLeaveBase,
+  } = useLeaveApply();
+
+  // Approval hook: HR reviewing and approving/rejecting leaves
+  const {
+    loading,
+    filter,
+    setFilter,
+    filteredLeaves,
+    handleApprove: handleApproveBase,
+    handleReject,
     processingLeaves,
-  } = useLeaves();
+  } = useLeaveApproval();
+
+  // Wire apply handler with balance validation and reload
+  const handleApplyLeave = async (e: React.FormEvent) => {
+    await handleApplyLeaveBase(e, calculateDays, getAvailableBalance);
+  };
+
+  // Wire approve handler with balance update
+  const handleApprove = async (leaveId: string) => {
+    await handleApproveBase(leaveId, updateLeaveBalanceField);
+  };
 
   if (loading) {
     return <PageSpinner />;

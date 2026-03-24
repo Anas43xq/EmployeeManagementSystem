@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { Calendar, XCircle, CheckCircle } from 'lucide-react';
 import type { LeaveBalance } from './types';
 
+const cardClass = 'bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-4 overflow-hidden';
+
 interface LeaveBalanceCardsProps {
   leaveBalance: LeaveBalance;
 }
@@ -11,7 +13,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
 
   return (
     <div className="grid grid-cols-3 gap-2 sm:gap-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-4 overflow-hidden">
+      <div className={cardClass}>
         <div className="flex items-center justify-between gap-1">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-sm text-gray-500 truncate">{t('leaves.annualLeave')}</p>
@@ -32,7 +34,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-4 overflow-hidden">
+      <div className={cardClass}>
         <div className="flex items-center justify-between gap-1">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-sm text-gray-500 truncate">{t('leaves.sickLeave')}</p>
@@ -53,7 +55,7 @@ export default function LeaveBalanceCards({ leaveBalance }: LeaveBalanceCardsPro
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-4 overflow-hidden">
+      <div className={cardClass}>
         <div className="flex items-center justify-between gap-1">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-sm text-gray-500 truncate">{t('leaves.casualLeave')}</p>

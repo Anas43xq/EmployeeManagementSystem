@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
+import { getManagedUsers, getEmployeesWithoutUserAccess } from '../../services/users';
 import { useUserActions } from './useUserActions';
 import type { User, EmployeeWithoutAccess } from './types';
 import { getUserEmail } from './types';
@@ -22,27 +22,8 @@ export function useUserManagement() {
 
   const loadUsers = async () => {
     try {
-      const { data, error } = await db
-        .from('users')
-        .select(`
-          *,
-          employees!inner (
-            id,
-            email,
-            first_name,
-            last_name,
-            employee_number,
-            position,
-            department_id,
-            departments!employees_department_id_fkey (
-              name
-            )
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setUsers((data || []) as User[]);
+      const data = await getManagedUsers();
+      setUsers(data);
     } catch (_error) {
       showNotification('error', t('userManagement.failedToLoad'));
     } finally {
@@ -52,39 +33,8 @@ export function useUserManagement() {
 
   const loadEmployeesWithoutAccess = async () => {
     try {
-      const { data: allEmployees, error: empError } = await db
-        .from('employees')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          employee_number,
-          position,
-          status,
-          departments!employees_department_id_fkey (
-            name
-          )
-        `)
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (empError) throw empError;
-
-      const { data: usersData } = await db
-        .from('users')
-        .select('employee_id');
-
-      const employeesWithAccess = new Set(
-        (usersData || []).map((u: { employee_id: string }) => u.employee_id)
-      );
-
-      const withoutAccess = (allEmployees || []).filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (emp: unknown) => !employeesWithAccess.has((emp as any).id)
-      ) as EmployeeWithoutAccess[];
-
-      setEmployeesWithoutAccess(withoutAccess);
+      const data = await getEmployeesWithoutUserAccess();
+      setEmployeesWithoutAccess(data);
     } catch {
       // silent
     }
@@ -102,9 +52,9 @@ export function useUserManagement() {
     const userEmail = getUserEmail(user);
     const matchesSearch =
       userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employees?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employees?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employees?.employee_number?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.employees?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.employees?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.employees?.employeeNumber?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
@@ -117,8 +67,8 @@ export function useUserManagement() {
     hr: users.filter(u => u.role === 'hr').length,
     employees: users.filter(u => u.role === 'staff').length,
     withoutAccess: employeesWithoutAccess.length,
-    banned: users.filter(u => u.banned_at).length,
-    inactive: users.filter(u => u.is_active === false).length,
+    banned: users.filter(u => u.bannedAt).length,
+    inactive: users.filter(u => u.isActive === false).length,
   };
 
   return {

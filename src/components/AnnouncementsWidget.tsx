@@ -1,15 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../services/supabase';
+import { useAsync } from '../hooks';
+import { getActiveAnnouncementsForWidget } from '../services/announcements';
 import { Megaphone, AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react';
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  created_at: string;
-}
 
 const PRIORITY_CONFIG = {
   low: { labelKey: 'announcements.low', color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Info },
@@ -20,35 +12,10 @@ const PRIORITY_CONFIG = {
 
 export default function AnnouncementsWidget() {
   const { t } = useTranslation();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadAnnouncements();
-  }, []);
-
-  const loadAnnouncements = async () => {
-    try {
-      const { data, error } = await (supabase
-        .from('announcements')
-        .select('id, title, content, priority, created_at')
-        .match({ is_active: true })
-        .order('priority', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(6) as unknown) as { data: Announcement[] | null; error: unknown };
-
-      if (error) throw error;
-
-      setAnnouncements(data || []);
-    } catch (_) {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, loading } = useAsync(() => getActiveAnnouncementsForWidget(6));
 
   const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
-  const sortedAnnouncements = [...announcements].sort(
+  const sortedAnnouncements = [...(data ?? [])].sort(
     (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
   );
 
@@ -107,7 +74,7 @@ export default function AnnouncementsWidget() {
                         {t(priorityConfig.labelKey)}
                       </span>
                       <p className="text-[10px] sm:text-xs text-gray-500">
-                        {new Date(announcement.created_at).toLocaleDateString()}
+                        {new Date(announcement.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

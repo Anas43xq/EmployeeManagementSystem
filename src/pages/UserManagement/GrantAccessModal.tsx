@@ -29,7 +29,7 @@ export default function GrantAccessModal({
   const { t } = useTranslation();
 
   const selectedEmployee = employeesWithoutAccess.find(
-    emp => emp.id === formData.employee_id
+    emp => emp.id === formData.employeeId
   );
 
   return (
@@ -44,15 +44,15 @@ export default function GrantAccessModal({
         <Modal.Body>
           <FormField label={t('userManagement.selectEmployee')}>
             <select
-              value={formData.employee_id}
-              onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             >
               <option value="">{t('userManagement.chooseEmployee')}</option>
               {employeesWithoutAccess.map((emp) => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.first_name} {emp.last_name} ({emp.employee_number})
+                  {emp.firstName} {emp.lastName} ({emp.employeeNumber})
                 </option>
               ))}
             </select>
@@ -113,7 +113,7 @@ export default function GrantAccessModal({
         </Modal.Body>
         <Modal.Footer>
           <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button type="submit" disabled={!formData.employee_id} loading={submitting} loadingText={t('common.processing')}>
+          <Button type="submit" disabled={!formData.employeeId} loading={submitting} loadingText={t('common.processing')}>
             {t('userManagement.grantAccessBtn')}
           </Button>
         </Modal.Footer>

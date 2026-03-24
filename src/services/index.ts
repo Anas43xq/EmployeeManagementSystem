@@ -15,4 +15,3 @@ export * from './tasks';
 export * from './warnings';
 export * from './complaints';
 export * from './performance';
-export * from './shared';

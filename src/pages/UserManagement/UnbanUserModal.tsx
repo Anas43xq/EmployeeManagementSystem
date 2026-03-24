@@ -52,14 +52,14 @@ export default function UnbanUserModal({
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="font-medium text-gray-900">{getUserDisplayName(user)}</p>
             <p className="text-sm text-gray-500">{getUserEmail(user)}</p>
-            {user.ban_reason && (
+            {user.banReason && (
               <p className="text-sm text-red-600 mt-2">
-                <span className="font-medium">{t('userManagement.banReason')}:</span> {user.ban_reason}
+                <span className="font-medium">{t('userManagement.banReason')}:</span> {user.banReason}
               </p>
             )}
-            {user.banned_at && (
+            {user.bannedAt && (
               <p className="text-xs text-gray-400 mt-1">
-                {t('userManagement.bannedOn')}: {new Date(user.banned_at).toLocaleDateString()}
+                {t('userManagement.bannedOn')}: {new Date(user.bannedAt).toLocaleDateString()}
               </p>
             )}
           </div>

@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { format } from 'date-fns';
-import type { Department, ReportEmployee, Leave, Attendance, DepartmentReport, PayrollReport, ReportType } from './types';
+import {
+  getReportDepartments,
+  getEmployeeReportData,
+  getLeaveReportData,
+  getAttendanceReportData,
+  getDepartmentReportData,
+  getPayrollReportData,
+} from '../../services/reports';
+import type { Department, ReportType } from './types';
 
 export function useReports() {
   const { t } = useTranslation();
@@ -21,13 +28,8 @@ export function useReports() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await db
-        .from('departments')
-        .select('id, name')
-        .order('name');
-
-      if (error) throw error;
-      setDepartments(data || []);
+      const data = await getReportDepartments();
+      setDepartments(data);
     } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load departments'));
     }
@@ -44,30 +46,7 @@ export function useReports() {
   };
 
   const generateEmployeeReport = async () => {
-    let query = db
-      .from('employees')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        email,
-        phone,
-        position,
-        employment_type,
-        status,
-        hire_date,
-        salary,
-        departments!department_id (name)
-      `)
-      .order('last_name');
-
-    if (selectedDepartment) {
-      query = query.eq('department_id', selectedDepartment);
-    }
-
-    const { data, error } = await query as { data: ReportEmployee[] | null; error: unknown };
-    if (error) throw error;
-    if (!data) return [];
+    const data = await getEmployeeReportData(selectedDepartment || undefined);
 
     return data.map(emp => ({
       'Employee ID': emp.id,
@@ -85,36 +64,8 @@ export function useReports() {
   };
 
   const generateLeaveReport = async () => {
-    let query = db
-      .from('leaves')
-      .select(`
-        id,
-        employees!employee_id (
-          first_name,
-          last_name,
-          departments!department_id (name)
-        ),
-        leave_type,
-        start_date,
-        end_date,
-        days_count,
-        status,
-        reason
-      `)
-      .order('start_date', { ascending: false });
-
     const dateFilter = getDateFilter();
-    if (dateFilter) {
-      query = query.gte('start_date', dateFilter);
-    }
-
-    if (selectedDepartment) {
-      query = query.eq('employees.department_id', selectedDepartment);
-    }
-
-    const { data, error } = await query as { data: Leave[] | null; error: unknown };
-    if (error) throw error;
-    if (!data) return [];
+    const data = await getLeaveReportData(dateFilter, selectedDepartment || undefined);
 
     return data.map(leave => ({
       'Leave ID': leave.id,
@@ -130,34 +81,8 @@ export function useReports() {
   };
 
   const generateAttendanceReport = async () => {
-    let query = db
-      .from('attendance')
-      .select(`
-        id,
-        employees!employee_id (
-          first_name,
-          last_name,
-          departments!department_id (name)
-        ),
-        date,
-        check_in,
-        check_out,
-        status
-      `)
-      .order('date', { ascending: false });
-
     const dateFilter = getDateFilter();
-    if (dateFilter) {
-      query = query.gte('date', dateFilter);
-    }
-
-    if (selectedDepartment) {
-      query = query.eq('employees.department_id', selectedDepartment);
-    }
-
-    const { data, error } = await query as { data: Attendance[] | null; error: unknown };
-    if (error) throw error;
-    if (!data) return [];
+    const data = await getAttendanceReportData(dateFilter, selectedDepartment || undefined);
 
     return data.map(att => ({
       'Attendance ID': att.id,
@@ -175,24 +100,7 @@ export function useReports() {
   };
 
   const generateDepartmentReport = async () => {
-    let query = db
-      .from('departments')
-      .select(`
-        id,
-        name,
-        type,
-        description,
-        employees!department_id (count)
-      `)
-      .order('name');
-
-    if (selectedDepartment) {
-      query = query.eq('id', selectedDepartment);
-    }
-
-    const { data, error } = await query as { data: DepartmentReport[] | null; error: unknown };
-    if (error) throw error;
-    if (!data) return [];
+    const data = await getDepartmentReportData(selectedDepartment || undefined);
 
     return data.map(dept => ({
       'Department ID': dept.id,
@@ -204,43 +112,8 @@ export function useReports() {
   };
 
   const generatePayrollReport = async () => {
-    let query = db
-      .from('payrolls')
-      .select(`
-        id,
-        employees!employee_id (
-          first_name,
-          last_name,
-          employee_number,
-          departments!department_id (name)
-        ),
-        period_month,
-        period_year,
-        base_salary,
-        total_bonuses,
-        total_deductions,
-        gross_salary,
-        net_salary,
-        status
-      `)
-      .order('period_year', { ascending: false })
-      .order('period_month', { ascending: false });
-
     const dateFilter = getDateFilter();
-    if (dateFilter) {
-      const filterDate = new Date(dateFilter);
-      const filterYear = filterDate.getFullYear();
-      const filterMonth = filterDate.getMonth() + 1;
-      query = query.or(`period_year.gt.${filterYear},and(period_year.eq.${filterYear},period_month.gte.${filterMonth})`);
-    }
-
-    if (selectedDepartment) {
-      query = query.eq('employees.department_id', selectedDepartment);
-    }
-
-    const { data, error } = await query as { data: PayrollReport[] | null; error: unknown };
-    if (error) throw error;
-    if (!data) return [];
+    const data = await getPayrollReportData(dateFilter, selectedDepartment || undefined);
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 

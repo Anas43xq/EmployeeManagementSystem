@@ -4,7 +4,7 @@ import { useOtpFlow } from './useOtpFlow';
 
 // Mock the loginAttempts service
 vi.mock('../services/session/loginAttempts', () => ({
-  sendLoginOtp: vi.fn().mockResolvedValue({ error: null }),
+  sendLoginOtp: vi.fn().mockResolvedValue({}),
 }));
 
 import { sendLoginOtp } from '../services/session/loginAttempts';
@@ -12,7 +12,7 @@ import { sendLoginOtp } from '../services/session/loginAttempts';
 describe('useOtpFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (sendLoginOtp as any).mockResolvedValue({ error: null });
+    vi.mocked(sendLoginOtp).mockResolvedValue({});
   });
 
   it('should initialize with OTP flow inactive', () => {
@@ -24,8 +24,6 @@ describe('useOtpFlow', () => {
 
   it('should trigger OTP flow when sending OTP', async () => {
     const { result } = renderHook(() => useOtpFlow());
-
-    (sendLoginOtp as any).mockResolvedValue({ error: null });
 
     await act(async () => {
       await result.current.triggerOtpFlow('user@example.com');
@@ -84,37 +82,35 @@ describe('useOtpFlow', () => {
   it('should handle OTP sending errors', async () => {
     const { result } = renderHook(() => useOtpFlow());
 
-    (sendLoginOtp as any).mockResolvedValue({
-      success: false,
-      error: { message: 'Failed to send OTP' } as { message: string },
+    vi.mocked(sendLoginOtp).mockResolvedValue({
+      error: 'Failed to send OTP',
     });
 
-    const response = await act(async () => {
-      return await result.current.triggerOtpFlow('user@example.com');
+    let response: Awaited<ReturnType<typeof result.current.triggerOtpFlow>> | undefined;
+
+    await act(async () => {
+      response = await result.current.triggerOtpFlow('user@example.com');
     });
 
-    // Hook returns the response from service with success field
-    expect(response.success).toBe(false);
-    expect(response.error).toBeDefined();
-    if (response.error && typeof response.error === 'object' && 'message' in response.error) {
-      expect((response.error as { message: string }).message).toBe('Failed to send OTP');
-    }
+    expect(response?.success).toBe(false);
+    expect(response?.error).toBeDefined();
+    expect(response?.error).toBe('Failed to send OTP');
   });
 
   it('should handle exceptions when sending OTP', async () => {
     const { result } = renderHook(() => useOtpFlow());
 
-    (sendLoginOtp as any).mockResolvedValue({
-      success: false,
-      error: { message: 'Network timeout' },
-    });
+    vi.mocked(sendLoginOtp).mockRejectedValue(new Error('Network timeout'));
 
-    // Hook catches errors and returns response (doesn't throw)
-    const response = await act(async () => {
-      return await result.current.triggerOtpFlow('user@example.com');
+    let response: Awaited<ReturnType<typeof result.current.triggerOtpFlow>> | undefined;
+
+    await act(async () => {
+      response = await result.current.triggerOtpFlow('user@example.com');
     });
 
     expect(response).toBeDefined();
+    expect(response?.success).toBe(false);
+    expect(response?.error).toBe('Network timeout');
   });
 
   it('should support multiple OTP flow cycles', async () => {
@@ -166,7 +162,7 @@ describe('useOtpFlow', () => {
     ];
 
     for (const email of emails) {
-      (sendLoginOtp as any).mockResolvedValue({ error: null });
+      vi.mocked(sendLoginOtp).mockResolvedValue({});
 
       await act(async () => {
         await result.current.triggerOtpFlow(email);
@@ -178,8 +174,6 @@ describe('useOtpFlow', () => {
 
   it('should handle rapid consecutive OTP requests', async () => {
     const { result } = renderHook(() => useOtpFlow());
-
-    (sendLoginOtp as any).mockResolvedValue({ error: null });
 
     await act(async () => {
       await result.current.triggerOtpFlow('user@example.com');
@@ -215,32 +209,30 @@ describe('useOtpFlow', () => {
   it('should return response from sendLoginOtp', async () => {
     const { result } = renderHook(() => useOtpFlow());
 
-    const mockResponse = {
-      success: true,
-    };
+    let response: Awaited<ReturnType<typeof result.current.triggerOtpFlow>> | undefined;
 
-    (sendLoginOtp as any).mockResolvedValue(mockResponse);
-
-    const response = await act(async () => {
-      return await result.current.triggerOtpFlow('user@example.com');
+    await act(async () => {
+      response = await result.current.triggerOtpFlow('user@example.com');
     });
 
     expect(response).toBeDefined();
-    expect(response.success).toBe(true);
+    expect(response?.success).toBe(true);
   });
 
   it('should handle empty email gracefully', async () => {
     const { result } = renderHook(() => useOtpFlow());
 
-    (sendLoginOtp as any).mockResolvedValue({
-      error: { message: 'Email is required' },
+    vi.mocked(sendLoginOtp).mockResolvedValue({
+      error: 'Email is required',
     });
 
-    const response = await act(async () => {
-      return await result.current.triggerOtpFlow('');
+    let response: Awaited<ReturnType<typeof result.current.triggerOtpFlow>> | undefined;
+
+    await act(async () => {
+      response = await result.current.triggerOtpFlow('');
     });
 
-    expect(response.error).toBeDefined();
+    expect(response?.error).toBeDefined();
   });
 
   it('should track OTP flow state changes', async () => {

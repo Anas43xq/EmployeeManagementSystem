@@ -1,29 +1,13 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Star, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Card } from '../../components/ui';
 import { getEmployeeOfWeek } from '../../services/performance';
-import type { EmployeeOfWeek } from '../../types';
+import { useAsync } from '../../hooks';
 
 export default function EmployeeOfWeekWidget() {
   const { t } = useTranslation();
-  const [employeeOfWeek, setEmployeeOfWeek] = useState<EmployeeOfWeek | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadEmployeeOfWeek();
-  }, []);
-
-  const loadEmployeeOfWeek = async () => {
-    try {
-      const data = await getEmployeeOfWeek();
-      setEmployeeOfWeek(data);
-    } catch (_error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: employeeOfWeek, loading } = useAsync(() => getEmployeeOfWeek());
 
   if (loading) {
     return (

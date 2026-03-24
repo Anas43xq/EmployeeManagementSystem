@@ -23,7 +23,7 @@ describe('photoUtils', () => {
   describe('deleteEmployeePhoto', () => {
     it('should do nothing for null or undefined URLs', async () => {
       const mockFrom = vi.fn();
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await deleteEmployeePhoto(null);
       await deleteEmployeePhoto(undefined);
@@ -34,7 +34,7 @@ describe('photoUtils', () => {
     it('should extract filename from URL and call remove', async () => {
       const mockRemove = vi.fn().mockResolvedValue({ error: null });
       const mockFrom = vi.fn().mockReturnValue({ remove: mockRemove });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await deleteEmployeePhoto('https://example.com/storage/photo.jpg');
 
@@ -44,7 +44,7 @@ describe('photoUtils', () => {
 
     it('should handle malformed URLs gracefully', async () => {
       const mockFrom = vi.fn();
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await deleteEmployeePhoto('not-a-valid-url');
 
@@ -54,7 +54,7 @@ describe('photoUtils', () => {
     it('should ignore errors during deletion', async () => {
       const mockRemove = vi.fn().mockResolvedValue({ error: { message: 'Not found' } });
       const mockFrom = vi.fn().mockReturnValue({ remove: mockRemove });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       // Should not throw
       await expect(deleteEmployeePhoto('https://example.com/storage/photo.jpg')).resolves.not.toThrow();
@@ -94,7 +94,7 @@ describe('photoUtils', () => {
           getPublicUrl: mockGetUrl,
           remove: vi.fn().mockResolvedValue({ error: null }),
         });
-        (supabase.storage.from as any) = mockFrom;
+        vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
         await uploadEmployeePhoto('emp-123', file);
 
@@ -112,7 +112,7 @@ describe('photoUtils', () => {
         getPublicUrl: mockGetUrl,
         remove: vi.fn().mockResolvedValue({ error: null }),
       });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await uploadEmployeePhoto('emp-456', mockFile);
 
@@ -131,7 +131,7 @@ describe('photoUtils', () => {
         getPublicUrl: mockGetUrl,
         remove: mockRemove,
       });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await uploadEmployeePhoto('emp-789', mockFile, 'https://example.com/old-photo.jpg');
 
@@ -150,7 +150,7 @@ describe('photoUtils', () => {
         getPublicUrl: mockGetUrl,
         remove: vi.fn().mockResolvedValue({ error: null }),
       });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       const result = await uploadEmployeePhoto('emp-999', mockFile);
 
@@ -165,7 +165,7 @@ describe('photoUtils', () => {
         upload: mockUpload,
         remove: vi.fn().mockResolvedValue({ error: null }),
       });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await expect(uploadEmployeePhoto('emp-123', mockFile)).rejects.toThrow(
         'Storage not configured'
@@ -180,7 +180,7 @@ describe('photoUtils', () => {
         upload: mockUpload,
         remove: vi.fn().mockResolvedValue({ error: null }),
       });
-      (supabase.storage.from as any) = mockFrom;
+      vi.mocked(supabase.storage.from).mockImplementation(mockFrom);
 
       await expect(uploadEmployeePhoto('emp-123', mockFile)).rejects.toThrow(
         'Upload failed'

@@ -1,18 +1,19 @@
 import { useTranslation } from 'react-i18next';
 import { Clock, Calendar, Plus } from 'lucide-react';
 import { PageSpinner, PageHeader, Card, EmptyState, Button } from '../../components/ui';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAttendance } from './useAttendance';
 import AttendanceRecordCard from './AttendanceRecordCard';
 import AddAttendanceModal from './AddAttendanceModal';
 
 export default function Attendance() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const {
     attendanceRecords,
     loading,
-    user,
     selectedDate,
-    setSelectedDate,
+    handleDateChange,
     showAddModal,
     setShowAddModal,
     employees,
@@ -60,7 +61,7 @@ export default function Attendance() {
           <input
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>

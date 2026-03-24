@@ -1,11 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase, db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createNotification, notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
 import { logActivity } from '../../services/activityLog';
 import { calculateWorkingDays } from '../../utils/dateUtils';
+import {
+  getLeaves,
+  getOrCreateLeaveBalance,
+  updateLeaveBalance,
+  checkLeaveConflicts,
+  createLeave,
+  updateLeaveStatus,
+  getEmployeeForLeave,
+  getUserIdForEmployee,
+  subscribeToLeavesChanges,
+  subscribeToLeaveBalanceChanges,
+} from '../../services/leaves';
 import type { Leave, LeaveBalance, LeaveFormData, LeaveConflict } from './types';
 
 export function useLeaves() {
@@ -37,18 +48,10 @@ export function useLeaves() {
   // --- Leaves loading ---
   const loadLeaves = async () => {
     try {
-      let query = db
-        .from('leaves')
-        .select(`*, employees (first_name, last_name, employee_number, email)`)
-        .order('created_at', { ascending: false });
-
-      if (user?.role === 'staff' && user?.employeeId) {
-        query = query.eq('employee_id', user.employeeId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      setLeaves(data || []);
+      const data = await getLeaves(
+        user?.role === 'staff' && user?.employeeId ? user.employeeId : undefined
+      );
+      setLeaves(data);
     } catch {
     } finally {
       setLoading(false);
@@ -59,11 +62,8 @@ export function useLeaves() {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel('leaves-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaves' }, () => { loadLeaves(); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return subscribeToLeavesChanges(() => { loadLeaves(); });
   }, [user]);
 
   // --- Leave balance ---
@@ -71,30 +71,8 @@ export function useLeaves() {
     if (!user?.employeeId) return;
     const currentYear = new Date().getFullYear();
     try {
-      const { data, error } = await db
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', user.employeeId)
-        .eq('year', currentYear)
-        .single();
-
-      if (error && error.code !== 'PGRST116') return;
-
-      if (data) {
-        setLeaveBalance(data);
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: newBalance, error: insertError } = await (db.from('leave_balances') as any)
-          .insert({
-            employee_id: user.employeeId, year: currentYear,
-            annual_total: 20, annual_used: 0,
-            sick_total: 10, sick_used: 0,
-            casual_total: 10, casual_used: 0,
-          })
-          .select()
-          .single();
-        if (!insertError && newBalance) setLeaveBalance(newBalance);
-      }
+      const data = await getOrCreateLeaveBalance(user.employeeId, currentYear);
+      setLeaveBalance(data);
     } catch {}
   };
 
@@ -102,14 +80,8 @@ export function useLeaves() {
 
   useEffect(() => {
     if (!user?.employeeId) return;
-    const channel = supabase
-      .channel('leave-balances-realtime')
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'leave_balances',
-        filter: `employee_id=eq.${user.employeeId}`,
-      }, () => { loadLeaveBalance(); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return subscribeToLeaveBalanceChanges(user.employeeId, () => { loadLeaveBalance(); });
   }, [user?.employeeId]);
 
   const getAvailableBalance = (leaveType: string): number => {
@@ -122,33 +94,27 @@ export function useLeaves() {
     }
   };
 
-  const updateLeaveBalance = async (employeeId: string, leaveType: string, days: number, action: 'add' | 'subtract') => {
+  const updateLeaveBalanceField = async (employeeId: string, leaveType: string, days: number, action: 'add' | 'subtract') => {
     const currentYear = new Date().getFullYear();
     let fieldToUpdate = '';
     switch (leaveType) {
-      case 'annual': fieldToUpdate = 'annual_used'; break;
-      case 'sick': fieldToUpdate = 'sick_used'; break;
-      case 'casual': fieldToUpdate = 'casual_used'; break;
-      default: return;
+      case 'annual':
+        fieldToUpdate = 'annual_used';
+        break;
+      case 'sick':
+        fieldToUpdate = 'sick_used';
+        break;
+      case 'casual':
+        fieldToUpdate = 'casual_used';
+        break;
+      default:
+        return;
     }
     try {
-      const { data: currentBalance } = await db
-        .from('leave_balances')
-        .select(fieldToUpdate)
-        .eq('employee_id', employeeId)
-        .eq('year', currentYear)
-        .single();
-      if (currentBalance) {
-        const rec = currentBalance as unknown as Record<string, number>;
-        const newValue = action === 'add'
-          ? (rec[fieldToUpdate] || 0) + days
-          : Math.max(0, (rec[fieldToUpdate] || 0) - days);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (db.from('leave_balances') as any)
-          .update({ [fieldToUpdate]: newValue })
-          .eq('employee_id', employeeId)
-          .eq('year', currentYear);
-      }
+      const balance = await getOrCreateLeaveBalance(employeeId, currentYear);
+      const rec = balance as unknown as Record<string, number>;
+      const newValue = action === 'add' ? (rec[fieldToUpdate] || 0) + days : Math.max(0, (rec[fieldToUpdate] || 0) - days);
+      await updateLeaveBalance(employeeId, currentYear, fieldToUpdate, newValue);
     } catch {}
   };
 
@@ -158,27 +124,15 @@ export function useLeaves() {
     return calculateWorkingDays(startDate, endDate);
   };
 
-  const checkLeaveConflicts = async (startDate: string, endDate: string, employeeId?: string): Promise<LeaveConflict[]> => {
+  const checkLeaveConflictsHandler = async (startDate: string, endDate: string, employeeId?: string): Promise<LeaveConflict[]> => {
     const targetEmployeeId = employeeId || user?.employeeId;
-    if (!targetEmployeeId || !startDate || !endDate) { setLeaveConflicts([]); return []; }
+    if (!targetEmployeeId || !startDate || !endDate) {
+      setLeaveConflicts([]);
+      return [];
+    }
     setCheckingConflicts(true);
     try {
-      const { data, error } = await db
-        .from('leaves')
-        .select('id, leave_type, start_date, end_date, status')
-        .eq('employee_id', targetEmployeeId)
-        .in('status', ['approved', 'pending'])
-        .lte('start_date', endDate)
-        .gte('end_date', startDate);
-      if (error) { setLeaveConflicts([]); return []; }
-      const conflicts: LeaveConflict[] = (data || []).map((leave: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const leaveData = leave as any;
-        return {
-          id: leaveData.id, leave_type: leaveData.leave_type,
-          start_date: leaveData.start_date, end_date: leaveData.end_date, status: leaveData.status,
-        };
-      });
+      const conflicts = await checkLeaveConflicts(targetEmployeeId, startDate, endDate);
       setLeaveConflicts(conflicts);
       return conflicts;
     } catch {
@@ -191,48 +145,63 @@ export function useLeaves() {
 
   const handleApplyLeave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.employeeId) { showNotification('error', 'Employee ID not found'); return; }
-    if (!formData.start_date || !formData.end_date || !formData.reason) {
-      showNotification('error', 'Please fill in all required fields'); return;
-    }
-    const daysCount = calculateDays(formData.start_date, formData.end_date);
-    if (daysCount <= 0) { showNotification('error', 'End date must be after start date'); return; }
-    const availableBalance = getAvailableBalance(formData.leave_type);
-    if (daysCount > availableBalance && availableBalance !== 999) {
-      showNotification('error', `Insufficient ${formData.leave_type} leave balance. Available: ${availableBalance} days`);
+    if (!user?.employeeId) {
+      showNotification('error', 'Employee ID not found');
       return;
     }
-    const conflicts = await checkLeaveConflicts(formData.start_date, formData.end_date);
-    if (conflicts.length > 0) { showNotification('error', t('leaves.conflictDetected')); return; }
+    if (!formData.start_date || !formData.end_date || !formData.reason) {
+      showNotification('error', 'Please fill in all required fields');
+      return;
+    }
+    const daysCount = calculateDays(formData.start_date, formData.end_date);
+    if (daysCount <= 0) {
+      showNotification('error', 'End date must be after start date');
+      return;
+    }
+    const availableBalance = getAvailableBalance(formData.leave_type);
+    if (daysCount > availableBalance && availableBalance !== 999) {
+      showNotification(
+        'error',
+        `Insufficient ${formData.leave_type} leave balance. Available: ${availableBalance} days`
+      );
+      return;
+    }
+    const conflicts = await checkLeaveConflictsHandler(formData.start_date, formData.end_date);
+    if (conflicts.length > 0) {
+      showNotification('error', t('leaves.conflictDetected'));
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const { data: employeeData } = await db
-        .from('employees').select('first_name, last_name').eq('id', user.employeeId).single() as
-        { data: { first_name: string; last_name: string } | null };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('leaves') as any)
-        .insert({
-          employee_id: user.employeeId, leave_type: formData.leave_type,
-          start_date: formData.start_date, end_date: formData.end_date,
-          days_count: daysCount, reason: formData.reason, status: 'pending',
-        });
-      if (error) throw error;
-
-      showNotification('success', t('leaves.leaveSubmitted'));
-      if (user) logActivity(user.id, 'leave_requested', 'leave', undefined, {
-        leave_type: formData.leave_type, start_date: formData.start_date,
-        end_date: formData.end_date, days_count: daysCount,
+      await createLeave({
+        employee_id: user.employeeId,
+        leave_type: formData.leave_type,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        days_count: daysCount,
+        reason: formData.reason,
       });
 
+      showNotification('success', t('leaves.leaveSubmitted'));
+      if (user)
+        logActivity(user.id, 'leave_requested', 'leave', undefined, {
+          leave_type: formData.leave_type,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          days_count: daysCount,
+        });
+
+      const employeeData = await getEmployeeForLeave(user.employeeId);
       const employeeName = employeeData
         ? `${employeeData.first_name} ${employeeData.last_name}`
         : 'An employee';
       await notifyHRAndAdmins(
         'New Leave Request',
         `${employeeName} has submitted a ${formData.leave_type} leave request (${formData.start_date} to ${formData.end_date})`,
-        'leave', true, user.id
+        'leave',
+        true,
+        user.id
       );
 
       setFormData({ leave_type: 'annual', start_date: '', end_date: '', reason: '' });
@@ -248,73 +217,91 @@ export function useLeaves() {
   const handleApprove = async (leaveId: string) => {
     if (processingLeaves.has(leaveId)) return;
     try {
-      setProcessingLeaves(prev => new Set(prev).add(leaveId));
-      const leave = leaves.find(l => l.id === leaveId);
+      setProcessingLeaves((prev) => new Set(prev).add(leaveId));
+      const leave = leaves.find((l) => l.id === leaveId);
       if (!leave) return;
-      if (leave.status === 'approved') { showNotification('info', 'Leave request is already approved'); return; }
-      if (leave.status !== 'pending') { showNotification('error', 'Can only approve pending leave requests'); return; }
+      if (leave.status === 'approved') {
+        showNotification('info', 'Leave request is already approved');
+        return;
+      }
+      if (leave.status !== 'pending') {
+        showNotification('error', 'Can only approve pending leave requests');
+        return;
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('leaves') as any)
-        .update({ status: 'approved', approved_by: user?.id, approved_at: new Date().toISOString() })
-        .eq('id', leaveId).eq('status', 'pending');
-      if (error) throw error;
-
-      await updateLeaveBalance(leave.employee_id, leave.leave_type, leave.days_count, 'add');
+      await updateLeaveStatus(leaveId, 'approved', user?.id || '');
+      await updateLeaveBalanceField(leave.employee_id, leave.leave_type, leave.days_count, 'add');
       showNotification('success', t('leaves.leaveApproved'));
-      if (user) logActivity(user.id, 'leave_approved', 'leave', leaveId, {
-        employee_id: leave.employee_id, leave_type: leave.leave_type,
-      });
+      if (user)
+        logActivity(user.id, 'leave_approved', 'leave', leaveId, {
+          employee_id: leave.employee_id,
+          leave_type: leave.leave_type,
+        });
 
-      const { data: employeeUser, error: userLookupError } = await db
-        .from('users').select('id').eq('employee_id', leave.employee_id).single() as
-        { data: { id: string } | null; error: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (!userLookupError && employeeUser) {
-        await createNotification(employeeUser.id, 'Leave Approved',
+      const employeeUserId = await getUserIdForEmployee(leave.employee_id);
+      if (employeeUserId) {
+        await createNotification(
+          employeeUserId,
+          'Leave Approved',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
-          'leave', true);
+          'leave',
+          true
+        );
       }
       loadLeaves();
     } catch {
       showNotification('error', 'Failed to approve leave request');
     } finally {
-      setProcessingLeaves(prev => { const s = new Set(prev); s.delete(leaveId); return s; });
+      setProcessingLeaves((prev) => {
+        const s = new Set(prev);
+        s.delete(leaveId);
+        return s;
+      });
     }
   };
 
   const handleReject = async (leaveId: string) => {
     if (processingLeaves.has(leaveId)) return;
     try {
-      setProcessingLeaves(prev => new Set(prev).add(leaveId));
-      const leave = leaves.find(l => l.id === leaveId);
+      setProcessingLeaves((prev) => new Set(prev).add(leaveId));
+      const leave = leaves.find((l) => l.id === leaveId);
       if (!leave) return;
-      if (leave.status === 'rejected') { showNotification('info', 'Leave request is already rejected'); return; }
-      if (leave.status !== 'pending') { showNotification('error', 'Can only reject pending leave requests'); return; }
+      if (leave.status === 'rejected') {
+        showNotification('info', 'Leave request is already rejected');
+        return;
+      }
+      if (leave.status !== 'pending') {
+        showNotification('error', 'Can only reject pending leave requests');
+        return;
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('leaves') as any)
-        .update({ status: 'rejected', approved_by: user?.id, approved_at: new Date().toISOString() })
-        .eq('id', leaveId).eq('status', 'pending');
-      if (error) throw error;
-
+      await updateLeaveStatus(leaveId, 'rejected', user?.id || '');
       showNotification('success', t('leaves.leaveRejected'));
-      if (user) logActivity(user.id, 'leave_rejected', 'leave', leaveId, {
-        employee_id: leave.employee_id, leave_type: leave.leave_type,
-      });
+      if (user)
+        logActivity(user.id, 'leave_rejected', 'leave', leaveId, {
+          employee_id: leave.employee_id,
+          leave_type: leave.leave_type,
+        });
 
-      const { data: employeeUser, error: userLookupError } = await db
-        .from('users').select('id').eq('employee_id', leave.employee_id).single() as
-        { data: { id: string } | null; error: any }; // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (!userLookupError && employeeUser) {
-        await createNotification(employeeUser.id, 'Leave Rejected',
+      const employeeUserId = await getUserIdForEmployee(leave.employee_id);
+      if (employeeUserId) {
+        await createNotification(
+          employeeUserId,
+          'Leave Rejected',
           `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
-          'leave', true);
+          'leave',
+          true
+        );
       }
       loadLeaves();
     } catch {
       showNotification('error', 'Failed to reject leave request');
     } finally {
-      setProcessingLeaves(prev => { const s = new Set(prev); s.delete(leaveId); return s; });
+      setProcessingLeaves((prev) => {
+        const s = new Set(prev);
+        s.delete(leaveId);
+        return s;
+      });
     }
   };
 
@@ -336,7 +323,7 @@ export function useLeaves() {
     setFormData,
     leaveConflicts,
     checkingConflicts,
-    checkLeaveConflicts,
+    checkLeaveConflicts: checkLeaveConflictsHandler,
     processingLeaves,
     calculateDays,
     handleApplyLeave,

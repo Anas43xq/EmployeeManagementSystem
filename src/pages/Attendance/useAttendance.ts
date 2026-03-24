@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../services/activityLog';
+import {
+  getAttendanceEmployees,
+  getAttendanceRecords,
+  checkAttendanceExists,
+  markAttendance,
+  updateCheckOut,
+  createAttendanceRecord,
+  attendanceRecordExists,
+} from '../../services/attendance';
 import type { AttendanceRecord, Employee } from './types';
 
 export function useAttendance() {
@@ -60,41 +68,19 @@ export function useAttendance() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await db
-        .from('employees')
-        .select('id, first_name, last_name, employee_number')
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (error) throw error;
-      setEmployees(data || []);
+      const data = await getAttendanceEmployees();
+      setEmployees(data);
     } catch (_err) {
     }
   };
 
   const loadAttendance = async () => {
     try {
-      let query = db
-        .from('attendance')
-        .select(`
-          *,
-          employees (
-            first_name,
-            last_name,
-            employee_number
-          )
-        `)
-        .eq('date', selectedDate)
-        .order('created_at', { ascending: false });
-
-      if (user?.role === 'staff' && user?.employeeId) {
-        query = query.eq('employee_id', user.employeeId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setAttendanceRecords(data || []);
+      const data = await getAttendanceRecords(
+        selectedDate,
+        user?.role === 'staff' && user?.employeeId ? user.employeeId : undefined
+      );
+      setAttendanceRecords(data);
     } catch (_error) {
     } finally {
       setLoading(false);
@@ -105,35 +91,18 @@ export function useAttendance() {
     if (!user?.employeeId) return;
 
     const today = new Date().toISOString().split('T')[0];
-
     try {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      const { data: existing } = await db
-        .from('attendance')
-        .select('id, check_in')
-        .eq('employee_id', user.employeeId)
-        .eq('date', today)
-        .maybeSingle();
-
+      const existing = await checkAttendanceExists(user.employeeId, today);
       if (existing) {
         showNotification('info', t('attendance.alreadyCheckedIn'));
         return;
       }
 
-      const { error } = await db.from('attendance').insert({
-        employee_id: user.employeeId,
-        date: today,
-        check_in: time,
-        status: 'present' as const,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      if (error) throw error;
-
+      await markAttendance(user.employeeId, today, time);
       showNotification('success', t('attendance.checkInSuccess'));
-
       logActivity(user.id, 'attendance_checked_in', 'attendance', undefined, {
         date: today,
         check_in: time,
@@ -151,21 +120,12 @@ export function useAttendance() {
     if (!user?.employeeId) return;
 
     const today = new Date().toISOString().split('T')[0];
-
     try {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('attendance') as any)
-        .update({ check_out: time })
-        .eq('id', recordId)
-        .eq('employee_id', user.employeeId);
-
-      if (error) throw error;
-
+      await updateCheckOut(recordId, user.employeeId, time);
       showNotification('success', t('attendance.checkOutSuccess'));
-
       logActivity(user.id, 'attendance_checked_out', 'attendance', recordId, {
         date: today,
         check_out: time,
@@ -202,21 +162,14 @@ export function useAttendance() {
         return;
       }
 
-      const { data: existingRecord } = await db
-        .from('attendance')
-        .select('id')
-        .eq('employee_id', formData.employee_id)
-        .eq('date', formData.date)
-        .maybeSingle();
-
-      if (existingRecord) {
+      const recordExists = await attendanceRecordExists(formData.employee_id, formData.date);
+      if (recordExists) {
         setError(t('attendance.recordAlreadyExists'));
         setSubmitting(false);
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (db.from('attendance') as any).insert({
+      await createAttendanceRecord({
         employee_id: formData.employee_id,
         date: formData.date,
         check_in: formData.check_in || null,
@@ -224,8 +177,6 @@ export function useAttendance() {
         status: formData.status,
         notes: formData.notes,
       });
-
-      if (error) throw error;
 
       if (user) {
         logActivity(user.id, 'attendance_manual_entry', 'attendance', undefined, {
@@ -246,12 +197,15 @@ export function useAttendance() {
     }
   };
 
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+  };
+
   return {
     attendanceRecords,
     loading,
-    user,
     selectedDate,
-    setSelectedDate,
+    handleDateChange,
     showAddModal,
     setShowAddModal,
     employees,

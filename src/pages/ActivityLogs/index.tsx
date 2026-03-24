@@ -2,24 +2,16 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Activity, RefreshCw } from 'lucide-react';
-import { db } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, PageSpinner } from '../../components/ui';
-
-interface ActivityLog {
-  id: string;
-  action: string;
-  entity_type: string;
-  created_at: string;
-  details?: Record<string, unknown> | null;
-}
+import { getRecentActivityLogs, type ActivityLogRecord } from '../../services/activityLog';
 
 export default function ActivityLogs() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [logs, setLogs] = useState<ActivityLogRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -39,13 +31,7 @@ export default function ActivityLogs() {
   const fetchLogs = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const { data, error } = await db
-        .from('activity_logs')
-        .select('id, action, entity_type, created_at, details')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      setLogs(data || []);
+      setLogs(await getRecentActivityLogs());
     } catch {
       // silently fail
     } finally {

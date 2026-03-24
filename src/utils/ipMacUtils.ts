@@ -7,6 +7,10 @@
  * as a reasonable proxy for device identification.
  */
 
+interface NavigatorFingerprintData {
+  deviceMemory?: number;
+}
+
 /**
  * Get user's public IP address
  * Falls back to 'unknown' if unable to determine
@@ -18,9 +22,7 @@ export async function getUserIpAddress(): Promise<string> {
       cache: 'no-store',
     });
 
-    if (!response.ok) {
-      return 'unknown';
-    }
+    if (!response.ok) return 'unknown';
 
     const data = (await response.json()) as { ip?: string };
     return data.ip || 'unknown';
@@ -33,7 +35,7 @@ export async function getUserIpAddress(): Promise<string> {
 /**
  * Get browser user-agent string (used for device fingerprinting)
  */
-export function getUserAgent(): string {
+function getUserAgent(): string {
   return navigator.userAgent || 'unknown';
 }
 
@@ -42,23 +44,24 @@ export function getUserAgent(): string {
  * Combines multiple signals that are unlikely to change across sessions
  * but unique enough to identify a device/browser combo
  */
-export function getDeviceFingerprint(): string {
+function getDeviceFingerprint(): string {
   try {
+    const fingerprintNavigator = navigator as Navigator & NavigatorFingerprintData;
     const parts: string[] = [];
 
     // Browser memory (in GB)
-    if ('deviceMemory' in navigator) {
-      parts.push(`dm${(navigator as any).deviceMemory}`);
+    if (typeof fingerprintNavigator.deviceMemory === 'number') {
+      parts.push(`dm${fingerprintNavigator.deviceMemory}`);
     }
 
     // CPU cores
-    if ('hardwareConcurrency' in navigator) {
-      parts.push(`cpu${(navigator as any).hardwareConcurrency}`);
+    if (typeof fingerprintNavigator.hardwareConcurrency === 'number') {
+      parts.push(`cpu${fingerprintNavigator.hardwareConcurrency}`);
     }
 
     // Touchscreen capability
-    if ('maxTouchPoints' in navigator) {
-      parts.push(`touch${(navigator as any).maxTouchPoints}`);
+    if (typeof fingerprintNavigator.maxTouchPoints === 'number') {
+      parts.push(`touch${fingerprintNavigator.maxTouchPoints}`);
     }
 
     // Screen resolution
@@ -85,7 +88,7 @@ export function getDeviceFingerprint(): string {
  * Creates one on first call and reuses on subsequent calls
  * Note: cleared if user clears browser data
  */
-export function getPersistentDeviceId(): string {
+function getPersistentDeviceId(): string {
   const DEVICE_ID_KEY = 'ems_device_id_v1';
 
   try {
@@ -127,13 +130,4 @@ export async function getMacProxy(): Promise<{ ipAddress: string; userAgent: str
   };
 }
 
-/**
- * Clear the persistent device ID (for testing or explicit logout)
- */
-export function clearPersistentDeviceId(): void {
-  try {
-    localStorage.removeItem('ems_device_id_v1');
-  } catch {
-    // Ignore errors
-  }
-}
+

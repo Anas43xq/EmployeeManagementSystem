@@ -1,0 +1,168 @@
+import { db } from '../supabase';
+import type {
+  Department,
+  ReportEmployee,
+  Leave,
+  Attendance,
+  DepartmentReport,
+  PayrollReport,
+} from '../../pages/Reports/types';
+
+export async function getReportDepartments(): Promise<Department[]> {
+  const { data, error } = await db
+    .from('departments')
+    .select('id, name')
+    .order('name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getEmployeeReportData(selectedDepartment?: string): Promise<ReportEmployee[]> {
+  let query = db
+    .from('employees')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      position,
+      employment_type,
+      status,
+      hire_date,
+      salary,
+      departments!department_id (name)
+    `)
+    .order('last_name');
+
+  if (selectedDepartment) {
+    query = query.eq('department_id', selectedDepartment);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as ReportEmployee[];
+}
+
+export async function getLeaveReportData(dateFilter: string | null, selectedDepartment?: string): Promise<Leave[]> {
+  let query = db
+    .from('leaves')
+    .select(`
+      id,
+      employees!employee_id (
+        first_name,
+        last_name,
+        departments!department_id (name)
+      ),
+      leave_type,
+      start_date,
+      end_date,
+      days_count,
+      status,
+      reason
+    `)
+    .order('start_date', { ascending: false });
+
+  if (dateFilter) {
+    query = query.gte('start_date', dateFilter);
+  }
+
+  if (selectedDepartment) {
+    query = query.eq('employees.department_id', selectedDepartment);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as Leave[];
+}
+
+export async function getAttendanceReportData(dateFilter: string | null, selectedDepartment?: string): Promise<Attendance[]> {
+  let query = db
+    .from('attendance')
+    .select(`
+      id,
+      employees!employee_id (
+        first_name,
+        last_name,
+        departments!department_id (name)
+      ),
+      date,
+      check_in,
+      check_out,
+      status
+    `)
+    .order('date', { ascending: false });
+
+  if (dateFilter) {
+    query = query.gte('date', dateFilter);
+  }
+
+  if (selectedDepartment) {
+    query = query.eq('employees.department_id', selectedDepartment);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as Attendance[];
+}
+
+export async function getDepartmentReportData(selectedDepartment?: string): Promise<DepartmentReport[]> {
+  let query = db
+    .from('departments')
+    .select(`
+      id,
+      name,
+      type,
+      description,
+      employees!department_id (count)
+    `)
+    .order('name');
+
+  if (selectedDepartment) {
+    query = query.eq('id', selectedDepartment);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as DepartmentReport[];
+}
+
+export async function getPayrollReportData(dateFilter: string | null, selectedDepartment?: string): Promise<PayrollReport[]> {
+  let query = db
+    .from('payrolls')
+    .select(`
+      id,
+      employees!employee_id (
+        first_name,
+        last_name,
+        employee_number,
+        departments!department_id (name)
+      ),
+      period_month,
+      period_year,
+      base_salary,
+      total_bonuses,
+      total_deductions,
+      gross_salary,
+      net_salary,
+      status
+    `)
+    .order('period_year', { ascending: false })
+    .order('period_month', { ascending: false });
+
+  if (dateFilter) {
+    const filterDate = new Date(dateFilter);
+    const filterYear = filterDate.getFullYear();
+    const filterMonth = filterDate.getMonth() + 1;
+    query = query.or(`period_year.gt.${filterYear},and(period_year.eq.${filterYear},period_month.gte.${filterMonth})`);
+  }
+
+  if (selectedDepartment) {
+    query = query.eq('employees.department_id', selectedDepartment);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as PayrollReport[];
+}

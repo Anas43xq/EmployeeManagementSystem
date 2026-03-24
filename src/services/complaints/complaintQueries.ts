@@ -1,4 +1,5 @@
-import { db } from '../supabase';
+import { db, supabase } from '../supabase';
+import { applyFilter } from '../shared/queryUtils';
 import type { EmployeeComplaint, EmployeeComplaintCreate, ComplaintStatus } from '../../types';
 
 export async function getComplaints(filters?: {
@@ -17,15 +18,9 @@ export async function getComplaints(filters?: {
     `)
     .order('created_at', { ascending: false });
 
-  if (filters?.employeeId) {
-    query = query.eq('employee_id', filters.employeeId);
-  }
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
-  }
-  if (filters?.assignedTo) {
-    query = query.eq('assigned_to', filters.assignedTo);
-  }
+  query = applyFilter(query, 'employee_id', filters?.employeeId);
+  query = applyFilter(query, 'status', filters?.status);
+  query = applyFilter(query, 'assigned_to', filters?.assignedTo);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -91,4 +86,23 @@ export async function deleteComplaint(id: string) {
     .eq('id', id);
 
   if (error) throw error;
+}
+
+export function subscribeToComplaintChanges(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`complaints-realtime:${Date.now()}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'employee_complaints',
+      },
+      onChange
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

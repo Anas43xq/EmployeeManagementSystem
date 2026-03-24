@@ -18,15 +18,6 @@ export function getDirectionClass(isRTL: boolean, normal: string, rtl: string): 
 }
 
 /**
- * Shared auth error management hook
- */
-export function useAuthError() {
-  const [error, setError] = useState('');
-  const clearError = () => setError('');
-  return { error, setError, clearError };
-}
-
-/**
  * OTP authentication hook with cooldown and attempt tracking
  */
 interface UseOtpProps {

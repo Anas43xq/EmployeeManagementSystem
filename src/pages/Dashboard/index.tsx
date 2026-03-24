@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Clock, TrendingUp, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { PieChart, Pie, Cell, Legend, Tooltip as PieTooltip } from 'recharts';
+import { useAuth } from '../../contexts/AuthContext';
 import { isWidgetVisible, getVisibleQuickActions } from '../../services/dashboard/dashboardConfig';
 import AnnouncementsWidget from '../../components/AnnouncementsWidget';
 import { PageSpinner, PageHeader, Card } from '../../components/ui';
@@ -15,7 +16,8 @@ import PerformanceCalculationStatus from './PerformanceCalculationStatus';
 const LEAVE_COLORS = { Pending: '#f59e0b', Approved: '#10b981', Rejected: '#ef4444' };
 
 export default function Dashboard() {
-  const { stats, recentActivities, departmentData, leaveStatusData, loading, user } = useDashboard();
+  const { stats, recentActivities, departmentData, leaveStatusData, loading } = useDashboard();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const userRole = user?.role || 'staff';

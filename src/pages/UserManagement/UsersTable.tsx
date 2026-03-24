@@ -17,6 +17,9 @@ import {
 import type { User } from './types';
 import { getUserEmail, getUserDisplayName } from './types';
 
+const thClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+const tdClass = 'px-6 py-4 whitespace-nowrap';
+
 interface UsersTableProps {
   filteredUsers: User[];
   currentUserId: string | undefined;
@@ -47,10 +50,10 @@ export default function UsersTable({
   const { t } = useTranslation();
 
   const getUserStatus = (user: User) => {
-    if (user.banned_at) {
+    if (user.bannedAt) {
       return { status: 'banned', badge: 'bg-red-100 text-red-800', icon: Ban };
     }
-    if (user.is_active === false) {
+    if (user.isActive === false) {
       return { status: 'inactive', badge: 'bg-gray-100 text-gray-800', icon: UserMinus };
     }
     return { status: 'active', badge: 'bg-green-100 text-green-800', icon: UserCheck };
@@ -62,11 +65,11 @@ export default function UsersTable({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('userManagement.employee')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('userManagement.role')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('userManagement.department')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('userManagement.accessGranted')}</th>
+              <th className={thClass}>{t('userManagement.employee')}</th>
+              <th className={thClass}>{t('userManagement.role')}</th>
+              <th className={thClass}>{t('common.status')}</th>
+              <th className={thClass}>{t('userManagement.department')}</th>
+              <th className={thClass}>{t('userManagement.accessGranted')}</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
             </tr>
           </thead>
@@ -77,18 +80,18 @@ export default function UsersTable({
               const userStatus = getUserStatus(user);
               const StatusIcon = userStatus.icon;
               return (
-              <tr key={user.id} className={`hover:bg-gray-50 ${user.banned_at ? 'bg-red-50/30' : user.is_active === false ? 'bg-gray-50/50' : ''}`}>
-                <td className="px-6 py-4 whitespace-nowrap">
+              <tr key={user.id} className={`hover:bg-gray-50 ${user.bannedAt ? 'bg-red-50/30' : user.isActive === false ? 'bg-gray-50/50' : ''}`}>
+                <td className={tdClass}>
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.banned_at ? 'bg-red-100' : user.is_active === false ? 'bg-gray-100' : 'bg-primary-100'}`}>
-                      <span className={`font-medium ${user.banned_at ? 'text-red-900' : user.is_active === false ? 'text-gray-600' : 'text-primary-900'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.bannedAt ? 'bg-red-100' : user.isActive === false ? 'bg-gray-100' : 'bg-primary-100'}`}>
+                      <span className={`font-medium ${user.bannedAt ? 'text-red-900' : user.isActive === false ? 'text-gray-600' : 'text-primary-900'}`}>
                         {userName.charAt(0).toUpperCase() || userEmail.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                         {userName}
-                        {user.banned_at && (
+                        {user.bannedAt && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs">
                             <Ban className="w-3 h-3" />
                           </span>
@@ -102,32 +105,32 @@ export default function UsersTable({
                         )}
                       </div>
                       <div className="text-xs text-gray-400">
-                        {user.employees?.employee_number} • {user.employees?.position}
+                        {user.employees?.employeeNumber} • {user.employees?.position}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className={tdClass}>
                   <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(user.role)}`}>
                     {getRoleIcon(user.role)}
                     <span>{t(`userManagement.${user.role}`)}</span>
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className={tdClass}>
                   <div className="flex flex-col gap-1">
                     <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${userStatus.badge}`}>
                       <StatusIcon className="w-3 h-3" />
                       <span>{t(`userManagement.status${userStatus.status.charAt(0).toUpperCase() + userStatus.status.slice(1)}`)}</span>
                     </span>
-                    {user.ban_reason && (
-                      <div className="flex items-center gap-1 text-xs text-red-600" title={user.ban_reason}>
+                      {user.banReason && (
+                      <div className="flex items-center gap-1 text-xs text-red-600" title={user.banReason}>
                         <AlertCircle className="w-3 h-3" />
-                        <span className="truncate max-w-[100px]">{user.ban_reason}</span>
+                        <span className="truncate max-w-[100px]">{user.banReason}</span>
                       </div>
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className={tdClass}>
                   {user.employees?.departments ? (
                     <div className="flex items-center space-x-1 text-sm text-gray-700">
                       <Building2 className="w-4 h-4 text-gray-400" />
@@ -140,7 +143,7 @@ export default function UsersTable({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -162,8 +165,8 @@ export default function UsersTable({
                     {user.id !== currentUserId && (
                       <>
                         {/* Deactivate/Activate button */}
-                        {!user.banned_at && (
-                          user.is_active === false ? (
+                        {!user.bannedAt && (
+                          user.isActive === false ? (
                             <button
                               onClick={() => onActivate(user)}
                               className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -182,7 +185,7 @@ export default function UsersTable({
                           )
                         )}
                         {/* Ban/Unban button */}
-                        {user.banned_at ? (
+                        {user.bannedAt ? (
                           <button
                             onClick={() => onUnban(user)}
                             className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

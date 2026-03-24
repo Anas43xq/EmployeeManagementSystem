@@ -16,9 +16,7 @@ export default function Warnings() {
     employees,
     filter,
     setFilter,
-    showModal,
-    showResolveModal,
-    setShowResolveModal,
+    activeModal,
     formData,
     setFormData,
     submitting,
@@ -32,6 +30,7 @@ export default function Warnings() {
     handleOpenResolveModal,
     handleResolve,
     handleDelete,
+    closeModal,
   } = useWarnings();
 
   if (loading) {
@@ -95,7 +94,7 @@ export default function Warnings() {
       {/* Issue Warning Modal */}
       {!isStaff && (
         <WarningFormModal
-          show={showModal}
+          show={activeModal === 'create'}
           onClose={handleCloseModal}
           formData={formData}
           setFormData={setFormData}
@@ -107,10 +106,10 @@ export default function Warnings() {
 
       {/* Resolve Warning Modal */}
       <Modal
-        show={showResolveModal}
-        onClose={() => setShowResolveModal(false)}
+        show={activeModal === 'resolve'}
+        onClose={closeModal}
       >
-        <Modal.Header onClose={() => setShowResolveModal(false)}>
+        <Modal.Header onClose={closeModal}>
           {t('warnings.resolveWarning')}
         </Modal.Header>
         <Modal.Body>
@@ -133,7 +132,7 @@ export default function Warnings() {
         <Modal.Footer>
           <Button
             variant="secondary"
-            onClick={() => setShowResolveModal(false)}
+            onClick={closeModal}
           >
             {t('common.cancel')}
           </Button>

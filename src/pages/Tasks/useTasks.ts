@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { supabase, db } from '../../services/supabase';
 import { logActivity } from '../../services/activityLog';
 import {
   getTasks,
@@ -11,7 +10,9 @@ import {
   updateTaskStatus,
   deleteTask,
   createTaskNotification,
+  subscribeToTaskChanges,
 } from '../../services/tasks';
+import { fetchActiveEmployeesWithDefaults, getUserAccountIdForEmployee } from '../../services/employees';
 import { notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';
@@ -48,16 +49,9 @@ export function useTasks() {
 
   const loadEmployees = useCallback(async () => {
     if (isStaff) return;
-    
     try {
-      const { data, error } = await db
-        .from('employees')
-        .select('id, first_name, last_name, employee_number')
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (error) throw error;
-      setEmployees(data || []);
+      const data = await fetchActiveEmployeesWithDefaults(true);
+      setEmployees(data as (EmployeeBasic & { employee_number: string })[]);
     } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
@@ -72,24 +66,9 @@ export function useTasks() {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('tasks-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employee_tasks',
-        },
-        () => {
-          loadTasks();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeToTaskChanges(() => {
+      loadTasks();
+    });
   }, [user, loadTasks]);
 
   const filteredTasks = tasks.filter(task => {
@@ -146,14 +125,10 @@ export function useTasks() {
           employee_id: formData.employee_id,
         });
 
-        const { data: targetUser, error: userLookupError } = await db
-          .from('users')
-          .select('id')
-          .eq('employee_id', formData.employee_id)
-          .maybeSingle() as { data: { id: string } | null; error: unknown };
+        const targetUserId = await getUserAccountIdForEmployee(formData.employee_id);
 
-        if (!userLookupError && targetUser) {
-          await createTaskNotification(targetUser.id, formData.title, 'assigned');
+        if (targetUserId) {
+          await createTaskNotification(targetUserId, formData.title, 'assigned');
         }
 
         showNotification('success', t('tasks.createSuccess'));

@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { db } from '../../services/supabase';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
 import { useTranslation } from 'react-i18next';
+import {
+  getDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+} from '../../services/departments';
+import { fetchActiveEmployeesWithDefaults } from '../../services/employees';
 import type { Department, DepartmentForm, Employee } from './types';
 
 export function useDepartments() {
@@ -31,17 +37,8 @@ export function useDepartments() {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await (db
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('departments') as any)
-        .select(`
-          *,
-          employees!employees_department_id_fkey (count)
-        `)
-        .order('name');
-
-      if (error) throw error;
-      setDepartments(data || []);
+      const data = await getDepartments();
+      setDepartments(data);
     } catch (_error) {
       showNotification('error', 'Failed to load departments');
     } finally {
@@ -51,15 +48,8 @@ export function useDepartments() {
 
   const loadEmployees = async () => {
     try {
-      const { data, error } = await (db
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('employees') as any)
-        .select('id, first_name, last_name')
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (error) throw error;
-      setEmployees(data || []);
+      const data = await fetchActiveEmployeesWithDefaults();
+      setEmployees(data as Employee[]);
     } catch (_error) {
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
@@ -99,13 +89,7 @@ export function useDepartments() {
       };
 
       if (editingDept) {
-        const { error } = await (db
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('departments') as any)
-          .update(payload)
-          .eq('id', editingDept.id);
-
-        if (error) throw error;
+        await updateDepartment(editingDept.id, payload);
         showNotification('success', t('departments.updatedSuccess'));
 
         if (user) {
@@ -115,14 +99,7 @@ export function useDepartments() {
           });
         }
       } else {
-        const { data, error } = await (db
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('departments') as any)
-          .insert(payload)
-          .select()
-          .single();
-
-        if (error) throw error;
+        const data = await createDepartment(payload);
         showNotification('success', t('departments.addedSuccess'));
 
         if (user && data) {
@@ -152,13 +129,7 @@ export function useDepartments() {
     if (!confirm(`Are you sure you want to delete "${dept.name}"?`)) return;
 
     try {
-      const { error } = await (db
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('departments') as any)
-        .delete()
-        .eq('id', dept.id);
-
-      if (error) throw error;
+      await deleteDepartment(dept.id);
       showNotification('success', t('departments.deletedSuccess'));
 
       if (user) {
