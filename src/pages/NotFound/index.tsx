@@ -27,14 +27,6 @@ export default function NotFound() {
           <div className="h-2 bg-gradient-to-r from-primary-500 to-primary-600" />
 
           <div className="p-8 flex flex-col items-center text-center">
-            <div className="mb-6 w-full max-w-xs">
-              <img
-                src="https://illustrations.popsy.co/error.svg"
-                alt="Page not found illustration"
-                className="w-full h-auto object-contain"
-              />
-            </div>
-
             <div className="w-16 h-16 bg-primary-50 border-2 border-primary-100 rounded-full flex items-center justify-center mb-6 -mt-2">
               <AlertCircle className="w-8 h-8 text-primary-500" />
             </div>
