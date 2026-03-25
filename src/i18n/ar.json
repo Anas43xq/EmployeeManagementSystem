@@ -880,5 +880,12 @@
     "tasksCompletedContribution": "المهام المكتملة (تضيف نقاط)",
     "tasksOverdueContribution": "المهام المتأخرة (تخصم نقاط)",
     "attendanceDaysContribution": "أيام الحضور (تضيف نقاط)"
+  },
+  "notFound": {
+    "title": "الصفحة غير موجودة",
+    "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    "backButton": "العودة",
+    "homeButton": "العودة إلى الصفحة الرئيسية",
+    "helpText": "إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع الدعم."
   }
 }

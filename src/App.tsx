@@ -30,6 +30,7 @@ const PayrollDashboard = lazy(() => import('./pages/PayrollDashboard'));
 const PayslipView = lazy(() => import('./pages/PayslipView'));
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
 const Deactivated = lazy(() => import('./pages/Deactivated'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function PageLoader() {
   const { t } = useTranslation();
@@ -77,6 +78,7 @@ function App() {
                 <Route path="activity-logs" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><ActivityLogs /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="settings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></RouteErrorBoundary>} />
               </Route>
+              <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
             </Routes>
           </BrowserRouter>
         </AuthProvider>
