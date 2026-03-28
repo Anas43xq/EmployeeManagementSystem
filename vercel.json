@@ -15,5 +15,19 @@
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/keepalive-supabase",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/keepalive-supabase",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/keepalive-supabase",
+      "schedule": "0 22 * * *"
+    }
   ]
 }
