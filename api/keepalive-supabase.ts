@@ -56,6 +56,26 @@ export default async function handler(
       try {
         const testEmployeeId = testEmployee.id;
 
+        // Get an admin user to assign the task
+        const { data: adminUser, error: adminError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('role', 'admin')
+          .limit(1)
+          .single();
+
+        if (adminError || !adminUser) {
+          console.warn('[Keepalive-Supabase] Cycle ${cycle}: No admin user found, skipping cycle');
+          results.push({
+            cycle,
+            status: 'skipped',
+            reason: 'No admin user found to assign task',
+          });
+          continue;
+        }
+
+        const assignedBy = adminUser.id;
+
         // 1. CREATE task
         const taskTitle = `[Keepalive Test] ${new Date().toISOString()}`;
         console.log(`[Keepalive-Supabase] Cycle ${cycle}: Creating test task`);
@@ -70,6 +90,7 @@ export default async function handler(
             description: 'Automatic keep-alive test - will be deleted shortly',
             status: 'pending',
             deadline: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+            assigned_by: assignedBy,
           })
           .select()
           .single();
