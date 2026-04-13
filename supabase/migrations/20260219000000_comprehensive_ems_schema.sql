@@ -93,7 +93,7 @@ DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.validate_otp_request_cooldown(TEXT) CASCADE;
-DROP FUNCTION IF EXISTS public.get_otp_request_cooldown_remaining(TEXT) CASCADE;
+-- get_otp_request_cooldown_remaining removed: validate_otp_request_cooldown returns the same data plus allowed/cooldown_seconds
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
@@ -106,7 +106,7 @@ RETURNS TEXT AS $$
 BEGIN
   RETURN 'EMP' || LPAD(nextval('employee_number_seq')::TEXT, 3, '0');
 END;
-$$ LANGUAGE plpgsql SET search_path = public;
+$$ LANGUAGE plpgsql SET search_path = public; -- Ensures function runs in the public schema
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -114,7 +114,7 @@ BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SET search_path = public;
+$$ LANGUAGE plpgsql SET search_path = public; -- Ensures function runs in the public schema
 
 -- Progressive login delay: 0s → 5s → 15s → 30s
 CREATE OR REPLACE FUNCTION public.get_progressive_delay_seconds(attempt_count INT)
@@ -230,38 +230,7 @@ GRANT EXECUTE ON FUNCTION public.clear_own_session_token() TO authenticated;
 -- LOGIN ATTEMPT RPC FUNCTIONS (SECURITY DEFINER)
 -- =============================================
 
-CREATE OR REPLACE FUNCTION public.get_otp_request_cooldown_remaining(p_email TEXT)
-RETURNS INT
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, auth
-AS $$
-DECLARE
-  v_user_id UUID;
-  v_last_request TIMESTAMPTZ;
-  v_cooldown_seconds INT := 60;
-  v_seconds_remaining INT;
-BEGIN
-  SELECT id INTO v_user_id FROM auth.users WHERE email = lower(p_email) LIMIT 1;
-  
-  IF v_user_id IS NULL THEN
-    RETURN 0;
-  END IF;
-  
-  SELECT last_otp_request_at INTO v_last_request 
-  FROM public.login_attempts 
-  WHERE user_id = v_user_id;
-  
-  IF v_last_request IS NULL THEN
-    RETURN 0;
-  END IF;
-  
-  v_seconds_remaining := GREATEST(0, EXTRACT(EPOCH FROM (v_last_request + (v_cooldown_seconds || ' seconds')::INTERVAL - now()))::INT);
-  RETURN v_seconds_remaining;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_otp_request_cooldown_remaining(TEXT) TO anon, authenticated;
+-- get_otp_request_cooldown_remaining removed: use validate_otp_request_cooldown and read seconds_remaining from the returned JSONB
 
 CREATE OR REPLACE FUNCTION public.refresh_otp_expiry(p_email TEXT)
 RETURNS VOID
@@ -435,13 +404,13 @@ CREATE TABLE public.login_attempts (
 CREATE TABLE public.login_attempt_limits (
   id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   ip_address          TEXT        NOT NULL,
-  user_agent          TEXT        NOT NULL,
+  user_agent          TEXT        NOT NULL,  -- stored for diagnostics only; NOT part of the unique key
   failed_attempts     INT         NOT NULL DEFAULT 0,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_attempt_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   window_start_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(ip_address, user_agent)
+  UNIQUE(ip_address)  -- keyed on IP alone; user_agent is trivially rotated
 );
 
 -- =============================================
@@ -653,10 +622,10 @@ CREATE INDEX idx_leaves_employee_status ON public.leaves(employee_id, status);
 CREATE INDEX idx_leave_balances_employee ON public.leave_balances(employee_id);
 
 CREATE INDEX idx_attendance_date ON public.attendance(date);
-CREATE INDEX idx_attendance_employee_date ON public.attendance(employee_id, date DESC);
+-- idx_attendance_employee_date dropped: idx_attendance_employee_date_status (employee_id, date, status) covers the same prefix
 
-CREATE INDEX idx_notifications_user ON public.notifications(user_id);
-CREATE INDEX idx_notifications_read ON public.notifications(is_read);
+-- idx_notifications_user dropped: idx_notifications_realtime (user_id, is_read, created_at DESC) covers the same prefix
+-- idx_notifications_read dropped: (is_read) alone is non-selective; queries always filter by user_id first
 CREATE INDEX idx_notifications_realtime ON public.notifications(user_id, is_read, created_at DESC);
 
 CREATE INDEX idx_activity_logs_user ON public.activity_logs(user_id);
@@ -685,10 +654,10 @@ CREATE INDEX idx_passkeys_user ON public.passkeys(user_id);
 CREATE INDEX idx_passkeys_credential ON public.passkeys(credential_id);
 
 CREATE INDEX idx_login_attempts_otp_expiry      ON public.login_attempts(user_id, otp_expires_at);
-CREATE INDEX idx_login_attempt_limits_ip_ua     ON public.login_attempt_limits(ip_address, user_agent);
+CREATE INDEX idx_login_attempt_limits_ip      ON public.login_attempt_limits(ip_address);
 CREATE INDEX idx_login_attempt_limits_window    ON public.login_attempt_limits(window_start_at);
 
-CREATE INDEX idx_payrolls_employee ON public.payrolls(employee_id);
+-- idx_payrolls_employee dropped: both idx_payrolls_employee_period and idx_payrolls_employee_year_month_status cover the employee_id prefix
 CREATE INDEX idx_payrolls_period ON public.payrolls(period_year, period_month);
 CREATE INDEX idx_payrolls_status ON public.payrolls(status);
 CREATE INDEX idx_payrolls_employee_period ON public.payrolls(employee_id, period_year DESC, period_month DESC);
@@ -709,6 +678,8 @@ CREATE INDEX idx_users_role ON public.users(role);
 CREATE INDEX idx_attendance_employee_date_status 
   ON public.attendance(employee_id, date, status);
 
+CREATE INDEX idx_employee_tasks_employee_id
+  ON public.employee_tasks(employee_id);
 CREATE INDEX idx_employee_tasks_employee_deadline_status 
   ON public.employee_tasks(employee_id, deadline, status);
 
@@ -840,7 +811,9 @@ BEGIN
     RAISE EXCEPTION 'Cannot create user: No employee found with email %. Create employee record first.', NEW.email;
   END IF;
   
-    user_role := COALESCE(NEW.raw_app_meta_data->>'role', NEW.raw_user_meta_data->>'role', 'staff');
+  -- raw_user_meta_data is user-controlled in Supabase and must never be trusted for role assignment.
+  -- Only raw_app_meta_data (server-controlled) is used; default is 'staff'.
+  user_role := COALESCE(NEW.raw_app_meta_data->>'role', 'staff');
   
     INSERT INTO public.users (id, role, employee_id, created_at, updated_at)
   VALUES (NEW.id, user_role, matched_employee_id, now(), now())
@@ -1006,15 +979,17 @@ CREATE POLICY "notifications_select_own" ON public.notifications FOR SELECT TO a
   USING (user_id = (select auth.uid()));
 CREATE POLICY "notifications_update_own" ON public.notifications FOR UPDATE TO authenticated
   USING (user_id = (select auth.uid()));
-CREATE POLICY "notifications_insert_all" ON public.notifications FOR INSERT TO authenticated
-  WITH CHECK ((select get_user_role()) IN ('admin', 'hr') OR user_id = (select auth.uid()));
+-- Staff must not be able to self-insert notifications; all inserts must come from admin/hr or SECURITY DEFINER functions.
+CREATE POLICY "notifications_insert_admin_hr" ON public.notifications FOR INSERT TO authenticated
+  WITH CHECK ((select get_user_role()) IN ('admin', 'hr'));
 CREATE POLICY "notifications_delete_own" ON public.notifications FOR DELETE TO authenticated
   USING (user_id = (select auth.uid()));
 
 CREATE POLICY "activity_logs_select_admin" ON public.activity_logs FOR SELECT TO authenticated
   USING ((select get_user_role()) = 'admin');
-CREATE POLICY "activity_logs_insert_all" ON public.activity_logs FOR INSERT TO authenticated
-  WITH CHECK (user_id = (select auth.uid()) OR (select get_user_role()) = 'admin');
+-- Direct INSERT removed: activity_logs must only be written via SECURITY DEFINER
+-- functions (record_failed_login, check_ip_mac_limits, etc.) to preserve audit integrity.
+-- Granting direct INSERT access would allow staff to inject arbitrary log entries.
 
 CREATE POLICY "user_preferences_select_own" ON public.user_preferences FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
@@ -1039,9 +1014,13 @@ CREATE POLICY "passkeys_insert_own" ON public.passkeys FOR INSERT TO authenticat
 CREATE POLICY "passkeys_update_own" ON public.passkeys FOR UPDATE TO authenticated USING (user_id = (select auth.uid()));
 CREATE POLICY "passkeys_delete_own" ON public.passkeys FOR DELETE TO authenticated USING (user_id = (select auth.uid()));
 
+-- FOR ALL is intentionally split: users must never be able to DELETE their own
+-- login_attempts row, which would wipe failed-attempt history and bypass OTP lockout.
 CREATE POLICY "login_attempts_select_own" ON public.login_attempts FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
-CREATE POLICY "login_attempts_upsert_own" ON public.login_attempts FOR ALL TO authenticated
+CREATE POLICY "login_attempts_insert_own" ON public.login_attempts FOR INSERT TO authenticated
+  WITH CHECK (user_id = (select auth.uid()));
+CREATE POLICY "login_attempts_update_own" ON public.login_attempts FOR UPDATE TO authenticated
   USING (user_id = (select auth.uid())) WITH CHECK (user_id = (select auth.uid()));
 CREATE POLICY "login_attempts_select_admin_hr" ON public.login_attempts FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
@@ -1147,7 +1126,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
-    NEW.days_count := calculate_working_days(NEW.start_date, NEW.end_date);
+  -- Recalculate days_count on every write so it always reflects the actual range.
+  -- generate_series overhead is negligible for typical leave durations (days–weeks).
+  -- If long sabbaticals become frequent, consider caching via a generated column.
+  NEW.days_count := calculate_working_days(NEW.start_date, NEW.end_date);
 
   SELECT COUNT(*),
          STRING_AGG(
@@ -1290,7 +1272,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE OR REPLACE FUNCTION select_employee_of_week(p_week_start DATE DEFAULT date_trunc('week', CURRENT_DATE)::DATE)
+CREATE OR REPLACE FUNCTION select_employee_of_week(
+  p_week_start    DATE    DEFAULT date_trunc('week', CURRENT_DATE)::DATE,
+  p_recalculate   BOOLEAN DEFAULT false
+)
 RETURNS void AS $$
 DECLARE
   p_week_end DATE;
@@ -1300,7 +1285,12 @@ DECLARE
   v_reason TEXT;
 BEGIN
   p_week_end := p_week_start + INTERVAL '6 days';
-  PERFORM calculate_weekly_performance(p_week_start);
+  -- Under normal cron operation calculate_weekly_performance runs at 00:05 Mon before
+  -- this fires at 00:10 Mon, so p_recalculate defaults to false.
+  -- Pass p_recalculate => true when calling manually mid-week to ensure fresh data.
+  IF p_recalculate THEN
+    PERFORM calculate_weekly_performance(p_week_start);
+  END IF;
 
   SELECT ep.employee_id, ep.total_score INTO v_top_employee_id, v_top_score
   FROM public.employee_performance ep
@@ -1374,10 +1364,7 @@ BEGIN
 
   SELECT salary INTO v_base_salary FROM public.employees WHERE id = p_employee_id;
   
-  SELECT COUNT(*) INTO v_working_days
-  FROM generate_series(v_month_start, v_month_end, '1 day'::INTERVAL) AS day
-  WHERE EXTRACT(dow FROM day) NOT IN (0, 6);
-  
+  v_working_days := calculate_working_days(v_month_start, v_month_end);
   v_daily_salary := v_base_salary / NULLIF(v_working_days, 0);
   
     SELECT 
@@ -1398,7 +1385,7 @@ $$ LANGUAGE plpgsql SET search_path = public;
 CREATE OR REPLACE FUNCTION calculate_leave_deductions(p_employee_id UUID, p_month INTEGER, p_year INTEGER)
 RETURNS NUMERIC AS $$
 DECLARE
-  v_unpaid_leave_days INTEGER;
+  v_unpaid_leave_days NUMERIC; -- NUMERIC (not INTEGER) to support proportional proration
   v_base_salary NUMERIC;
   v_working_days INTEGER;
   v_daily_salary NUMERIC;
@@ -1409,31 +1396,64 @@ BEGIN
   v_month_end := (v_month_start + INTERVAL '1 month - 1 day')::DATE;
 
   SELECT salary INTO v_base_salary FROM public.employees WHERE id = p_employee_id;
-  
-  SELECT COUNT(*) INTO v_working_days
-  FROM generate_series(v_month_start, v_month_end, '1 day'::INTERVAL) AS day
-  WHERE EXTRACT(dow FROM day) NOT IN (0, 6);
-  
+
+  v_working_days := calculate_working_days(v_month_start, v_month_end);
   v_daily_salary := v_base_salary / NULLIF(v_working_days, 0);
-  
-    SELECT COALESCE(SUM(
-    CASE 
-      WHEN l.leave_type = 'annual' THEN GREATEST(0, l.days_count - COALESCE(lb.annual_total - lb.annual_used, 0))
-      WHEN l.leave_type = 'sick' THEN GREATEST(0, l.days_count - COALESCE(lb.sick_total - lb.sick_used, 0))
-      WHEN l.leave_type = 'casual' THEN GREATEST(0, l.days_count - COALESCE(lb.casual_total - lb.casual_used, 0))
-      ELSE l.days_count
+
+  -- Compute unpaid leave days using year-to-date totals derived from actual approved
+  -- leave records. This avoids relying on leave_balances.*_used columns, which have
+  -- no update trigger and are typically stale.
+  --
+  -- Strategy: for each leave type, calculate total days taken in the year.
+  -- Any days beyond the annual allowance are "unpaid". Those excess days are then
+  -- prorated proportionally to each month's share of the year's total for that type.
+  -- Sabbatical and other unlisted types are always fully unpaid.
+  --
+  -- Cross-month leaves (e.g. Jan 28 – Feb 3) are handled correctly: the per-row
+  -- numerator uses only the working days that fall within this month
+  -- (calculate_working_days(GREATEST(start, month_start), LEAST(end, month_end)))
+  -- rather than the full days_count, so the leave is never double-counted across
+  -- two payroll periods.
+  WITH year_totals AS (
+    SELECT
+      COALESCE(SUM(CASE WHEN leave_type = 'annual' THEN days_count END), 0) AS annual_taken,
+      COALESCE(SUM(CASE WHEN leave_type = 'sick'   THEN days_count END), 0) AS sick_taken,
+      COALESCE(SUM(CASE WHEN leave_type = 'casual' THEN days_count END), 0) AS casual_taken
+    FROM public.leaves
+    WHERE employee_id = p_employee_id
+      AND status = 'approved'
+      AND EXTRACT(YEAR FROM start_date) = p_year
+  )
+  SELECT COALESCE(SUM(
+    CASE
+      WHEN l.leave_type = 'annual' THEN
+        GREATEST(0, yt.annual_taken - COALESCE(lb.annual_total, 20))
+          * (calculate_working_days(GREATEST(l.start_date, v_month_start), LEAST(l.end_date, v_month_end))::NUMERIC
+             / NULLIF(yt.annual_taken, 0))
+      WHEN l.leave_type = 'sick' THEN
+        GREATEST(0, yt.sick_taken - COALESCE(lb.sick_total, 10))
+          * (calculate_working_days(GREATEST(l.start_date, v_month_start), LEAST(l.end_date, v_month_end))::NUMERIC
+             / NULLIF(yt.sick_taken, 0))
+      WHEN l.leave_type = 'casual' THEN
+        GREATEST(0, yt.casual_taken - COALESCE(lb.casual_total, 10))
+          * (calculate_working_days(GREATEST(l.start_date, v_month_start), LEAST(l.end_date, v_month_end))::NUMERIC
+             / NULLIF(yt.casual_taken, 0))
+      ELSE
+        calculate_working_days(GREATEST(l.start_date, v_month_start), LEAST(l.end_date, v_month_end))
     END
-  ), 0) INTO v_unpaid_leave_days
+  ), 0)
+  INTO v_unpaid_leave_days
   FROM public.leaves l
+  CROSS JOIN year_totals yt
   LEFT JOIN public.leave_balances lb ON lb.employee_id = l.employee_id AND lb.year = p_year
-  WHERE l.employee_id = p_employee_id 
+  WHERE l.employee_id = p_employee_id
     AND l.status = 'approved'
     AND (
-      (l.start_date BETWEEN v_month_start AND v_month_end) 
+      (l.start_date BETWEEN v_month_start AND v_month_end)
       OR (l.end_date BETWEEN v_month_start AND v_month_end)
       OR (l.start_date <= v_month_start AND l.end_date >= v_month_end)
     );
-  
+
   RETURN COALESCE(v_unpaid_leave_days * COALESCE(v_daily_salary, 0), 0);
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
@@ -1667,17 +1687,17 @@ BEGIN
   IF v_new_fails = v_threshold THEN
     v_otp_expires := v_now + (v_otp_minutes || ' minutes')::INTERVAL;
     UPDATE public.login_attempts
-    SET otp_sent_at = v_now, otp_expires_at = v_otp_expires, 
+    SET otp_sent_at = v_now, otp_expires_at = v_otp_expires,
         otp_verification_attempts = 0,
         last_otp_request_at = v_now,
         delay_until = v_delay_until, updated_at = v_now
     WHERE user_id = v_user_id;
   ELSE
+    -- Collapse UPDATE + SELECT into a single statement via RETURNING.
     UPDATE public.login_attempts
     SET delay_until = v_delay_until, updated_at = v_now
-    WHERE user_id = v_user_id;
-    
-    SELECT otp_expires_at INTO v_otp_expires FROM public.login_attempts WHERE user_id = v_user_id;
+    WHERE user_id = v_user_id
+    RETURNING otp_expires_at INTO v_otp_expires;
   END IF;
 
   v_remaining := GREATEST(0, v_threshold - v_new_fails);
@@ -1732,15 +1752,16 @@ BEGIN
 
   INSERT INTO public.login_attempt_limits (ip_address, user_agent, failed_attempts, last_attempt_at, window_start_at)
   VALUES (p_ip_address, p_user_agent, 1, v_now, v_now)
-  ON CONFLICT (ip_address, user_agent) DO UPDATE
+  ON CONFLICT (ip_address) DO UPDATE
     SET failed_attempts = login_attempt_limits.failed_attempts + 1,
+        user_agent      = EXCLUDED.user_agent,  -- update for diagnostics
         last_attempt_at = v_now, updated_at = v_now
     WHERE window_start_at + (v_window_minutes || ' minutes')::INTERVAL > v_now
   RETURNING failed_attempts INTO v_failed;
 
   IF v_failed IS NULL THEN
     SELECT failed_attempts INTO v_failed FROM public.login_attempt_limits
-    WHERE ip_address = p_ip_address AND user_agent = p_user_agent;
+    WHERE ip_address = p_ip_address;
   END IF;
 
   v_failed    := COALESCE(v_failed, 0);
@@ -1750,7 +1771,7 @@ BEGIN
   SELECT window_start_at + (v_window_minutes || ' minutes')::INTERVAL 
   INTO v_window_reset_at
   FROM public.login_attempt_limits
-  WHERE ip_address = p_ip_address AND user_agent = p_user_agent;
+  WHERE ip_address = p_ip_address;
 
   IF NOT v_allowed AND p_email IS NOT NULL THEN
     BEGIN
@@ -1843,7 +1864,6 @@ GRANT EXECUTE ON FUNCTION public.pre_auth_login_check(TEXT)     TO anon, authent
 GRANT EXECUTE ON FUNCTION public.record_failed_login(TEXT)      TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.reset_login_attempts_rpc(UUID) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.validate_otp_request_cooldown(TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.get_otp_request_cooldown_remaining(TEXT) TO anon, authenticated;
 
 -- =============================================
 -- SCHEMA COMPLETE

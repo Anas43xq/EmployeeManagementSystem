@@ -232,7 +232,8 @@ This comprehensive database schema implements a complete Employee Management Sys
 - 1st failure: 0 seconds
 - 2nd failure: 5 seconds
 - 3rd failure: 15 seconds
-- 4th+ failures: 30 seconds + OTP verification
+- 4th attempt: 30 second wait
+- 5th+ attempt: OTP email required to proceed
 
 ---
 
@@ -248,7 +249,7 @@ This comprehensive database schema implements a complete Employee Management Sys
 - `last_attempt_at` (TIMESTAMPTZ): Last attempt time
 - `created_at`, `updated_at` (TIMESTAMPTZ): Timestamps
 
-**Unique Constraint:** (ip_address, user_agent)
+**Unique Constraint:** `ip_address` only — `user_agent` is stored for diagnostics but is not part of the key. Keying on IP alone prevents user-agent rotation from bypassing the rate limit. Note: shared NAT/corporate networks will have their attempt counts pooled.
 
 ---
 
@@ -283,6 +284,17 @@ This comprehensive database schema implements a complete Employee Management Sys
 
 ### `activity_logs` Table
 **Purpose:** Comprehensive audit trail of all user actions.
+
+> **⚠️ DEVELOPER NOTE — No direct INSERT policy by design.**
+> `activity_logs` has no RLS INSERT policy for authenticated users. All writes must go
+> through a `SECURITY DEFINER` function so the action, entity_type, and details fields
+> cannot be spoofed by frontend code. Existing logging functions:
+> - `record_failed_login()` — failed login attempts and OTP triggers
+> - `check_ip_mac_limits()` — IP rate-limit exceeded events
+>
+> If a new feature needs to write audit entries, add a dedicated `SECURITY DEFINER`
+> function in the schema rather than calling `supabase.from('activity_logs').insert(...)`
+> directly from the frontend — that call will silently fail with no INSERT policy.
 
 **Columns:**
 - `id` (UUID PK): Unique identifier
@@ -429,7 +441,7 @@ This comprehensive database schema implements a complete Employee Management Sys
 | Function | Purpose |
 |----------|---------|
 | `calculate_weekly_performance(week_start)` | Calculate performance scores |
-| `select_employee_of_week(week_start)` | Select top performer |
+| `select_employee_of_week(week_start, p_recalculate)` | Select top performer; pass `p_recalculate => true` when calling manually to ensure fresh performance data |
 | `notify_role_users(title, msg, roles, exclude_id)` | Notify specific role users |
 | `get_role_user_emails(roles, exclude_id)` | Get emails of users in roles |
 
@@ -468,6 +480,7 @@ This comprehensive database schema implements a complete Employee Management Sys
 #### `activity_logs` Table
 - Users see their own actions
 - Admins see all logs (audit trail)
+- **No INSERT policy for authenticated users** — all writes must use `SECURITY DEFINER` functions (see table section above)
 
 #### `notifications` Table
 - Users see only their own notifications
@@ -482,7 +495,7 @@ This comprehensive database schema implements a complete Employee Management Sys
 Performance indexes are created on:
 
 - **login_attempts:** user_id, failed_attempts, last_attempt_at
-- **login_attempt_limits:** (ip_address, user_agent), window_start_at
+- **login_attempt_limits:** ip_address only (user_agent stored for diagnostics but not part of the unique key — keying on IP alone prevents user-agent rotation from bypassing the rate limit; note this means shared NAT/corporate networks count attempts collectively)
 - **leaves:** user_id, start_date, end_date
 - **attendance:** user_id, date
 - **payrolls:** user_id, month
@@ -523,7 +536,8 @@ Triggers on all main tables to auto-set `updated_at` on any update:
 
 ### 2. Employee of Week Selection
 **Schedule:** Every Monday at 00:10 UTC  
-**Function:** `select_employee_of_week()`  
+**Function:** `select_employee_of_week(week_start, p_recalculate DEFAULT false)`  
+**Note:** The cron call uses the default (`p_recalculate = false`) since `calculate_weekly_performance` already ran 5 minutes earlier. Pass `true` for manual/ad-hoc calls.
 **Purpose:** Identify and record top performer for the week
 
 ---
@@ -572,10 +586,13 @@ supabase
 1. 1st failed attempt: No delay
 2. 2nd attempt: 5 second wait
 3. 3rd attempt: 15 second wait
-4. 4th+ attempt: 30 second wait + OTP required
+4. 4th attempt: 30 second wait
+5. 5th+ attempt: 30 second wait + OTP email required
 
-### IP/MAC Rate Limiting
-- Maximum 5 failed attempts per IP/User-Agent per 5 minute window
+### IP Rate Limiting
+- Maximum 5 failed attempts **per IP address** per 5 minute window
+- `user_agent` is recorded for diagnostics but is **not** part of the rate-limit key — prevents trivial bypass via user-agent rotation
+- Shared NAT / corporate networks will have attempt counts pooled across all users on that IP
 - Lazy cleanup of expired records
 - Separate from per-user progressive delays
 
@@ -600,10 +617,11 @@ supabase
 
 ✅ Row Level Security (RLS) enforced at database layer  
 ✅ SECURITY DEFINER functions for privilege escalation  
-✅ Progressive login delays prevent brute-force  
-✅ IP/MAC device rate limiting  
+✅ Progressive login delays prevent brute-force (OTP at 5th attempt)  
+✅ IP-based device rate limiting (user-agent rotation resistant)  
+✅ Role assigned from `raw_app_meta_data` only — `raw_user_meta_data` never trusted  
 ✅ WebAuthn passwordless login support  
-✅ Comprehensive activity audit trail  
+✅ Comprehensive activity audit trail (no direct INSERT — SECURITY DEFINER only)  
 ✅ Email sync between auth and public schemas  
 ✅ Automatic session invalidation  
 
@@ -639,14 +657,4 @@ Includes:
 - Demo payroll records
 - Sample announcements
 
----
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 3.5 | Feb 2026 | Progressive delays + IP/MAC rate limiting + session enforcement |
-| 3.0 | Jan 2026 | Complete schema overhaul + performance tracking |
-| 2.0 | Dec 2025 | WebAuthn passkeys + real-time features |
-| 1.0 | Nov 2025 | Initial schema |
 

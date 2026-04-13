@@ -13,7 +13,7 @@
  *   5. resetLoginAttempts        — zero-out (called post-auth)
  *   6. checkIpMacLimits          — validate IP/device combo hasn't hit 5 per 5 min
  *   7. validateOtpRequestCooldown — check if 60 seconds passed since last OTP request
- *   8. getOtpRequestCooldownRemaining — returns seconds until next OTP request allowed
+ *   8. getOtpRequestCooldownRemaining — thin wrapper around validateOtpRequestCooldown returning seconds only
  */
 
 import { supabase } from '../supabase';
@@ -280,20 +280,9 @@ export async function validateOtpRequestCooldown(
 
 /**
  * Get OTP request cooldown remaining seconds.
- * Simplified version that only returns the countdown.
+ * Delegates to validateOtpRequestCooldown and extracts secondsRemaining.
  */
 export async function getOtpRequestCooldownRemaining(email: string): Promise<number> {
-  try {
-    const { data, error } = await rpc.rpc('get_otp_request_cooldown_remaining', {
-      p_email: email,
-    });
-
-    if (error) {
-      return 0;
-    }
-
-    return (data as number) ?? 0;
-  } catch (_err: unknown) {
-    return 0;
-  }
+  const { secondsRemaining } = await validateOtpRequestCooldown(email);
+  return secondsRemaining;
 }
