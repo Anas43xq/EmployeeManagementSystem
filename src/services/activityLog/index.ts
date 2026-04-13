@@ -1,16 +1,11 @@
 /**
  * Activity logging service
- * Priority 1: SOLID - Dependency Inversion (accepts dbClient parameter)
+ * Uses Supabase RPC (log_activity SECURITY DEFINER function)
  * Priority 4: SOLID - Centralized error handling (no silent swallows)
  */
 
-import type { Database } from '../../types/database';
-import type { DatabaseClient } from '../../types/interfaces';
 import { supabase } from '../supabase';
-import { dbClient } from '../shared/dbClient';
 import { logError, extractError } from '../errorHandler';
-
-type ActivityLogInsert = Database['public']['Tables']['activity_logs']['Insert'];
 
 export type ActivityAction =
   | 'user_password_reset'
@@ -98,7 +93,6 @@ function mapActivityLogRecord(record: {
 
 /**
  * Log single activity - internal DI version
- * @param dbClient - Database client (injected for testability)
  * @param userId - User performing the action
  * @param action - Action type
  * @param entityType - Type of entity affected
@@ -106,7 +100,6 @@ function mapActivityLogRecord(record: {
  * @param details - Additional context
  */
 async function logActivityInternal(
-  dbClient: DatabaseClient,
   userId: string,
   action: ActivityAction,
   entityType: EntityType,
@@ -117,21 +110,21 @@ async function logActivityInternal(
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const record: ActivityLogInsert = {
-      user_id: userId,
-      action,
-      entity_type: entityType,
-      entity_id: entityId || null,
-      details: (details ?? null) as ActivityLogInsert['details'],
-    };
-
-    const { error } = await dbClient.insert({
-      table: 'activity_logs',
-      data: record,
+    // Call SECURITY DEFINER RPC function to safely log activity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.rpc as any)('log_activity', {
+      p_user_id: userId,
+      p_action: action,
+      p_entity_type: entityType,
+      p_entity_id: entityId || null,
+      p_details: details ? JSON.stringify(details) : null,
     });
 
     if (error) {
-      logError(error, 'logActivity');
+      logError({
+        message: error.message || 'logActivity error',
+        details: typeof error.details === 'string' ? { raw: error.details } : (error.details as Record<string, unknown>),
+      }, 'logActivity');
     }
   } catch (err) {
     logError(extractError(err), 'logActivity');
@@ -140,7 +133,6 @@ async function logActivityInternal(
 
 /**
  * Log single activity - PUBLIC API (backward compatible)
- * Uses global dbClient instance
  */
 export async function logActivity(
   userId: string,
@@ -149,7 +141,7 @@ export async function logActivity(
   entityId?: string | null,
   details?: Record<string, unknown>,
 ): Promise<void> {
-  return logActivityInternal(dbClient, userId, action, entityType, entityId, details);
+  return logActivityInternal(userId, action, entityType, entityId, details);
 }
 
 export async function getRecentActivityLogs(limit = 200): Promise<ActivityLogRecord[]> {
@@ -165,11 +157,9 @@ export async function getRecentActivityLogs(limit = 200): Promise<ActivityLogRec
 
 /**
  * Log multiple activities in batch - internal DI version
- * @param dbClient - Database client (injected for testability)
  * @param activities - Array of activity records
  */
 async function logActivitiesInternal(
-  dbClient: DatabaseClient,
   activities: Array<{
     userId: string;
     action: ActivityAction;
@@ -179,22 +169,23 @@ async function logActivitiesInternal(
   }>,
 ): Promise<void> {
   try {
-    const records: ActivityLogInsert[] = activities.map((a) => ({
-      user_id: a.userId,
-      action: a.action,
-      entity_type: a.entityType,
-      entity_id: a.entityId || null,
-      details: (a.details ?? null) as ActivityLogInsert['details'],
-    }));
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
-    const { error } = await dbClient.insert({
-      table: 'activity_logs',
-      data: records,
-    });
-
-    if (error) {
-      logError(error, 'logActivities');
-    }
+    // Call log_activity RPC for each activity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rpc = supabase.rpc as any;
+    await Promise.all(
+      activities.map((a) =>
+        rpc('log_activity', {
+          p_user_id: a.userId,
+          p_action: a.action,
+          p_entity_type: a.entityType,
+          p_entity_id: a.entityId || null,
+          p_details: a.details ? JSON.stringify(a.details) : null,
+        }),
+      ),
+    );
   } catch (err) {
     logError(extractError(err), 'logActivities');
   }
@@ -202,7 +193,7 @@ async function logActivitiesInternal(
 
 /**
  * Log multiple activities in batch - PUBLIC API (backward compatible)
- * Uses global dbClient instance
+ * Uses Supabase RPC
  */
 export async function logActivities(
   activities: Array<{
@@ -213,26 +204,23 @@ export async function logActivities(
     details?: Record<string, unknown>;
   }>,
 ): Promise<void> {
-  return logActivitiesInternal(dbClient, activities);
+  return logActivitiesInternal(activities);
 }
 
 /**
- * DI versions for testing/advanced usage
- * Allow injecting custom dbClient
+ * Public API versions for use throughout the app
  */
 export async function logActivityWithDI(
-  dbClient: DatabaseClient,
   userId: string,
   action: ActivityAction,
   entityType: EntityType,
   entityId?: string | null,
   details?: Record<string, unknown>,
 ): Promise<void> {
-  return logActivityInternal(dbClient, userId, action, entityType, entityId, details);
+  return logActivityInternal(userId, action, entityType, entityId, details);
 }
 
 export async function logActivitiesWithDI(
-  dbClient: DatabaseClient,
   activities: Array<{
     userId: string;
     action: ActivityAction;
@@ -241,5 +229,5 @@ export async function logActivitiesWithDI(
     details?: Record<string, unknown>;
   }>,
 ): Promise<void> {
-  return logActivitiesInternal(dbClient, activities);
+  return logActivitiesInternal(activities);
 }

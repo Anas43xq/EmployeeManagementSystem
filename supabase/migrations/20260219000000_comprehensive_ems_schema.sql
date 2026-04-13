@@ -917,6 +917,25 @@ GRANT EXECUTE ON FUNCTION public.get_user_employee_id() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_user_email() TO authenticated;
 
 -- =============================================
+-- ACTIVITY LOGGING RPC FUNCTION (SECURITY DEFINER)
+-- =============================================
+CREATE OR REPLACE FUNCTION public.log_activity(
+  p_user_id UUID,
+  p_action TEXT,
+  p_entity_type TEXT,
+  p_entity_id UUID DEFAULT NULL,
+  p_details JSONB DEFAULT NULL
+)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth AS $$
+BEGIN
+  INSERT INTO public.activity_logs (user_id, action, entity_type, entity_id, details)
+  VALUES (p_user_id, p_action, p_entity_type, p_entity_id, p_details);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.log_activity(UUID, TEXT, TEXT, UUID, JSONB) TO authenticated;
+
+-- =============================================
 -- RLS POLICIES
 -- =============================================
 
@@ -987,9 +1006,7 @@ CREATE POLICY "notifications_delete_own" ON public.notifications FOR DELETE TO a
 
 CREATE POLICY "activity_logs_select_admin" ON public.activity_logs FOR SELECT TO authenticated
   USING ((select get_user_role()) = 'admin');
--- Direct INSERT removed: activity_logs must only be written via SECURITY DEFINER
--- functions (record_failed_login, check_ip_mac_limits, etc.) to preserve audit integrity.
--- Granting direct INSERT access would allow staff to inject arbitrary log entries.
+-- Direct INSERT via policy removed: all inserts must go through log_activity() SECURITY DEFINER function
 
 CREATE POLICY "user_preferences_select_own" ON public.user_preferences FOR SELECT TO authenticated
   USING (user_id = (select auth.uid()));
