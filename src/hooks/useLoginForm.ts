@@ -1,8 +1,4 @@
-/**
- * useLoginForm hook
- * Priority 3: SOLID - Extract Login.tsx complexity
- * Encapsulates login form state and error handling
- */
+
 
 import { useState } from 'react';
 
@@ -28,10 +24,6 @@ export interface LoginFormActions {
   reset: () => void;
 }
 
-/**
- * Manages all form-related state for Login component
- * Separates form state concerns from auth/routing logic
- */
 export function useLoginForm(): LoginFormState & LoginFormActions {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
