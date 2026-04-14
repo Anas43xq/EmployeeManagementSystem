@@ -249,3 +249,51 @@ export async function getFreshAccessToken(): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Update the last_activity_at timestamp for a user in the database.
+ * Call this on successful login to establish the activity baseline.
+ * Note: In production, this should also be called on real API calls (not page loads).
+ */
+export async function updateServerActivityTimestamp(userId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ last_activity_at: new Date().toISOString() })
+      .eq('id', userId);
+    
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate if a user's session is still active based on server-side last_activity_at.
+ * If last_activity_at > 8 hours ago, the session is considered expired.
+ * Returns true if session is valid, false if expired.
+ */
+export async function validateSessionActivity(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('last_activity_at')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data || !data.last_activity_at) {
+      // If no last_activity_at, consider session valid (new account)
+      return true;
+    }
+    
+    const lastActivity = new Date(data.last_activity_at).getTime();
+    const now = Date.now();
+    const inactiveMinutes = (now - lastActivity) / 60000;
+    
+    // 8 hours = 480 minutes
+    const isValid = inactiveMinutes <= 480;
+    return isValid;
+  } catch {
+    return false;
+  }
+}

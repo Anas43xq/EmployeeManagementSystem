@@ -1106,6 +1106,7 @@ export type Database = {
           employee_id: string
           id: string
           is_active: boolean
+          last_activity_at: string | null
           role: string
           updated_at: string | null
         }
@@ -1116,6 +1117,7 @@ export type Database = {
           employee_id: string
           id: string
           is_active?: boolean
+          last_activity_at?: string | null
           role?: string
           updated_at?: string | null
         }
@@ -1126,6 +1128,7 @@ export type Database = {
           employee_id?: string
           id?: string
           is_active?: boolean
+          last_activity_at?: string | null
           role?: string
           updated_at?: string | null
         }

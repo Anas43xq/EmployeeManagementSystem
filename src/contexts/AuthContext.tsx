@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth } from '../services/session/sessionManager';
+import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp } from '../services/session/sessionManager';
 import { getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session/loginAttempts';
 import { clearAllCache } from '../services/shared/cacheManager';
 import { isRefreshTokenError, isAuthTransientError } from '../services/auth/authHelpers';
@@ -103,6 +103,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (mounted) { setUser(null); setLoading(false); }
           return;
         }
+        
+        // Validate session activity: if user was inactive > 8 hours, invalidate session
+        const isSessionValid = await validateSessionActivity(session.user.id);
+        if (!isSessionValid) {
+          await clearAuthState();
+          await supabase.auth.signOut();
+          if (mounted) { setUser(null); setLoading(false); }
+          return;
+        }
+        
         const userData = await loadUserData(session.user);
         if (mounted && userData) setUser(userData);
       } catch (_error) {
@@ -220,6 +230,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
       await supabase.rpc('set_own_session_token', { p_token: sessionToken });
+      // Update server-side activity timestamp on successful login
+      await updateServerActivityTimestamp(data.user.id).catch(() => {});
       logActivity(data.user.id, 'user_login', 'user', data.user.id, { email: data.user.email });
     }
   };
