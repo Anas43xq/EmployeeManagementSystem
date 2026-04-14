@@ -321,5 +321,7 @@ export function subscribeToUserNotifications(
     )
     .subscribe();
 
-  return () => supabase.removeChannel(channel);
+  return () => {
+    void channel.unsubscribe();
+  };
 }
