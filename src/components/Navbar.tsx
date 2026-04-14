@@ -10,7 +10,7 @@ import {
   Briefcase, Globe, Star,
   LayoutDashboard, Users, Building2, Clock, Calendar,
   ListTodo, AlertTriangle, MessageSquare, Calculator,
-  Receipt, Megaphone, FileText, UserCog, Settings, Activity, User,
+  Receipt, Megaphone, FileText, UserCog, Settings, Activity, User, HelpCircle,
 } from 'lucide-react';
 
 function useNavCategories(): NavCategory[] {
@@ -51,6 +51,7 @@ function useNavCategories(): NavCategory[] {
         { name: t('nav.complaints'), href: '/complaints', icon: MessageSquare },
         { name: t('nav.warnings'), href: '/warnings', icon: AlertTriangle },
         { name: t('nav.reports'), href: '/reports', icon: FileText },
+        { name: t('nav.faq', 'FAQ'), href: '/faq', icon: HelpCircle },
       ],
     },
     {
@@ -59,6 +60,7 @@ function useNavCategories(): NavCategory[] {
       items: [
         { name: t('nav.userManagement'), href: '/users', icon: UserCog },
         { name: t('nav.activityLogs', 'Activity Logs'), href: '/activity-logs', icon: Activity },
+        { name: t('nav.faqManagement', 'FAQ Management'), href: '/settings/faq-management', icon: HelpCircle },
         { name: t('nav.settings'), href: '/settings', icon: Settings },
       ],
     },

@@ -30,6 +30,8 @@ const PayrollDashboard = lazy(() => import('./pages/PayrollDashboard'));
 const PayslipView = lazy(() => import('./pages/PayslipView'));
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
 const Deactivated = lazy(() => import('./pages/Deactivated'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const FAQManagement = lazy(() => import('./pages/Settings/FAQManagement'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function PageLoader() {
@@ -73,10 +75,12 @@ function App() {
                 <Route path="payroll" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayrollDashboard /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="payslips" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><PayslipView /></Suspense></RouteErrorBoundary>} />
                 <Route path="announcements" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Announcements /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="faq" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><FAQ /></Suspense></RouteErrorBoundary>} />
                 <Route path="reports" element={<ProtectedRoute roles={['admin', 'hr']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><Reports /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="users" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><UserManagement /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="activity-logs" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><ActivityLogs /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="settings" element={<RouteErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></RouteErrorBoundary>} />
+                <Route path="settings/faq-management" element={<ProtectedRoute roles={['admin']}><RouteErrorBoundary><Suspense fallback={<PageLoader />}><FAQManagement /></Suspense></RouteErrorBoundary></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
             </Routes>

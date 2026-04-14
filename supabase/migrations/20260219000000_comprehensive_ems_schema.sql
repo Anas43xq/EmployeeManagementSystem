@@ -869,6 +869,7 @@ ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.passkeys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.login_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.login_attempt_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payrolls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bonuses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deductions ENABLE ROW LEVEL SECURITY;
@@ -1041,6 +1042,17 @@ CREATE POLICY "login_attempts_update_own" ON public.login_attempts FOR UPDATE TO
   USING (user_id = (select auth.uid())) WITH CHECK (user_id = (select auth.uid()));
 CREATE POLICY "login_attempts_select_admin_hr" ON public.login_attempts FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr'));
+
+-- login_attempt_limits table: System-level IP tracking, managed only by SECURITY DEFINER functions
+-- No direct access by authenticated users
+CREATE POLICY "login_attempt_limits_deny_all" ON public.login_attempt_limits FOR SELECT TO authenticated
+  USING (FALSE);
+CREATE POLICY "login_attempt_limits_deny_insert" ON public.login_attempt_limits FOR INSERT TO authenticated
+  WITH CHECK (FALSE);
+CREATE POLICY "login_attempt_limits_deny_update" ON public.login_attempt_limits FOR UPDATE TO authenticated
+  USING (FALSE) WITH CHECK (FALSE);
+CREATE POLICY "login_attempt_limits_deny_delete" ON public.login_attempt_limits FOR DELETE TO authenticated
+  USING (FALSE);
 
 CREATE POLICY "payrolls_select_policy" ON public.payrolls FOR SELECT TO authenticated
   USING ((select get_user_role()) IN ('admin', 'hr') OR employee_id = (select get_user_employee_id()));

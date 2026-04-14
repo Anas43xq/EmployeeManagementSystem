@@ -733,6 +733,63 @@ export type Database = {
           },
         ]
       }
+      faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          created_by: string
+          faq_order: number
+          id: string
+          is_active: boolean
+          question: string
+          updated_at: string
+          updated_by: string | null
+          visible_to: string[]
+        }
+        Insert: {
+          answer: string
+          category: string
+          created_at?: string
+          created_by: string
+          faq_order?: number
+          id?: string
+          is_active?: boolean
+          question: string
+          updated_at?: string
+          updated_by?: string | null
+          visible_to?: string[]
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          faq_order?: number
+          id?: string
+          is_active?: boolean
+          question?: string
+          updated_at?: string
+          updated_by?: string | null
+          visible_to?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faqs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_balances: {
         Row: {
           annual_total: number | null

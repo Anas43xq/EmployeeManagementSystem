@@ -1,0 +1,243 @@
+/**
+ * pages/Settings/FAQManagement/FAQForm.tsx
+ * Form component for creating and editing FAQs
+ */
+
+import { useState } from 'react';
+import { ChevronDown, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { type FAQ, type CreateFAQInput } from '../../../services/faq';
+
+const CATEGORIES = [
+  'Account & Access',
+  'Leave & Attendance',
+  'Payroll & Benefits',
+  'Technical Support',
+  'Policies & Guidelines',
+  'Performance & Evaluation',
+  'General',
+];
+
+const ROLES = ['admin', 'hr', 'manager', 'staff'];
+
+interface FAQFormProps {
+  faq?: FAQ | null;
+  onSubmit: (input: CreateFAQInput) => Promise<void>;
+  onCancel: () => void;
+}
+
+export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
+  const { t } = useTranslation();
+  const [formData, setFormData] = useState<CreateFAQInput>({
+    question: faq?.question || '',
+    answer: faq?.answer || '',
+    category: faq?.category || 'General',
+    visible_to: faq?.visible_to || ['staff', 'manager', 'hr', 'admin'],
+    faq_order: faq?.faq_order || 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedRoles, setExpandedRoles] = useState(false);
+
+  const handleChange = (field: keyof CreateFAQInput, value: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const toggleRole = (role: string) => {
+    setFormData(prev => ({
+      ...prev,
+      visible_to: prev.visible_to.includes(role)
+        ? prev.visible_to.filter(r => r !== role)
+        : [...prev.visible_to, role],
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!formData.question.trim()) {
+      setError(t('question_required') || 'Question is required');
+      return;
+    }
+    if (!formData.answer.trim()) {
+      setError(t('answer_required') || 'Answer is required');
+      return;
+    }
+    if (formData.visible_to.length === 0) {
+      setError(t('select_at_least_one_role') || 'Select at least one role');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      await onSubmit(formData);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'An error occurred';
+      setError(msg);
+      console.error('Form submission error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          {faq ? (t('edit_faq') || 'Edit FAQ') : (t('create_faq') || 'Create FAQ')}
+        </h1>
+        <button
+          onClick={onCancel}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <X className="h-6 w-6 text-gray-500" />
+        </button>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 space-y-6">
+        {/* Error Alert */}
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-300">
+            {error}
+          </div>
+        )}
+
+        {/* Question Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            {t('question') || 'Question'} *
+          </label>
+          <input
+            type="text"
+            value={formData.question}
+            onChange={(e) => handleChange('question', e.target.value)}
+            placeholder={t('enter_question') || 'Enter FAQ question...'}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+            disabled={loading}
+          />
+        </div>
+
+        {/* Answer Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            {t('answer') || 'Answer'} *
+          </label>
+          <textarea
+            value={formData.answer}
+            onChange={(e) => handleChange('answer', e.target.value)}
+            placeholder={t('enter_answer') || 'Enter detailed answer...'}
+            rows={8}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            disabled={loading}
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {t('supports_line_breaks') || 'Line breaks are preserved'}
+          </p>
+        </div>
+
+        {/* Category Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            {t('category') || 'Category'} *
+          </label>
+          <select
+            value={formData.category}
+            onChange={(e) => handleChange('category', e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            disabled={loading}
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Order Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            {t('display_order') || 'Display Order'}
+          </label>
+          <input
+            type="number"
+            value={formData.faq_order || 0}
+            onChange={(e) => handleChange('faq_order', parseInt(e.target.value) || 0)}
+            min="0"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            disabled={loading}
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {t('lower_order_appears_first') || 'Lower order appears first'}
+          </p>
+        </div>
+
+        {/* Visible To (Roles) */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            {t('visible_to_roles') || 'Visible To Roles'} *
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setExpandedRoles(!expandedRoles)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <span>
+                {formData.visible_to.length === 0
+                  ? t('select_roles') || 'Select roles...'
+                  : `${formData.visible_to.length} role(s) selected`}
+              </span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${expandedRoles ? 'rotate-180' : ''}`} />
+            </button>
+
+            {expandedRoles && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10">
+                {ROLES.map(role => (
+                  <label
+                    key={role}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-0"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.visible_to.includes(role)}
+                      onChange={() => toggleRole(role)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      disabled={loading}
+                    />
+                    <span className="text-gray-900 dark:text-white font-medium capitalize">{role}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            {t('cancel') || 'Cancel'}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading && <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+            {faq ? (t('update_faq') || 'Update FAQ') : (t('create_faq') || 'Create FAQ')}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
