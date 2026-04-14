@@ -12,7 +12,7 @@ export function useAsync<T>(fn: () => Promise<T>) {
       .then(setData)
       .catch(err => setError(getErrorMessage(err)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [fn]);
 
   return { data, loading, error };
 }

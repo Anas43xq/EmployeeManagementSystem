@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDashboardData } from '../../services/dashboard';
 import { useAsync } from '../../hooks/useAsync';
@@ -16,11 +17,14 @@ const DEFAULT_STATS: Stats = {
 export function useDashboard() {
   const { user } = useAuth();
 
-  const { data, loading } = useAsync(
+  const fetchData = useCallback(
     () => user?.role
       ? getDashboardData(user.role, user.employeeId)
-      : Promise.resolve(null)
+      : Promise.resolve(null),
+    [user?.role, user?.employeeId]
   );
+
+  const { data, loading } = useAsync(fetchData);
 
   const stats: Stats = data?.stats ?? DEFAULT_STATS;
   const recentActivities: RecentActivity[] = data?.recentActivities ?? [];

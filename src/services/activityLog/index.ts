@@ -7,6 +7,18 @@
 import { supabase } from '../supabase';
 import { logError, extractError } from '../errorHandler';
 
+/**
+ * Check if error is a "function not found" error (e.g., log_activity RPC doesn't exist)
+ * Returns true if we should skip logging (function not available in this environment)
+ */
+function isFunctionNotFoundError(err: unknown): boolean {
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase();
+    return msg.includes('could not find the function') || msg.includes('function is not found');
+  }
+  return false;
+}
+
 export type ActivityAction =
   | 'user_password_reset'
   | 'user_access_granted'
@@ -121,12 +133,20 @@ async function logActivityInternal(
     });
 
     if (error) {
+      // Skip logging if RPC function doesn't exist in this environment
+      if (isFunctionNotFoundError(error)) {
+        return;
+      }
       logError({
         message: error.message || 'logActivity error',
         details: typeof error.details === 'string' ? { raw: error.details } : (error.details as Record<string, unknown>),
       }, 'logActivity');
     }
   } catch (err) {
+    // Skip logging if RPC function doesn't exist in this environment
+    if (isFunctionNotFoundError(err)) {
+      return;
+    }
     logError(extractError(err), 'logActivity');
   }
 }
@@ -187,6 +207,10 @@ async function logActivitiesInternal(
       ),
     );
   } catch (err) {
+    // Skip logging if RPC function doesn't exist in this environment
+    if (isFunctionNotFoundError(err)) {
+      return;
+    }
     logError(extractError(err), 'logActivities');
   }
 }
