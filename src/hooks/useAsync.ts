@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getErrorMessage } from '../services/errorHandler';
 
 /** Generic async data fetcher with loading and error state. */
@@ -7,12 +7,19 @@ export function useAsync<T>(fn: () => Promise<T>) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fnRef = useRef(fn);
+  fnRef.current = fn;
+
   useEffect(() => {
-    fn()
-      .then(setData)
-      .catch(err => setError(getErrorMessage(err)))
-      .finally(() => setLoading(false));
-  }, [fn]);
+    let cancelled = false;
+
+    fnRef.current()
+      .then(result => { if (!cancelled) setData(result); })
+      .catch(err => { if (!cancelled) setError(getErrorMessage(err)); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, []);
 
   return { data, loading, error };
 }
