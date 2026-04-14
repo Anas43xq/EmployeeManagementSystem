@@ -649,6 +649,145 @@ END $$;
 -- Automatically calculated based on attendance, tasks, and warnings
 -- ============================================================================
 
+-- ============================================================================
+-- FAQs - Comprehensive help center for all users
+-- ============================================================================
+DO $$
+DECLARE
+  v_admin_id UUID;
+BEGIN
+  SELECT u.id INTO v_admin_id FROM public.users u WHERE u.role = 'admin' LIMIT 1;
+
+  IF v_admin_id IS NOT NULL THEN
+    INSERT INTO public.faqs (question, answer, category, visible_to, faq_order, created_by) VALUES
+    -- General FAQs (all roles)
+    (
+      'What is the Employee Management System?',
+      'The Employee Management System (EMS) is a comprehensive platform for managing employee data, leave requests, attendance tracking, performance management, and more. It helps streamline HR operations and enables employees to manage their work-related information.',
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      1,
+      v_admin_id
+    ),
+    (
+      'How do I reset my password?',
+      'You can reset your password by clicking the "Forgot Password" link on the login page. Enter your email address and follow the instructions sent to your email to set a new password. The reset link expires after 24 hours.',
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      2,
+      v_admin_id
+    ),
+    (
+      'How do I update my profile information?',
+      'Navigate to **Settings** → **Profile** to view and edit your personal information. You can update your name, contact details, and profile photo. Click "Save" to confirm changes.',
+      'settings',
+      ARRAY['staff', 'hr', 'admin'],
+      1,
+      v_admin_id
+    ),
+    (
+      'Where can I see my notifications?',
+      'Notifications appear in the **Notification Center** (bell icon in the top navigation). You can view, mark as read, or delete notifications. Enable notifications in your browser for push alerts.',
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      3,
+      v_admin_id
+    ),
+    -- Leave Management FAQs (staff, hr, admin)
+    (
+      'How do I apply for leave?',
+      'To apply for leave:\n1. Go to **Leaves** from the sidebar\n2. Click **Apply Leave**\n3. Select leave type (sick, casual, annual, etc.)\n4. Choose start and end dates\n5. Add any comments (optional)\n6. Click **Submit**\n\nYour manager will review and approve/reject within 2-3 business days.',
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      1,
+      v_admin_id
+    ),
+    (
+      'Can I cancel a leave request after applying?',
+      'Yes, you can cancel a pending leave request. Go to **Leaves**, find your request with **Pending** status, and click **Cancel**. Note: You cannot cancel approved or rejected requests.',
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      2,
+      v_admin_id
+    ),
+    (
+      'What is the leave approval process?',
+      'Leave requests go through these statuses:\n- **Pending**: Waiting for manager review\n- **Approved**: Manager approved, leave confirmed\n- **Rejected**: Manager denied the request\n\nStaff typically hear back within 2-3 business days. HR and Managers can expedite approvals.',
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      3,
+      v_admin_id
+    ),
+    (
+      'How many leave days do I have?',
+      'Check your leave balance in the **Leave Balance** section on **Leaves** page. It shows:\n- Annual leave balance\n- Sick leave balance\n- Other leave types\n\nYour balance resets on January 1st each year.',
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      4,
+      v_admin_id
+    ),
+    -- Attendance FAQs (staff, hr, admin)
+    (
+      'How do I mark my attendance?',
+      'You can mark attendance in two ways:\n1. **Quick Mark**: Click **Mark Attendance** on Dashboard\n2. **Attendance Page**: Go to **Attendance** → **Mark Now**\n\nAttendance must be marked between 8:00 AM and 11:59 PM. Early/late markers are tracked.',
+      'attendance',
+      ARRAY['staff', 'hr', 'admin'],
+      1,
+      v_admin_id
+    ),
+    (
+      'What if I forget to mark attendance?',
+      'If you forget to mark attendance:\n1. Go to **Attendance** → **Request Correction**\n2. Select the date and provide a reason\n3. Submit for manager review\n\nManagers can approve corrections within 48 hours. Repeated missed marks may affect your record.',
+      'attendance',
+      ARRAY['staff', 'hr', 'admin'],
+      2,
+      v_admin_id
+    ),
+    -- Employee Management FAQs (hr, admin only)
+    (
+      'How do I add a new employee?',
+      'To add a new employee (HR/Admin only):\n1. Go to **Employees** → **Add Employee**\n2. Fill in employee details (name, email, position, department, etc.)\n3. Set user role (staff, hr, admin)\n4. Click **Create**\n\nThe employee will receive an invitation email to set up their account.',
+      'employees',
+      ARRAY['hr', 'admin'],
+      1,
+      v_admin_id
+    ),
+    (
+      'How do I edit employee information?',
+      'To edit employee details:\n1. Go to **Employees**\n2. Find the employee and click their name\n3. Click **Edit** button\n4. Update information as needed\n5. Click **Save**\n\nChanges are logged for audit purposes.',
+      'employees',
+      ARRAY['hr', 'admin'],
+      2,
+      v_admin_id
+    ),
+    (
+      'Can I deactivate an employee without deleting them?',
+      'Yes, you should **deactivate** rather than delete employees:\n1. Go to **Employees** → find employee\n2. Click **Deactivate**\n3. Deactivated employees cannot log in but their records remain (audit trail)\n4. To reactivate: Click **Activate** on deactivated employee profile',
+      'employees',
+      ARRAY['hr', 'admin'],
+      3,
+      v_admin_id
+    ),
+    -- Admin-only FAQs
+    (
+      'How do I manage FAQs?',
+      'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).',
+      'settings',
+      ARRAY['admin'],
+      2,
+      v_admin_id
+    ),
+    (
+      'How do I manage user roles and permissions?',
+      'User role management is in **Settings** → **User Management** (admin only):\n- **Staff**: Regular employees with basic access\n- **HR**: Can manage employees, approve leaves, view reports\n- **Admin**: Full access to all features and settings\n\nAssign roles when creating employees or edit existing user roles in User Management.',
+      'employees',
+      ARRAY['admin'],
+      4,
+      v_admin_id
+    );
+  END IF;
+END $$;
+
 -- Calculate weekly performance and select Employee of the Week automatically
 DO $$
 DECLARE
