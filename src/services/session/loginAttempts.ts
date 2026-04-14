@@ -235,7 +235,10 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
     const macProxy = await getMacProxy();
 
     // Skip RPC if IP or user-agent detection failed (prevents 400 errors from invalid parameters)
-    if (macProxy.ipAddress === 'unknown' || macProxy.userAgent === 'unknown') {
+    const isInvalid = (val: string | null | undefined) =>
+      !val || val === 'unknown' || (typeof val === 'string' && val.trim() === '');
+
+    if (isInvalid(macProxy.ipAddress) || isInvalid(macProxy.userAgent)) {
       console.debug('[IP/MAC Rate Limit] Skipping check - IP/UA detection unavailable');
       return parseIpMacLimitResult(null);
     }

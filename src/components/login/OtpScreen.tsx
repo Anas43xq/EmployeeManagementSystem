@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useOtp } from '../../hooks/useAuthHooks';
+import { handleError } from '../../services/errorHandler';
 import { Mail, Clock } from 'lucide-react';
 
 interface OtpScreenProps {
@@ -47,13 +48,29 @@ export default function OtpScreen({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (await verify(code)) {
+    const success = await verify(code);
+    if (!success && error) {
+      // Route error through registry
+      await handleError(error, {
+        form: { setError: () => {} },
+        t,
+        showNotification,
+      });
+    } else if (success) {
       showNotification('success', t('auth.otpVerifiedSuccess'));
     }
   };
 
   const handleResend = async () => {
-    if (await resend()) {
+    const success = await resend();
+    if (!success && error) {
+      // Route error through registry
+      await handleError(error, {
+        form: { setError: () => {} },
+        t,
+        showNotification,
+      });
+    } else if (success) {
       showNotification('success', t('auth.newOtpSent'));
     }
   };

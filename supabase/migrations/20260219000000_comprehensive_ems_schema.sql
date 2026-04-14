@@ -819,10 +819,19 @@ BEGIN
   INSERT INTO public.login_attempt_limits (ip_address, user_agent, failed_attempts, last_attempt_at, window_start_at)
   VALUES (p_ip_address, p_user_agent, 1, v_now, v_now)
   ON CONFLICT (ip_address) DO UPDATE
-    SET failed_attempts = login_attempt_limits.failed_attempts + 1,
+    SET failed_attempts = CASE
+        WHEN login_attempt_limits.window_start_at + (v_window_minutes || ' minutes')::INTERVAL > v_now
+        THEN login_attempt_limits.failed_attempts + 1
+        ELSE 1
+      END,
         user_agent      = EXCLUDED.user_agent,
-        last_attempt_at = v_now, updated_at = v_now
-    WHERE window_start_at + (v_window_minutes || ' minutes')::INTERVAL > v_now
+        last_attempt_at = v_now,
+        window_start_at = CASE
+        WHEN login_attempt_limits.window_start_at + (v_window_minutes || ' minutes')::INTERVAL > v_now
+        THEN login_attempt_limits.window_start_at
+        ELSE v_now
+      END,
+        updated_at      = v_now
   RETURNING failed_attempts INTO v_failed;
 
   IF v_failed IS NULL THEN

@@ -47,7 +47,7 @@ export function useOtp({
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [showCooldown, setShowCooldown] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Main countdown timer
   useEffect(() => {

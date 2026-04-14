@@ -664,7 +664,7 @@ BEGIN
     -- General FAQs (all roles)
     (
       'What is the Employee Management System?',
-      'The Employee Management System (EMS) is a comprehensive platform for managing employee data, leave requests, attendance tracking, performance management, and more. It helps streamline HR operations and enables employees to manage their work-related information.',
+      'The Employee Management System (EMS) is a  platform for managing employee data, leave requests, attendance tracking, performance management, and more. It helps streamline HR operations and enables employees to manage their work-related information.',
       'general',
       ARRAY['staff', 'hr', 'admin'],
       1,

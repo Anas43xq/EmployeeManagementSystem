@@ -19,7 +19,7 @@ export interface CountdownState {
  */
 export function useProgressiveCountdown(): CountdownState {
   const [countdown, setCountdown] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (countdown > 0) {

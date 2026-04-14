@@ -120,3 +120,9 @@ export function isAuthError(error: AppError | unknown): boolean {
     message.includes('not authenticated')
   );
 }
+
+/**
+ * Re-export new registry-based error handling system
+ * Pattern: Initialize once at app startup, then use handleError() throughout
+ */
+export { initializeErrorHandlers, handleError, errorRegistry } from './errorHandler';

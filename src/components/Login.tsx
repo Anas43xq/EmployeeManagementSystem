@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { extractError, getErrorMessage, logError } from '../services/errorHandler';
+import { extractError, getErrorMessage, logError, handleError } from '../services/errorHandler';
 import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session/loginAttempts';
 import { isWebAuthnSupported, authenticateWithPasskey } from '../services/passkeys';
 import { sendPasswordResetEmail } from '../services/auth';
@@ -113,38 +113,15 @@ export default function Login() {
     } catch (err: Error | unknown) {
       logError(extractError(err), 'Login.handleSubmit');
       const errorMessage = getErrorMessage(err, '');
-
-      // Handle specific error scenarios
-      if (errorMessage === 'EMAIL_NOT_FOUND') {
-        form.setError(t('auth.emailNotFound'));
-        showNotification('error', t('auth.emailNotFound'));
-      } else if (errorMessage === 'REQUIRES_OTP_NEW') {
-        // New OTP needed — trigger flow
-        const { success, error } = await otp.triggerOtpFlow(form.email);
-        if (!success && error) {
-          form.setError(error);
-        } else {
-          setScreen('otp');
-        }
-      } else if (errorMessage === 'REQUIRES_OTP_ACTIVE') {
-        // OTP already sent
-        otp.setOtpEmail(form.email);
-        setScreen('otp');
-      } else if (errorMessage.startsWith('ATTEMPTS_REMAINING:')) {
-        const remaining = parseInt(errorMessage.split(':')[1], 10) || 0;
-        form.setWarnMessage(t('auth.attemptsRemaining', { attempts: remaining }));
-        form.setError(t('auth.invalidCredentials'));
-        showNotification('error', t('auth.invalidCredentials'));
-      } else if (errorMessage.toLowerCase().includes('banned') || errorMessage.toLowerCase().includes('user is banned')) {
-        form.setError(t('auth.accountBanned'));
-        showNotification('error', t('auth.accountBanned'));
-      } else if (errorMessage.toLowerCase().includes('email not confirmed')) {
-        form.setError(t('auth.emailNotConfirmed'));
-        showNotification('error', t('auth.emailNotConfirmed'));
-      } else {
-        form.setError(t('auth.invalidCredentials'));
-        showNotification('error', t('auth.invalidCredentials'));
-      }
+      await handleError(errorMessage, {
+        form,
+        t,
+        showNotification,
+        otp,
+        email: form.email,
+        setScreen,
+        navigate,
+      });
     } finally {
       form.setLoading(false);
     }

@@ -110,12 +110,12 @@ export const FAQPage = () => {
             >
               <button
                 onClick={() => setExpandedId(expandedId === faq.id ? null : faq.id)}
-                className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
               >
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-white">{faq.question}</h3>
                   {faq.category && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{faq.category}</p>
+                    <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 font-medium">{faq.category}</p>
                   )}
                 </div>
                 <ChevronDown

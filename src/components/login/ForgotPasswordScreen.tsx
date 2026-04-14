@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useForgotPassword, getDirectionClass } from '../../hooks/useAuthHooks';
+import { handleError } from '../../services/errorHandler';
 import { ArrowLeft, Briefcase } from 'lucide-react';
 
 interface ForgotPasswordScreenProps {
@@ -20,10 +21,16 @@ export default function ForgotPasswordScreen({ onBack, resetPassword }: ForgotPa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (await submit(email)) {
+    const success = await submit(email);
+    if (!success && error) {
+      // Route error through registry
+      await handleError(error, {
+        form: { setError: () => {} },
+        t,
+        showNotification,
+      });
+    } else if (success) {
       showNotification('success', t('auth.resetEmailSent'));
-    } else {
-      showNotification('error', t('auth.resetEmailFailed'));
     }
   };
 
