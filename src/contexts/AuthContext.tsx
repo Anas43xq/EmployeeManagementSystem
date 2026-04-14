@@ -1,11 +1,10 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth, updateLastActivity, clearLastActivity } from '../services/session/sessionManager';
+import { clearAuthState, resetSessionHealth } from '../services/session/sessionManager';
 import { getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session/loginAttempts';
 import { clearAllCache } from '../services/shared/cacheManager';
 import { isRefreshTokenError, isAuthTransientError } from '../services/auth/authHelpers';
-import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
 
 export type { AuthUser } from '../services/auth/authHelpers';
@@ -167,13 +166,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadUserData, clearCache]);
 
-  // -- Inactivity auto-logout ------------------------------------------------
-  const handleInactivityLogout = useCallback(() => {
-    clearCache(); clearAllCache(); setUser(null);
-  }, [clearCache]);
-  useInactivityLogout(user, handleInactivityLogout);
-
   // -- Single-session enforcement + ban/deactivation -------------------------
+  // JWT expiry is handled automatically by Supabase's autoRefreshToken.
+  // This hook only enforces real-time ban/deactivation checks.
   const handleForceLogout = useCallback(async () => {
     clearCache(); clearAllCache();
     localStorage.removeItem('ems_session_token');
@@ -205,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadUserData, clearCache]);
 
   const signIn = async (email: string, password: string) => {
-    clearCache(); clearAllCache(); updateLastActivity();
+    clearCache(); clearAllCache();
 
     const status = await getLoginAttemptStatus(email);
     if (!status.userId) throw new Error('EMAIL_NOT_FOUND');
@@ -235,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.rpc('clear_own_session_token'); // SECURITY DEFINER � bypasses RLS
     }
     localStorage.removeItem('ems_session_token');
-    clearCache(); clearAllCache(); resetSessionHealth(); clearLastActivity();
+    clearCache(); clearAllCache(); resetSessionHealth();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setUser(null);
