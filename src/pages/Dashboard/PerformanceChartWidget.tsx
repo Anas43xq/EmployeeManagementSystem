@@ -44,7 +44,6 @@ export default function PerformanceChartWidget() {
             <p className="text-xs text-gray-500 mt-0.5">{t('performance.rankedByPoints')}</p>
           </div>
         </div>
-        <span className="text-sm text-gray-500">{t('performance.thisWeek')}</span>
       </div>
 
       {topPerformers.length === 0 ? (

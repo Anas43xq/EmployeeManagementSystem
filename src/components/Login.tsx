@@ -1,14 +1,4 @@
-/**
- * Login Component (Refactored)
- * Priority 3: SOLID - Reduced complexity via hook extraction
- * 
- * This component now handles only rendering logic.
- * All async/state logic moved to custom hooks:
- * - useLanguageSwitcher: Language toggle
- * - useLoginForm: Form state management
- * - useOtpFlow: OTP authentication flow
- * - useProgressiveCountdown: Delay countdown timer
- */
+
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -20,7 +10,7 @@ import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCoo
 import { isWebAuthnSupported, authenticateWithPasskey } from '../services/passkeys';
 import { sendPasswordResetEmail } from '../services/auth';
 
-// Extracted hooks
+
 import { useLanguageSwitcher } from '../hooks/useLanguageSwitcher';
 import { useLoginForm } from '../hooks/useLoginForm';
 import { useOtpFlow } from '../hooks/useOtpFlow';
