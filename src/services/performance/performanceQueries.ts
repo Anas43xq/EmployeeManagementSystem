@@ -2,6 +2,23 @@ import { db, supabase } from '../supabase';
 import type { EmployeePerformance } from '../../types';
 import { mapEmployeeOfWeekRecord } from '../../utils/employeeMappers';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rpc = supabase as any;
+
+/**
+ * Trigger performance calculation for a specific week.
+ * Safe to call even if calculation already exists (uses ON CONFLICT DO UPDATE).
+ */
+async function triggerWeeklyPerformanceCalculation(weekStart?: string): Promise<void> {
+  try {
+    await rpc.rpc('calculate_weekly_performance', {
+      p_week_start: weekStart,
+    });
+  } catch (_err: unknown) {
+    // Non-critical: calculation may already exist or fail silently
+  }
+}
+
 export async function getPerformanceRecords(filters?: {
   employeeId?: string;
   startDate?: string;
@@ -64,9 +81,14 @@ export async function getTopPerformers(weekStart?: string) {
 
     const latestPeriod = periodData?.[0] ?? null;
 
-    if (latestPeriod?.period_start) {
-      query = query.eq('period_start', latestPeriod.period_start);
+    if (!latestPeriod?.period_start) {
+      // Table empty — trigger calculation and return empty array
+      // Calculation will populate data for next call
+      await triggerWeeklyPerformanceCalculation();
+      return [];
     }
+
+    query = query.eq('period_start', latestPeriod.period_start);
   }
 
   const { data, error } = await query
