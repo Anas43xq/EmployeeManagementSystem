@@ -119,7 +119,7 @@ export default function Login() {
         showNotification,
         otp,
         email: form.email,
-        setScreen,
+        setScreen: (screenValue: string) => setScreen(screenValue as Screen),
         navigate,
       });
     } finally {

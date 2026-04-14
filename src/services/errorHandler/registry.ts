@@ -4,7 +4,7 @@
  * Supports exact match → pattern matching → fallback
  */
 
-import { ErrorContext, ErrorHandler, ErrorHandlerResult } from './types';
+import { ErrorContext, ErrorHandler } from './types';
 
 export class ErrorHandlerRegistry {
   private handlers: ErrorHandler[] = [];

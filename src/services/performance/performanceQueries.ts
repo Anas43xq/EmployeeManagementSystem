@@ -56,12 +56,13 @@ export async function getTopPerformers(weekStart?: string) {
   if (weekStart) {
     query = query.eq('period_start', weekStart);
   } else {
-    const { data: latestPeriod } = await db
+    const { data: periodData } = await db
       .from('employee_performance')
       .select('period_start')
       .order('period_start', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
+
+    const latestPeriod = periodData?.[0] ?? null;
 
     if (latestPeriod?.period_start) {
       query = query.eq('period_start', latestPeriod.period_start);
@@ -189,7 +190,7 @@ export async function getWeeklyDataAvailability(weekStart: string) {
     });
 
     if (error) throw error;
-    
+
     return data as {
       days_with_data: number;
       total_days: number;
