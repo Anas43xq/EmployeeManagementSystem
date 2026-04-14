@@ -41,7 +41,13 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     }
   };
 
-  if (loading) {
+  // Redirect to login only if NOT loading (session check finished and no user)
+  if (!user && !loading) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Show loading spinner ONLY if user is authenticated but their data is still loading
+  if (loading && user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -63,17 +69,15 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user.isActive === false) {
+  if (user && user.isActive === false) {
     return <Navigate to="/deactivated" replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (user && roles && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Render children (allows Navigate to work during session check, shows page after auth)
   return <>{children}</>;
 }
+
