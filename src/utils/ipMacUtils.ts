@@ -12,22 +12,65 @@ interface NavigatorFingerprintData {
 }
 
 /**
- * Get user's public IP address
+ * Get user's public IP address with caching
+ * Caches result for 24 hours to avoid excessive API calls
  * Falls back to 'unknown' if unable to determine
  */
 export async function getUserIpAddress(): Promise<string> {
+  const CACHE_KEY = 'ems_cached_ip_v1';
+  const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const FETCH_TIMEOUT_MS = 3000; // 3 second timeout
+
   try {
+    // Tier 1: Check localStorage cache first (instant, ~90% of calls)
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { ip, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_DURATION_MS && ip && ip !== 'unknown') {
+          console.debug('[IP Cache] Using cached IP:', ip.substring(0, 10) + '...');
+          return ip;
+        }
+      }
+    } catch (_e) {
+      // localStorage unavailable (incognito), continue to fetch
+    }
+
+    // Tier 2: Fetch fresh IP with timeout (~10% of calls)
+    console.debug('[IP Fetch] Fetching fresh IP from api.ipify.org');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
     const response = await fetch('https://api.ipify.org?format=json', {
       method: 'GET',
       cache: 'no-store',
+      signal: controller.signal,
     });
 
-    if (!response.ok) return 'unknown';
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.debug('[IP Fetch] API returned status:', response.status);
+      return 'unknown';
+    }
 
     const data = (await response.json()) as { ip?: string };
-    return data.ip || 'unknown';
-  } catch {
-    // Fallback: IP detection failed, will use user-agent only
+    const ip = data.ip || 'unknown';
+
+    // Cache the result for future use
+    if (ip !== 'unknown') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ip, timestamp: Date.now() }));
+        console.debug('[IP Cache] Cached IP:', ip.substring(0, 10) + '...');
+      } catch (_e) {
+        // localStorage full or unavailable
+      }
+    }
+
+    return ip;
+  } catch (err) {
+    // Network timeout, parse error, or other issue
+    console.debug('[IP Fetch] Error fetching IP:', err instanceof Error ? err.message : String(err));
     return 'unknown';
   }
 }

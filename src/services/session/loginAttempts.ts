@@ -233,6 +233,13 @@ export async function resetLoginAttempts(userId: string): Promise<void> {
 export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus> {
   try {
     const macProxy = await getMacProxy();
+
+    // Skip RPC if IP or user-agent detection failed (prevents 400 errors from invalid parameters)
+    if (macProxy.ipAddress === 'unknown' || macProxy.userAgent === 'unknown') {
+      console.debug('[IP/MAC Rate Limit] Skipping check - IP/UA detection unavailable');
+      return parseIpMacLimitResult(null);
+    }
+
     const { data, error } = await rpc.rpc('check_ip_mac_limits', {
       p_ip_address: macProxy.ipAddress,
       p_user_agent: macProxy.userAgent,
@@ -241,12 +248,14 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
 
     if (error) {
       // On error, assume allowed (fail-open for UX, not security-critical since server validates)
+      console.debug('[IP/MAC Rate Limit] RPC error:', error);
       return parseIpMacLimitResult(null);
     }
 
     return parseIpMacLimitResult(data);
   } catch (_err: unknown) {
     // Network error or other issue, assume allowed
+    console.debug('[IP/MAC Rate Limit] Exception:', _err);
     return parseIpMacLimitResult(null);
   }
 }
