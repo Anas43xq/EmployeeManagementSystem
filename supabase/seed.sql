@@ -1,11 +1,5 @@
--- ============================================================
--- SEED DATA
--- WARNING: This file is for development/demo only.
--- DO NOT run in production.
--- Loaded automatically by: supabase db reset
--- ============================================================
 
--- =============================================
+--============================================
 -- SEED DATA
 -- =============================================
 
@@ -272,6 +266,13 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
   NULL;
 END $$;
+
+-- ============================================================================
+-- SYNC ROLES FROM AUTH.USERS TO PUBLIC.USERS
+-- ============================================================================
+UPDATE public.users SET role = 'admin' WHERE id = 'a1b2c3d4-e5f6-4a5b-8c7d-1234567890ab';
+UPDATE public.users SET role = 'hr' WHERE id = 'b2c3d4e5-f6a7-4b5c-9d8e-234567890abc';
+UPDATE public.users SET role = 'staff' WHERE id = 'c3d4e5f6-a7b8-4c5d-ae9f-34567890abcd';
 
 -- ============================================================================
 -- PAYROLL
@@ -772,7 +773,7 @@ BEGIN
     (
       'How do I manage FAQs?',
       'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).',
-      'settings',
+      'system',
       ARRAY['admin'],
       2,
       v_admin_id
