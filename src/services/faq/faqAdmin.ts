@@ -7,6 +7,9 @@
 import { db } from '../supabase';
 import type { FAQ, BilingualContent } from './faqQueries';
 
+// Re-export BilingualContent for use in components
+export type { BilingualContent };
+
 /**
  * Input for creating a new FAQ with bilingual content
  */

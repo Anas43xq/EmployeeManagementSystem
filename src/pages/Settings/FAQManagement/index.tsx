@@ -186,8 +186,8 @@ export const FAQManagement = () => {
               <tbody>
                 {filteredFAQs.map((faq) => {
                   // Check which languages have content
-                  const hasEnglish = faq.content?.en?.question?.trim().length > 0;
-                  const hasArabic = faq.content?.ar?.question?.trim().length > 0;
+                  const hasEnglish = faq.content && faq.content.en && faq.content.en.question?.trim().length > 0;
+                  const hasArabic = faq.content && faq.content.ar && faq.content.ar.question?.trim().length > 0;
 
                   return (
                     <tr
