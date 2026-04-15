@@ -7,6 +7,7 @@ import { extractError } from '../errorHandler';
 import type { DatabaseClient } from '../../types/interfaces';
 import type { EmployeeBasic, EmployeeListItem, EmployeeWithNumber } from '../../types';
 import { dbClient } from '../shared/dbClient';
+import { supabase } from '../supabase';
 
 /**
  * Fetch active employees
@@ -14,25 +15,36 @@ import { dbClient } from '../shared/dbClient';
  * @param includeNumber - Whether to include employee number
  */
 export async function fetchActiveEmployees(
-  dbClient: DatabaseClient,
+  _dbClient: DatabaseClient,
   includeNumber?: boolean,
 ): Promise<EmployeeBasic[] | EmployeeWithNumber[]> {
-  const columns = includeNumber
-    ? 'id, first_name, last_name, employee_number'
-    : 'id, first_name, last_name';
-
-  const { data, error } = await dbClient.select({
-    from: 'employees',
-    columns,
-    orderBy: { column: 'first_name' },
-  });
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*')
+    .order('first_name', { ascending: true });
 
   if (error) {
-    console.error('[fetchActiveEmployees] Database query error:', error);
     return [];
   }
 
-  return (data || []) as EmployeeBasic[] | EmployeeWithNumber[];
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  return data.map((emp: any) =>
+    includeNumber
+      ? {
+          id: emp.id,
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+          employee_number: emp.employee_number,
+        }
+      : {
+          id: emp.id,
+          first_name: emp.first_name,
+          last_name: emp.last_name,
+        }
+  );
 }
 
 /**
