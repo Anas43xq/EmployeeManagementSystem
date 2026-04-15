@@ -138,11 +138,22 @@ export async function grantUserAccess(request: {
   }
 
   // Validate request fields before sending to edge function
+  console.log('[grantUserAccess] Validating request fields:', {
+    email: request.email ? `${request.email.substring(0, 3)}...` : 'MISSING',
+    password: request.password ? `${request.password.length} chars` : 'MISSING',
+    role: request.role || 'MISSING',
+    employeeId: request.employeeId || 'MISSING',
+  });
+
   if (!request.email?.trim()) {
     throw new Error('Email is required');
   }
-  if (!request.password?.trim()) {
-    throw new Error('Password is required');
+  if (!request.password || !request.password.trim()) {
+    console.error('[grantUserAccess] Password validation failed:', {
+      password: request.password,
+      trimmed: request.password?.trim(),
+    });
+    throw new Error('Password is required and cannot be empty');
   }
   if (!request.role?.trim()) {
     throw new Error('Role is required');
@@ -162,6 +173,8 @@ export async function grantUserAccess(request: {
     email: requestBody.email,
     role: requestBody.role,
     employee_id: requestBody.employee_id,
+    passwordIncluded: !!requestBody.password,
+    passwordLength: requestBody.password?.length,
   });
 
   const { data, error } = await db.functions.invoke('grant-user-access', {
