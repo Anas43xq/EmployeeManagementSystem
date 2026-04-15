@@ -50,71 +50,132 @@ serve(async (req) => {
       );
     }
 
-    const { email, password, role, employee_id } = await req.json();
+    let requestBody: any;
+    try {
+      requestBody = await req.json();
+      console.log('[grant-user-access] Successfully parsed request body');
+    } catch (parseError) {
+      console.error('[grant-user-access] JSON parse error:', parseError.message);
+      return new Response(
+        JSON.stringify({ error: `Invalid JSON: ${parseError.message}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { email, password, role, employee_id } = requestBody;
 
     console.log('[grant-user-access] Received request with fields:', {
       email: email ? `${email.substring(0, 3)}...` : 'MISSING',
-      password: password ? '***' : 'MISSING',
+      password: password ? `${typeof password} - ${password.length} chars` : 'MISSING',
       role: role || 'MISSING',
       employee_id: employee_id || 'MISSING',
     });
 
     if (!email || !password || !role || !employee_id) {
       console.error('[grant-user-access] Validation failed for fields:', {
-        email: !email,
-        password: !password,
-        role: !role,
-        employee_id: !employee_id,
+        email: { present: !!email, value: email },
+        password: { present: !!password, type: typeof password, length: password?.length },
+        role: { present: !!role, value: role },
+        employee_id: { present: !!employee_id, value: employee_id },
       });
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, role, employee_id' }),
+        JSON.stringify({ 
+          error: 'Missing required fields: email, password, role, employee_id',
+          received: {
+            email: !!email,
+            password: !!password,
+            role: !!role,
+            employee_id: !!employee_id,
+          }
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Trim whitespace from inputs
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+    const cleanRole = role.trim();
+    const cleanEmployeeId = employee_id.trim();
+
+    console.log('[grant-user-access] Creating auth user with:', {
+      email: cleanEmail,
+      passwordLength: cleanPassword.length,
+      role: cleanRole,
+      employee_id: cleanEmployeeId,
+    });
+
     // Step 1: Create auth user (email_confirm: false → sends confirmation email)
     const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
+      email: cleanEmail,
+      password: cleanPassword,
       email_confirm: false,
       user_metadata: {
-        role,
+        role: cleanRole,
       },
     });
 
-    if (signupError || !authData.user) {
-      console.error('Auth signup error:', {
+    if (signupError) {
+      console.error('[grant-user-access] Auth signup error:', {
         message: signupError?.message,
         status: signupError?.status,
-        userCreated: !!authData.user,
+        code: signupError?.code,
       });
       return new Response(
-        JSON.stringify({ error: `Failed to create auth user: ${signupError?.message}` }),
+        JSON.stringify({ 
+          error: `Failed to create auth user: ${signupError?.message}`,
+          details: signupError?.code
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!authData?.user) {
+      console.error('[grant-user-access] Auth user creation succeeded but no user returned');
+      return new Response(
+        JSON.stringify({ error: 'Auth user created but no user ID returned' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const newUserId = authData.user.id;
+    console.log('[grant-user-access] Auth user created successfully. User ID:', newUserId);
 
     // Step 2: Insert into public.users table (with admin privileges via SECURITY DEFINER)
+    console.log('[grant-user-access] Inserting user record into users table:', {
+      id: newUserId,
+      role: cleanRole,
+      employee_id: cleanEmployeeId,
+      is_active: true,
+    });
+
     const { error: insertError } = await supabaseAdmin
       .from('users')
       .insert({
         id: newUserId,
-        role,
-        employee_id,
+        role: cleanRole,
+        employee_id: cleanEmployeeId,
         is_active: true,
       });
 
     if (insertError) {
-      console.error('Users table insert error:', insertError.message);
+      console.error('[grant-user-access] Users table insert error:', {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details,
+      });
       // Cleanup: delete the auth user if users table insert fails
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
       return new Response(
-        JSON.stringify({ error: `Failed to create user record: ${insertError.message}` }),
+        JSON.stringify({ 
+          error: `Failed to create user record: ${insertError.message}`,
+          details: insertError.code
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[grant-user-access] User access granted successfully for user:', newUserId);
 
     return new Response(
       JSON.stringify({ 
