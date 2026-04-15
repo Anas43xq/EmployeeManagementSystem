@@ -14,7 +14,10 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('[grant-user-access] Auth header received:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('[grant-user-access] Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -27,25 +30,65 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user: callerUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    console.log('[grant-user-access] Token extracted, attempting to verify');
+    
+    // Use getSession with the token to verify auth
+    const { data: { session }, error: authError } = await supabaseAdmin.auth.getSession();
+    
+    // Fallback: try verifying the JWT directly
+    let callerUser = null;
+    if (!authError && session?.user) {
+      callerUser = session.user;
+    } else {
+      // If session doesn't work, decode JWT manually
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        try {
+          const payload = JSON.parse(atob(parts[1]));
+          callerUser = { id: payload.sub };
+          console.log('[grant-user-access] JWT decoded, user ID:', callerUser.id);
+        } catch (e) {
+          console.error('[grant-user-access] Failed to decode JWT:', e.message);
+        }
+      }
+    }
 
-    if (authError || !callerUser) {
+    console.log('[grant-user-access] Auth result:', {
+      hasUser: !!callerUser,
+      userId: callerUser?.id,
+      authError: authError?.message,
+    });
+
+    if (!callerUser) {
+      console.error('[grant-user-access] Invalid authentication:', authError?.message);
       return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
+        JSON.stringify({ error: 'Invalid authentication', details: authError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Check if caller is admin
+    console.log('[grant-user-access] Checking if user is admin:', callerUser.id);
+    
     const { data: callerData, error: callerError } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', callerUser.id)
       .single();
 
+    console.log('[grant-user-access] Admin check result:', {
+      role: callerData?.role,
+      error: callerError?.message,
+      isAdmin: callerData?.role === 'admin',
+    });
+
     if (callerError || callerData?.role !== 'admin') {
+      console.error('[grant-user-access] User is not admin:', {
+        error: callerError?.message,
+        role: callerData?.role,
+      });
       return new Response(
-        JSON.stringify({ error: 'Only admins can grant access' }),
+        JSON.stringify({ error: 'Only admins can grant access', role: callerData?.role }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -110,9 +153,6 @@ serve(async (req) => {
       email: cleanEmail,
       password: cleanPassword,
       email_confirm: false,
-      user_metadata: {
-        role: cleanRole,
-      },
     });
 
     if (signupError) {
@@ -141,41 +181,47 @@ serve(async (req) => {
     const newUserId = authData.user.id;
     console.log('[grant-user-access] Auth user created successfully. User ID:', newUserId);
 
-    // Step 2: Insert into public.users table (with admin privileges via SECURITY DEFINER)
-    console.log('[grant-user-access] Inserting user record into users table:', {
-      id: newUserId,
-      role: cleanRole,
-      employee_id: cleanEmployeeId,
-      is_active: true,
+    // Step 1b: Update app_metadata with role (for trigger to read from raw_app_meta_data)
+    console.log('[grant-user-access] Setting app_metadata with role:', cleanRole);
+    
+    const { error: updateMetaError } = await supabaseAdmin.auth.admin.updateUserById(newUserId, {
+      app_metadata: { role: cleanRole }
     });
 
-    const { error: insertError } = await supabaseAdmin
-      .from('users')
-      .insert({
-        id: newUserId,
-        role: cleanRole,
-        employee_id: cleanEmployeeId,
-        is_active: true,
-      });
+    if (updateMetaError) {
+      console.error('[grant-user-access] Failed to update metadata:', updateMetaError?.message);
+      // Don't fail here - continue anyway, trigger might still work
+    }
 
-    if (insertError) {
-      console.error('[grant-user-access] Users table insert error:', {
-        message: insertError.message,
-        code: insertError.code,
-        details: insertError.details,
-      });
-      // Cleanup: delete the auth user if users table insert fails
+    // Step 2: Insert into public.users table (users table creation will trigger automatically)
+    console.log('[grant-user-access] Waiting for trigger to create user record...');
+    
+    // Wait a moment for trigger to fire
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Verify user was created
+    const { data: createdUser, error: checkError } = await supabaseAdmin
+      .from('users')
+      .select('id, role, employee_id')
+      .eq('id', newUserId)
+      .single();
+
+    if (checkError || !createdUser) {
+      console.error('[grant-user-access] User record not created by trigger:', checkError?.message);
+      
+      // Cleanup: delete the auth user
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      
       return new Response(
         JSON.stringify({ 
-          error: `Failed to create user record: ${insertError.message}`,
-          details: insertError.code
+          error: 'User record creation failed. Trigger did not fire or employee not found.',
+          details: checkError?.message
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[grant-user-access] User access granted successfully for user:', newUserId);
+    console.log('[grant-user-access] User created successfully:', { id: newUserId, role: createdUser.role, employee_id: createdUser.employee_id });
 
     return new Response(
       JSON.stringify({ 

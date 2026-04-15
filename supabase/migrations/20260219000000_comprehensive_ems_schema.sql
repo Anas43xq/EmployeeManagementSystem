@@ -1118,22 +1118,30 @@ CREATE TRIGGER sync_auth_email_on_employee_update
   EXECUTE FUNCTION sync_auth_email_from_employee();
 
 -- Role is read from raw_app_meta_data only (server-controlled); raw_user_meta_data is untrusted
+-- Employee ID is passed via raw_app_meta_data by grant-user-access or other creation flows
 CREATE OR REPLACE FUNCTION handle_new_auth_user()
 RETURNS TRIGGER AS $$
 DECLARE
+  employee_id_from_metadata UUID;
   matched_employee_id UUID;
   user_role TEXT;
 BEGIN
-  SELECT id INTO matched_employee_id FROM public.employees WHERE email = NEW.email LIMIT 1;
+  -- First, try to get employee_id from raw_app_meta_data (set by grant-user-access)
+  employee_id_from_metadata := (NEW.raw_app_meta_data->>'employee_id')::UUID;
   
-  IF matched_employee_id IS NULL THEN
-    RAISE EXCEPTION 'Cannot create user: No employee found with email %. Create employee record first.', NEW.email;
+  -- If no employee_id in metadata, try to match by email (legacy behavior)
+  IF employee_id_from_metadata IS NULL THEN
+    SELECT id INTO matched_employee_id FROM public.employees WHERE email = NEW.email LIMIT 1;
+    IF matched_employee_id IS NULL THEN
+      RAISE EXCEPTION 'Cannot create user: No employee found with email % and no employee_id provided. Create employee record first.', NEW.email;
+    END IF;
+    employee_id_from_metadata := matched_employee_id;
   END IF;
   
   user_role := COALESCE(NEW.raw_app_meta_data->>'role', 'staff');
   
   INSERT INTO public.users (id, role, employee_id, created_at, updated_at)
-  VALUES (NEW.id, user_role, matched_employee_id, now(), now())
+  VALUES (NEW.id, user_role, employee_id_from_metadata, now(), now())
   ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, employee_id = EXCLUDED.employee_id, updated_at = now();
   
   INSERT INTO public.user_preferences (user_id, email_leave_approvals, email_attendance_reminders)

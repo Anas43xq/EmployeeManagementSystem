@@ -187,42 +187,61 @@ export async function grantUserAccess(request: {
   }));
 
   console.log('[grantUserAccess] Sending request to edge function...');
-  const { data, error } = await db.functions.invoke('grant-user-access', {
-    body: requestBody,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
-
-  console.log('[grantUserAccess] Edge function response received:', {
-    hasError: !!error,
-    hasData: !!data,
-    errorMessage: error?.message,
-    dataSuccess: data?.success,
-  });
-
-  if (error) {
-    console.error('[grantUserAccess] Edge function error:', {
-      message: error?.message,
-      status: error?.status,
-      code: error?.code,
-    });
-    
-    // Try to extract more details from the error
-    if (error instanceof Error) {
-      console.error('[grantUserAccess] Error details:', error.toString());
-    }
-    
-    throw new Error(error?.message || 'Failed to grant access');
+  
+  // Get Supabase URL from environment
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL not configured');
   }
-
-  if (!data?.success) {
-    console.error('[grantUserAccess] Edge function returned error:', {
-      error: data?.error,
-      details: data?.details,
-      received: data,
+  
+  const functionUrl = `${supabaseUrl}/functions/v1/grant-user-access`;
+  
+  console.log('[grantUserAccess] Calling edge function at:', functionUrl);
+  
+  let data: any;
+  try {
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(requestBody),
     });
-    throw new Error(data?.error || 'Failed to grant access');
+
+    data = await response.json();
+
+    console.log('[grantUserAccess] Edge function response received:', {
+      status: response.status,
+      success: data?.success,
+      error: data?.error,
+      hasUserId: !!data?.user?.id,
+    });
+
+    if (!response.ok) {
+      console.error('[grantUserAccess] Edge function HTTP error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: data?.error,
+        details: data?.details,
+      });
+      throw new Error(data?.error || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    if (!data?.success) {
+      console.error('[grantUserAccess] Edge function returned error:', {
+        error: data?.error,
+        details: data?.details,
+        received: data,
+      });
+      throw new Error(data?.error || 'Failed to grant access');
+    }
+  } catch (error) {
+    console.error('[grantUserAccess] Request failed:', {
+      message: error instanceof Error ? error.message : String(error),
+      type: error instanceof Error ? error.name : typeof error,
+    });
+    throw error instanceof Error ? error : new Error(String(error));
   }
 
   console.log('[grantUserAccess] Success! User created:', data?.user?.id);
@@ -274,29 +293,38 @@ async function invokeManageUserStatus(request: {
       return { success: false, error: 'Not authenticated' };
     }
 
-    const { data, error } = await db.functions.invoke('manage-user-status', {
-      body: {
-        action: request.action,
-        userId: request.userId,
-        ...(request.banDuration ? { banDuration: request.banDuration } : {}),
-        ...(request.reason ? { reason: request.reason } : {}),
-      },
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+      return { success: false, error: 'Supabase URL not configured' };
+    }
+
+    const functionUrl = `${supabaseUrl}/functions/v1/manage-user-status`;
+
+    const requestBody = {
+      action: request.action,
+      userId: request.userId,
+      ...(request.banDuration ? { banDuration: request.banDuration } : {}),
+      ...(request.reason ? { reason: request.reason } : {}),
+    };
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
+      body: JSON.stringify(requestBody),
     });
 
-    if (error) {
-      if (error.message?.includes('non-2xx') || error.message?.includes('404')) {
-        return {
-          success: false,
-          error: request.action === 'get-status'
-            ? 'User management service is not available.'
-            : 'User management service is not available. Please contact your administrator.',
-        };
-      }
+    const data = await response.json();
 
-      throw error;
+    if (!response.ok) {
+      return {
+        success: false,
+        error: request.action === 'get-status'
+          ? 'User management service is not available.'
+          : 'User management service is not available. Please contact your administrator.',
+      };
     }
 
     return data as ManageUserStatusResult;
