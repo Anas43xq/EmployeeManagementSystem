@@ -5,23 +5,25 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../services/activityLog';
 import {
+  grantUserAccess,
   updateManagedUserRole,
   revokeManagedUserAccess,
   requestManagedUserPasswordReset,
 } from '../../services/users';
-import type { User, EditUserFormData, BanUserFormData } from './types';
+import type { User, EmployeeWithoutAccess, GrantAccessFormData, EditUserFormData, BanUserFormData } from './types';
 import { getUserEmail } from './types';
 import { banUser, unbanUser, deactivateUser, activateUser } from './userStatusApi';
 
 interface UseUserActionsOptions {
+  employeesWithoutAccess: EmployeeWithoutAccess[];
   loadUsers: () => Promise<void>;
   loadEmployeesWithoutAccess: () => Promise<void>;
 }
 
-type ModalType = 'edit' | 'revokeAccess' | 'resetPassword' | 'ban' | 'unban' | null;
+type ModalType = 'grantAccess' | 'edit' | 'revokeAccess' | 'resetPassword' | 'ban' | 'unban' | null;
 
 /** Manages user-access modals and account administration actions for user management. */
-export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUserActionsOptions) {
+export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployeesWithoutAccess }: UseUserActionsOptions) {
   const { user: currentUser } = useAuth();
   const { showNotification } = useNotification();
   const { t } = useTranslation();
@@ -33,6 +35,12 @@ export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUse
   const [showPassword, setShowPassword] = useState(false);
 
   // --- Form state ---
+  const [grantAccessForm, setGrantAccessForm] = useState<GrantAccessFormData>({
+    employeeId: '',
+    password: '',
+    role: 'staff',
+  });
+
   const [editForm, setEditForm] = useState<EditUserFormData>({
     role: 'staff',
   });
@@ -43,6 +51,10 @@ export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUse
   });
 
   // --- Modal openers (set activeModal instead of individual booleans) ---
+  const openGrantAccessModal = () => {
+    setActiveModal('grantAccess');
+  };
+
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setEditForm({ role: user.role });
@@ -76,6 +88,82 @@ export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUse
   };
 
   // --- Action handlers ---
+  const handleGrantAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const selectedEmployee = employeesWithoutAccess.find(
+      emp => emp.id === grantAccessForm.employeeId
+    );
+
+    if (!selectedEmployee) {
+      showNotification('error', t('userManagement.employeeNotFound'));
+      return;
+    }
+
+    // Validate form fields
+    console.log('[handleGrantAccess] Form validation started', {
+      employeeId: grantAccessForm.employeeId,
+      passwordLength: grantAccessForm.password?.length,
+      passwordTrimmedLength: grantAccessForm.password?.trim().length,
+      role: grantAccessForm.role,
+      selectedEmployeeEmail: selectedEmployee?.email,
+    });
+
+    if (!grantAccessForm.employeeId || !grantAccessForm.employeeId.trim()) {
+      showNotification('error', 'Please select an employee');
+      return;
+    }
+
+    const passwordTrimmed = (grantAccessForm.password ?? '').trim();
+    if (!passwordTrimmed || passwordTrimmed.length < 6) {
+      console.warn('[handleGrantAccess] Validation failed: password too short or missing', {
+        passwordTrimmedLength: passwordTrimmed.length,
+      });
+      showNotification('error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!grantAccessForm.role) {
+      showNotification('error', 'Please select a role');
+      return;
+    }
+
+    if (!selectedEmployee.email || !selectedEmployee.email.trim()) {
+      showNotification('error', 'Employee email is missing');
+      return;
+    }
+
+    console.log('[handleGrantAccess] All validations passed, calling grantUserAccess');
+    setSubmitting(true);
+    try {
+      const data = await grantUserAccess({
+        email: selectedEmployee.email.trim(),
+        password: passwordTrimmed,
+        role: grantAccessForm.role,
+        employeeId: selectedEmployee.id,
+      });
+
+      showNotification('success', t('userManagement.accessGrantedSuccess'));
+      if (data.user && currentUser) {
+        logActivity(currentUser.id, 'user_access_granted', 'user', data.user.id, {
+          employee_id: grantAccessForm.employeeId,
+          employee_email: selectedEmployee.email,
+          role: grantAccessForm.role,
+        });
+      }
+
+      closeModal();
+      setGrantAccessForm({ employeeId: '', password: '', role: 'staff' });
+      loadUsers();
+      loadEmployeesWithoutAccess();
+    } catch (_error: unknown) {
+      logError(extractError(_error), 'useUserActions.handleGrantAccess');
+      showNotification('error', getErrorMessage(_error, t('userManagement.failedToGrantAccess')));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
@@ -292,12 +380,15 @@ export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUse
     showPassword,
     setShowPassword,
     // Form state
+    grantAccessForm,
+    setGrantAccessForm,
     editForm,
     setEditForm,
     banForm,
     setBanForm,
     currentUserId: currentUser?.id,
     // Modal openers
+    openGrantAccessModal,
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
@@ -305,6 +396,7 @@ export function useUserActions({ loadUsers, loadEmployeesWithoutAccess }: UseUse
     openUnbanModal,
     closeModal,
     // Action handlers
+    handleGrantAccess,
     handleEditUser,
     handleRevokeAccess,
     handleResetPassword,

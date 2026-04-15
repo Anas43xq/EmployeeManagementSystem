@@ -1129,9 +1129,9 @@ BEGIN
   -- First, try to get employee_id from raw_app_meta_data (set by grant-user-access)
   employee_id_from_metadata := (NEW.raw_app_meta_data->>'employee_id')::UUID;
   
-  -- If no employee_id in metadata, try to match by email (legacy behavior)
+  -- If no employee_id in metadata, try to match by email (case-insensitive)
   IF employee_id_from_metadata IS NULL THEN
-    SELECT id INTO matched_employee_id FROM public.employees WHERE email = NEW.email LIMIT 1;
+    SELECT id INTO matched_employee_id FROM public.employees WHERE LOWER(email) = LOWER(NEW.email) LIMIT 1;
     IF matched_employee_id IS NULL THEN
       RAISE EXCEPTION 'Cannot create user: No employee found with email % and no employee_id provided. Create employee record first.', NEW.email;
     END IF;

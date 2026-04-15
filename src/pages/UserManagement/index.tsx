@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { ShieldAlert, ShieldCheck, Shield } from 'lucide-react';
-import { PageSpinner, PageHeader } from '../../components/ui';
+import { UserPlus, ShieldAlert, ShieldCheck, Shield } from 'lucide-react';
+import { PageSpinner, PageHeader, Button } from '../../components/ui';
 import { useUserManagement } from './useUserManagement';
 import UserStatsCards from './UserStatsCards';
 import UserFilters from './UserFilters';
 import UsersTable from './UsersTable';
 import EditUserModal from './EditUserModal';
+import GrantAccessModal from './GrantAccessModal';
 import RevokeAccessModal from './RevokeAccessModal';
 import ResetPasswordModal from './ResetPasswordModal';
 import BanUserModal from './BanUserModal';
@@ -22,6 +23,8 @@ export default function UserManagement() {
     activeModal,
     selectedUser,
     submitting,
+    grantAccessForm,
+    setGrantAccessForm,
     editForm,
     setEditForm,
     banForm,
@@ -29,6 +32,7 @@ export default function UserManagement() {
     currentUserId,
     loadUsers,
     loadEmployeesWithoutAccess,
+    handleGrantAccess,
     handleEditUser,
     handleRevokeAccess,
     handleResetPassword,
@@ -42,9 +46,11 @@ export default function UserManagement() {
     openResetPasswordModal,
     openBanModal,
     openUnbanModal,
+    openGrantAccessModal,
     closeModal,
     filteredUsers,
     stats,
+    employeesWithoutAccess,
   } = useUserManagement();
 
   const getRoleIcon = (role: string) => {
@@ -78,6 +84,18 @@ export default function UserManagement() {
       <PageHeader
         title={t('userManagement.title')}
         subtitle={t('userManagement.subtitleNew')}
+        action={
+          <Button
+            onClick={() => {
+              setGrantAccessForm({ employeeId: '', password: '', role: 'staff' });
+              openGrantAccessModal();
+            }}
+            icon={<UserPlus className="w-5 h-5" />}
+            disabled={employeesWithoutAccess.length === 0}
+          >
+            {t('userManagement.grantAccess')}
+          </Button>
+        }
       />
 
       <UserStatsCards stats={stats} />
@@ -112,6 +130,16 @@ export default function UserManagement() {
         formData={editForm}
         setFormData={setEditForm}
         onSubmit={handleEditUser}
+        onClose={closeModal}
+        submitting={submitting}
+      />
+
+      <GrantAccessModal
+        show={activeModal === 'grantAccess'}
+        employees={employeesWithoutAccess}
+        formData={grantAccessForm}
+        setFormData={setGrantAccessForm}
+        onSubmit={handleGrantAccess}
         onClose={closeModal}
         submitting={submitting}
       />
