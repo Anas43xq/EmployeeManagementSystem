@@ -651,7 +651,7 @@ END $$;
 -- ============================================================================
 
 -- ============================================================================
--- FAQs - Comprehensive help center for all users
+-- FAQs - Comprehensive help center for all users (Bilingual EN/AR)
 -- ============================================================================
 DO $$
 DECLARE
@@ -660,35 +660,67 @@ BEGIN
   SELECT u.id INTO v_admin_id FROM public.users u WHERE u.role = 'admin' LIMIT 1;
 
   IF v_admin_id IS NOT NULL THEN
-    INSERT INTO public.faqs (question, answer, category, visible_to, faq_order, created_by) VALUES
+    INSERT INTO public.faqs (content, category, visible_to, faq_order, created_by) VALUES
     -- General FAQs (all roles)
     (
-      'What is the Employee Management System?',
-      'The Employee Management System (EMS) is a  platform for managing employee data, leave requests, attendance tracking, performance management, and more. It helps streamline HR operations and enables employees to manage their work-related information.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What is the Employee Management System?',
+          'answer', 'The Employee Management System (EMS) is a platform for managing employee data, leave requests, attendance tracking, performance management, and more. It helps streamline HR operations and enables employees to manage their work-related information.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هو نظام إدارة الموظفين؟',
+          'answer', 'نظام إدارة الموظفين (EMS) منصة لإدارة بيانات الموظفين وطلبات الإجازات وتتبع الحضور وإدارة الأداء والمزيد. يساعد على تبسيط عمليات الموارد البشرية ويمكن الموظفين من إدارة معلوماتهم المتعلقة بالعمل.'
+        )
+      ),
       'general',
       ARRAY['staff', 'hr', 'admin'],
       1,
       v_admin_id
     ),
     (
-      'How do I reset my password?',
-      'You can reset your password by clicking the "Forgot Password" link on the login page. Enter your email address and follow the instructions sent to your email to set a new password. The reset link expires after 24 hours.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I reset my password?',
+          'answer', 'You can reset your password by clicking the "Forgot Password" link on the login page. Enter your email address and follow the instructions sent to your email to set a new password. The reset link expires after 24 hours.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أعيد تعيين كلمة المرور الخاصة بي؟',
+          'answer', 'يمكنك إعادة تعيين كلمة المرور بالنقر على رابط "نسيت كلمة المرور" على صفحة تسجيل الدخول. أدخل عنوان بريدك الإلكتروني واتبع التعليمات المرسلة إلى بريدك لتعيين كلمة مرور جديدة. ينتهي رابط إعادة التعيين بعد 24 ساعة.'
+        )
+      ),
       'general',
       ARRAY['staff', 'hr', 'admin'],
       2,
       v_admin_id
     ),
     (
-      'How do I update my profile information?',
-      'Navigate to **Settings** → **Profile** to view and edit your personal information. You can update your name, contact details, and profile photo. Click "Save" to confirm changes.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I update my profile information?',
+          'answer', 'Navigate to **Settings** → **Profile** to view and edit your personal information. You can update your name, contact details, and profile photo. Click "Save" to confirm changes.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أحدّث معلومات ملفي الشخصي؟',
+          'answer', 'انتقل إلى **الإعدادات** → **الملف الشخصي** لعرض وتحرير معلوماتك الشخصية. يمكنك تحديث اسمك وبيانات الاتصال وصورة ملفك الشخصي. انقر على "حفظ" لتأكيد التغييرات.'
+        )
+      ),
       'settings',
       ARRAY['staff', 'hr', 'admin'],
       1,
       v_admin_id
     ),
     (
-      'Where can I see my notifications?',
-      'Notifications appear in the **Notification Center** (bell icon in the top navigation). You can view, mark as read, or delete notifications. Enable notifications in your browser for push alerts.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'Where can I see my notifications?',
+          'answer', 'Notifications appear in the **Notification Center** (bell icon in the top navigation). You can view, mark as read, or delete notifications. Enable notifications in your browser for push alerts.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'أين يمكنني رؤية إشعاراتي؟',
+          'answer', 'تظهر الإشعارات في **مركز الإخطارات** (أيقونة الجرس في الملاحة العلوية). يمكنك عرض الإشعارات أو وضع علامة كمقروءة أو حذفها. قم بتمكين الإشعارات في متصفحك للحصول على تنبيهات فورية.'
+        )
+      ),
       'general',
       ARRAY['staff', 'hr', 'admin'],
       3,
@@ -696,32 +728,64 @@ BEGIN
     ),
     -- Leave Management FAQs (staff, hr, admin)
     (
-      'How do I apply for leave?',
-      'To apply for leave:\n1. Go to **Leaves** from the sidebar\n2. Click **Apply Leave**\n3. Select leave type (sick, casual, annual, etc.)\n4. Choose start and end dates\n5. Add any comments (optional)\n6. Click **Submit**\n\nYour manager will review and approve/reject within 2-3 business days.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I apply for leave?',
+          'answer', 'To apply for leave:\n1. Go to **Leaves** from the sidebar\n2. Click **Apply Leave**\n3. Select leave type (sick, casual, annual, etc.)\n4. Choose start and end dates\n5. Add any comments (optional)\n6. Click **Submit**\n\nYour manager will review and approve/reject within 2-3 business days.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أتقدم بطلب إجازة؟',
+          'answer', 'للتقدم بطلب إجازة:\n1. انتقل إلى **الإجازات** من الشريط الجانبي\n2. انقر على **تقديم طلب إجازة**\n3. اختر نوع الإجازة (مرضية، شخصية، سنوية، إلخ)\n4. اختر تاريخي البداية والنهاية\n5. أضف أي تعليقات (اختياري)\n6. انقر على **إرسال**\n\nسيراجع مديرك ويوافق/برفض خلال 2-3 أيام عمل.'
+        )
+      ),
       'leaves',
       ARRAY['staff', 'hr', 'admin'],
       1,
       v_admin_id
     ),
     (
-      'Can I cancel a leave request after applying?',
-      'Yes, you can cancel a pending leave request. Go to **Leaves**, find your request with **Pending** status, and click **Cancel**. Note: You cannot cancel approved or rejected requests.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'Can I cancel a leave request after applying?',
+          'answer', 'Yes, you can cancel a pending leave request. Go to **Leaves**, find your request with **Pending** status, and click **Cancel**. Note: You cannot cancel approved or rejected requests.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'هل يمكنني إلغاء طلب إجازة بعد التقدم به؟',
+          'answer', 'نعم، يمكنك إلغاء طلب إجازة قيد الانتظار. انتقل إلى **الإجازات**، وابحث عن طلبك بحالة **قيد الانتظار**، وانقر على **إلغاء**. ملاحظة: لا يمكنك إلغاء الطلبات المعتمدة أو المرفوضة.'
+        )
+      ),
       'leaves',
       ARRAY['staff', 'hr', 'admin'],
       2,
       v_admin_id
     ),
     (
-      'What is the leave approval process?',
-      'Leave requests go through these statuses:\n- **Pending**: Waiting for manager review\n- **Approved**: Manager approved, leave confirmed\n- **Rejected**: Manager denied the request\n\nStaff typically hear back within 2-3 business days. HR and Managers can expedite approvals.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What is the leave approval process?',
+          'answer', 'Leave requests go through these statuses:\n- **Pending**: Waiting for manager review\n- **Approved**: Manager approved, leave confirmed\n- **Rejected**: Manager denied the request\n\nStaff typically hear back within 2-3 business days. HR and Managers can expedite approvals.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هي عملية الموافقة على الإجازة؟',
+          'answer', 'تمر طلبات الإجازة بهذه الحالات:\n- **قيد الانتظار**: في انتظار مراجعة المدير\n- **معتمد**: وافق المدير، تم تأكيد الإجازة\n- **مرفوض**: رفض المدير الطلب\n\nعادة ما يسمع الموظفون برد خلال 2-3 أيام عمل. يمكن لموظفي الموارد البشرية والمديرين التعجيل بالموافقات.'
+        )
+      ),
       'leaves',
       ARRAY['staff', 'hr', 'admin'],
       3,
       v_admin_id
     ),
     (
-      'How many leave days do I have?',
-      'Check your leave balance in the **Leave Balance** section on **Leaves** page. It shows:\n- Annual leave balance\n- Sick leave balance\n- Other leave types\n\nYour balance resets on January 1st each year.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How many leave days do I have?',
+          'answer', 'Check your leave balance in the **Leave Balance** section on **Leaves** page. It shows:\n- Annual leave balance\n- Sick leave balance\n- Other leave types\n\nYour balance resets on January 1st each year.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كم عدد أيام الإجازات المتاحة لي؟',
+          'answer', 'تحقق من رصيد إجازتك في قسم **رصيد الإجازة** على صفحة **الإجازات**. يعرض:\n- رصيد الإجازة السنوية\n- رصيد الإجازات المرضية\n- أنواع إجازات أخرى\n\nتُعاد تعيين رصيدك في 1 يناير من كل عام.'
+        )
+      ),
       'leaves',
       ARRAY['staff', 'hr', 'admin'],
       4,
@@ -729,16 +793,32 @@ BEGIN
     ),
     -- Attendance FAQs (staff, hr, admin)
     (
-      'How do I mark my attendance?',
-      'You can mark attendance in two ways:\n1. **Quick Mark**: Click **Mark Attendance** on Dashboard\n2. **Attendance Page**: Go to **Attendance** → **Mark Now**\n\nAttendance must be marked between 8:00 AM and 11:59 PM. Early/late markers are tracked.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I mark my attendance?',
+          'answer', 'You can mark attendance in two ways:\n1. **Quick Mark**: Click **Mark Attendance** on Dashboard\n2. **Attendance Page**: Go to **Attendance** → **Mark Now**\n\nAttendance must be marked between 8:00 AM and 11:59 PM. Early/late markers are tracked.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أسجل الحضور؟',
+          'answer', 'يمكنك تسجيل الحضور بطريقتين:\n1. **تسجيل سريع**: انقر على **تسجيل الحضور** في لوحة التحكم\n2. **صفحة الحضور**: انتقل إلى **الحضور** → **سجل الآن**\n\nيجب تسجيل الحضور بين الساعة 8:00 صباحاً والساعة 11:59 مساءً. يتم تتبع التسجيلات المبكرة/المتأخرة.'
+        )
+      ),
       'attendance',
       ARRAY['staff', 'hr', 'admin'],
       1,
       v_admin_id
     ),
     (
-      'What if I forget to mark attendance?',
-      'If you forget to mark attendance:\n1. Go to **Attendance** → **Request Correction**\n2. Select the date and provide a reason\n3. Submit for manager review\n\nManagers can approve corrections within 48 hours. Repeated missed marks may affect your record.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What if I forget to mark attendance?',
+          'answer', 'If you forget to mark attendance:\n1. Go to **Attendance** → **Request Correction**\n2. Select the date and provide a reason\n3. Submit for manager review\n\nManagers can approve corrections within 48 hours. Repeated missed marks may affect your record.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ماذا لو نسيت تسجيل الحضور؟',
+          'answer', 'إذا نسيت تسجيل الحضور:\n1. انتقل إلى **الحضور** → **طلب تصحيح**\n2. حدد التاريخ وقدم السبب\n3. قدّم للمراجعة من قبل المدير\n\nيمكن للمديرين الموافقة على التصحيحات خلال 48 ساعة. قد تؤثر التسجيلات المفقودة المتكررة على سجلك.'
+        )
+      ),
       'attendance',
       ARRAY['staff', 'hr', 'admin'],
       2,
@@ -746,24 +826,48 @@ BEGIN
     ),
     -- Employee Management FAQs (hr, admin only)
     (
-      'How do I add a new employee?',
-      'To add a new employee (HR/Admin only):\n1. Go to **Employees** → **Add Employee**\n2. Fill in employee details (name, email, position, department, etc.)\n3. Set user role (staff, hr, admin)\n4. Click **Create**\n\nThe employee will receive an invitation email to set up their account.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I add a new employee?',
+          'answer', 'To add a new employee (HR/Admin only):\n1. Go to **Employees** → **Add Employee**\n2. Fill in employee details (name, email, position, department, etc.)\n3. Set user role (staff, hr, admin)\n4. Click **Create**\n\nThe employee will receive an invitation email to set up their account.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أضيف موظفاً جديداً؟',
+          'answer', 'لإضافة موظف جديد (الموارد البشرية/المسؤول فقط):\n1. انتقل إلى **الموظفون** → **إضافة موظف**\n2. املأ بيانات الموظف (الاسم والبريد الإلكتروني والمنصب والقسم، إلخ)\n3. اتبع دور المستخدم (موظف، موارد بشرية، مسؤول)\n4. انقر على **إنشاء**\n\nسيتلقى الموظف بريداً إلكترونياً للدعوة لإعداد حسابه.'
+        )
+      ),
       'employees',
       ARRAY['hr', 'admin'],
       1,
       v_admin_id
     ),
     (
-      'How do I edit employee information?',
-      'To edit employee details:\n1. Go to **Employees**\n2. Find the employee and click their name\n3. Click **Edit** button\n4. Update information as needed\n5. Click **Save**\n\nChanges are logged for audit purposes.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I edit employee information?',
+          'answer', 'To edit employee details:\n1. Go to **Employees**\n2. Find the employee and click their name\n3. Click **Edit** button\n4. Update information as needed\n5. Click **Save**\n\nChanges are logged for audit purposes.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أعدل معلومات الموظف؟',
+          'answer', 'لتحرير تفاصيل الموظف:\n1. انتقل إلى **الموظفون**\n2. ابحث عن الموظف وانقر على اسمه\n3. انقر على زر **تحرير**\n4. حدّث المعلومات حسب الحاجة\n5. انقر على **حفظ**\n\nتسجل التغييرات لأغراض التدقيق.'
+        )
+      ),
       'employees',
       ARRAY['hr', 'admin'],
       2,
       v_admin_id
     ),
     (
-      'Can I deactivate an employee without deleting them?',
-      'Yes, you should **deactivate** rather than delete employees:\n1. Go to **Employees** → find employee\n2. Click **Deactivate**\n3. Deactivated employees cannot log in but their records remain (audit trail)\n4. To reactivate: Click **Activate** on deactivated employee profile',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'Can I deactivate an employee without deleting them?',
+          'answer', 'Yes, you should **deactivate** rather than delete employees:\n1. Go to **Employees** → find employee\n2. Click **Deactivate**\n3. Deactivated employees cannot log in but their records remain (audit trail)\n4. To reactivate: Click **Activate** on deactivated employee profile'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'هل يمكنني إلغاء تفعيل موظف دون حذفه؟',
+          'answer', 'نعم، يجب عليك **إلغاء تفعيل** بدلاً من حذف الموظفين:\n1. انتقل إلى **الموظفون** → ابحث عن الموظف\n2. انقر على **إلغاء التفعيل**\n3. لا يمكن للموظفين الذين تم إلغاء تفعيلهم تسجيل الدخول لكن سجلاتهم تبقى (مسار التدقيق)\n4. لإعادة التفعيل: انقر على **تفعيل** في ملف الموظف الذي تم إلغاء تفعيله'
+        )
+      ),
       'employees',
       ARRAY['hr', 'admin'],
       3,
@@ -771,16 +875,32 @@ BEGIN
     ),
     -- Admin-only FAQs
     (
-      'How do I manage FAQs?',
-      'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I manage FAQs?',
+          'answer', 'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أدير الأسئلة الشائعة؟',
+          'answer', 'لإدارة الأسئلة الشائعة (مسؤول فقط):\n1. انتقل إلى **الإعدادات** → **إدارة الأسئلة الشائعة**\n2. عرض جميع الأسئلة الشائعة\n3. انقر على **تحرير** للتعديل\n4. انقر على **حذف** للإزالة\n5. انقر على **إنشاء جديد** لإضافة سؤال شائع\n\nيمكنك التحكم في الأدوار التي ترى كل سؤال شائع (موظف/موارد بشرية/مسؤول).'
+        )
+      ),
       'system',
       ARRAY['admin'],
       2,
       v_admin_id
     ),
     (
-      'How do I manage user roles and permissions?',
-      'User role management is in **Settings** → **User Management** (admin only):\n- **Staff**: Regular employees with basic access\n- **HR**: Can manage employees, approve leaves, view reports\n- **Admin**: Full access to all features and settings\n\nAssign roles when creating employees or edit existing user roles in User Management.',
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I manage user roles and permissions?',
+          'answer', 'User role management is in **Settings** → **User Management** (admin only):\n- **Staff**: Regular employees with basic access\n- **HR**: Can manage employees, approve leaves, view reports\n- **Admin**: Full access to all features and settings\n\nAssign roles when creating employees or edit existing user roles in User Management.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أدير أدوار وأذونات المستخدم؟',
+          'answer', 'إدارة دور المستخدم في **الإعدادات** → **إدارة المستخدمين** (مسؤول فقط):\n- **موظف**: الموظفون العاديون مع الوصول الأساسي\n- **الموارد البشرية**: يمكنهم إدارة الموظفين والموافقة على الإجازات وعرض التقارير\n- **مسؤول**: وصول كامل إلى جميع الميزات والإعدادات\n\nحدد الأدوار عند إنشاء الموظفين أو عدّل أدوار المستخدمين الموجودة في إدارة المستخدمين.'
+        )
+      ),
       'employees',
       ARRAY['admin'],
       4,

@@ -12,244 +12,231 @@ const log = (msg: string, data?: any) => {
   if (isDev) console.log(msg, data);
 };
 
+class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const jsonResponse = (body: object, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
+const parseBearerToken = (req: Request): string => {
+  const authHeader = req.headers.get('Authorization');
+  log('[grant-user-access] Auth header received:', !!authHeader);
+
+  if (!authHeader) {
+    throw new ApiError(401, 'Missing authorization header');
+  }
+
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    throw new ApiError(401, 'Invalid authorization header');
+  }
+
+  return match[1];
+};
+
+const decodeJwtUserId = (token: string): string | null => {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    return typeof payload.sub === 'string' ? payload.sub : null;
+  } catch (error) {
+    log('[grant-user-access] JWT decode failed:', error?.message ?? error);
+    return null;
+  }
+};
+
+const verifyAdminCaller = async (supabaseAdmin: any, token: string) => {
+  const callerId = decodeJwtUserId(token);
+  if (!callerId) {
+    throw new ApiError(401, 'Invalid authentication token');
+  }
+
+  log('[grant-user-access] Verifying admin caller:', callerId);
+
+  const { data: callerData, error: callerError } = await supabaseAdmin
+    .from('users')
+    .select('role')
+    .eq('id', callerId)
+    .single();
+
+  if (callerError || !callerData || callerData.role !== 'admin') {
+    log('[grant-user-access] Admin verification failed:', {
+      role: callerData?.role,
+      error: callerError?.message,
+    });
+    throw new ApiError(403, 'Only admins can grant access');
+  }
+
+  return callerId;
+};
+
+type GrantAccessRequest = {
+  email: string;
+  password: string;
+  role: string;
+  employee_id: string;
+};
+
+const parseGrantAccessRequest = async (req: Request): Promise<GrantAccessRequest> => {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch (error) {
+    throw new ApiError(400, `Invalid JSON: ${error?.message ?? 'Unable to parse request body'}`);
+  }
+
+  if (!body || typeof body !== 'object') {
+    throw new ApiError(400, 'Request body must be an object');
+  }
+
+  const { email, password, role, employee_id } = body as Record<string, unknown>;
+
+  if (!email || !password || !role || !employee_id) {
+    throw new ApiError(400, 'Missing required fields: email, password, role, employee_id');
+  }
+
+  return {
+    email: String(email).trim(),
+    password: String(password),
+    role: String(role).trim(),
+    employee_id: String(employee_id).trim(),
+  };
+};
+
+const createAuthUser = async (supabaseAdmin: any, payload: GrantAccessRequest) => {
+  log('[grant-user-access] Creating auth user for email:', payload.email);
+
+  const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
+    email: payload.email,
+    password: payload.password,
+    email_confirm: false,
+  });
+
+  if (signupError) {
+    log('[grant-user-access] Auth create error:', signupError);
+    throw new ApiError(400, `Failed to create auth user: ${signupError.message || 'Unknown error'}`);
+  }
+
+  if (!authData?.user?.id) {
+    throw new ApiError(400, 'Auth user created but no user ID returned');
+  }
+
+  return authData.user.id;
+};
+
+const updateAuthUserMetadata = async (
+  supabaseAdmin: any,
+  userId: string,
+  role: string,
+  employeeId: string
+) => {
+  const { error: updateMetaError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    app_metadata: {
+      role,
+      employee_id: employeeId,
+    },
+  });
+
+  if (updateMetaError) {
+    log('[grant-user-access] Metadata update failed:', updateMetaError);
+    return false;
+  }
+
+  log('[grant-user-access] Metadata updated successfully');
+  return true;
+};
+
+const getUserRow = async (supabaseAdmin: any, userId: string) => {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('id, role, employee_id')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    log('[grant-user-access] User row lookup error:', error);
+    return null;
+  }
+
+  return data;
+};
+
+const waitForUserRow = async (supabaseAdmin: any, userId: string, attempts = 6, delayMs = 300) => {
+  for (let i = 0; i < attempts; i += 1) {
+    const user = await getUserRow(supabaseAdmin, userId);
+    if (user) {
+      return user;
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  return null;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    log('[grant-user-access] Auth header received:', !!authHeader);
-    
-    if (!authHeader) {
-      console.error('[grant-user-access] Missing authorization header');
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !serviceKey) {
+      throw new ApiError(500, 'Supabase service configuration is missing');
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+    const token = parseBearerToken(req);
+    await verifyAdminCaller(supabaseAdmin, token);
 
-    const token = authHeader.replace('Bearer ', '');
-    log('[grant-user-access] Token extracted, attempting to verify');
-    
-    // Use getSession with the token to verify auth
-    const { data: { session }, error: authError } = await supabaseAdmin.auth.getSession();
-    
-    // Fallback: try verifying the JWT directly
-    let callerUser = null;
-    if (!authError && session?.user) {
-      callerUser = session.user;
-    } else {
-      // If session doesn't work, decode JWT manually
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        try {
-          const payload = JSON.parse(atob(parts[1]));
-          callerUser = { id: payload.sub };
-          log('[grant-user-access] JWT decoded, user ID:', callerUser.id);
-        } catch (e) {
-          console.error('[grant-user-access] Failed to decode JWT:', e.message);
-        }
-      }
-    }
+    const payload = await parseGrantAccessRequest(req);
 
-    log('[grant-user-access] Auth result:', {
-      hasUser: !!callerUser,
-      userId: callerUser?.id,
-      authError: authError?.message,
+    log('[grant-user-access] Validated request payload:', {
+      email: payload.email ? `${payload.email.substring(0, 3)}...` : 'MISSING',
+      role: payload.role,
+      employee_id: payload.employee_id,
     });
 
-    if (!callerUser) {
-      console.error('[grant-user-access] Invalid authentication:', authError?.message);
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication', details: authError?.message }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const newUserId = await createAuthUser(supabaseAdmin, payload);
+    await updateAuthUserMetadata(supabaseAdmin, newUserId, payload.role, payload.employee_id);
 
-    // Check if caller is admin
-    log('[grant-user-access] Checking if user is admin:', callerUser.id);
-    
-    const { data: callerData, error: callerError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', callerUser.id)
-      .single();
+    log('[grant-user-access] Waiting for users table row for user:', newUserId);
+    const createdUser = await waitForUserRow(supabaseAdmin, newUserId);
 
-    log('[grant-user-access] Admin check result:', {
-      role: callerData?.role,
-      error: callerError?.message,
-      isAdmin: callerData?.role === 'admin',
-    });
-
-    if (callerError || callerData?.role !== 'admin') {
-      console.error('[grant-user-access] User is not admin:', {
-        error: callerError?.message,
-        role: callerData?.role,
-      });
-      return new Response(
-        JSON.stringify({ error: 'Only admins can grant access', role: callerData?.role }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let requestBody: any;
-    try {
-      requestBody = await req.json();
-      log('[grant-user-access] Successfully parsed request body');
-    } catch (parseError) {
-      console.error('[grant-user-access] JSON parse error:', parseError.message);
-      return new Response(
-        JSON.stringify({ error: `Invalid JSON: ${parseError.message}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { email, password, role, employee_id } = requestBody;
-
-    log('[grant-user-access] Received request with fields:', {
-      email: email ? `${email.substring(0, 3)}...` : 'MISSING',
-      password: password ? `${typeof password} - ${password.length} chars` : 'MISSING',
-      role: role || 'MISSING',
-      employee_id: employee_id || 'MISSING',
-    });
-
-    if (!email || !password || !role || !employee_id) {
-      console.error('[grant-user-access] Validation failed for fields:', {
-        email: { present: !!email, value: email },
-        password: { present: !!password, type: typeof password, length: password?.length },
-        role: { present: !!role, value: role },
-        employee_id: { present: !!employee_id, value: employee_id },
-      });
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing required fields: email, password, role, employee_id',
-          received: {
-            email: !!email,
-            password: !!password,
-            role: !!role,
-            employee_id: !!employee_id,
-          }
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Trim whitespace from inputs
-    const cleanEmail = email.trim();
-    const cleanPassword = password.trim();
-    const cleanRole = role.trim();
-    const cleanEmployeeId = employee_id.trim();
-
-    log('[grant-user-access] Creating auth user with:', {
-      email: cleanEmail,
-      passwordLength: cleanPassword.length,
-      role: cleanRole,
-      employee_id: cleanEmployeeId,
-    });
-
-    // Step 1: Create auth user
-    // First, try with the admin client (without app_metadata)
-    log('[grant-user-access] Creating auth user...');
-    
-    const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
-      email: cleanEmail,
-      password: cleanPassword,
-      email_confirm: false,
-    });
-
-    if (signupError) {
-      console.error('[grant-user-access] Auth signup error:', {
-        message: signupError?.message,
-        status: signupError?.status,
-        code: signupError?.code,
-      });
-      return new Response(
-        JSON.stringify({ 
-          error: `Failed to create auth user: ${signupError?.message}`,
-          details: signupError?.code
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!authData?.user?.id) {
-      console.error('[grant-user-access] Auth user creation succeeded but no user ID returned');
-      return new Response(
-        JSON.stringify({ error: 'Auth user created but no user ID returned' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const newUserId = authData.user.id;
-    log('[grant-user-access] Auth user created successfully. User ID:', newUserId);
-
-    // Step 1b: Update auth user app_metadata with role and employee_id
-    log('[grant-user-access] Updating auth user metadata with role and employee_id...');
-    
-    const { error: updateMetaError } = await supabaseAdmin.auth.admin.updateUserById(newUserId, {
-      app_metadata: {
-        role: cleanRole,
-        employee_id: cleanEmployeeId,
-      },
-    });
-
-    if (updateMetaError) {
-      console.error('[grant-user-access] Failed to update metadata:', updateMetaError?.message);
-      // Don't fail here - trigger might still work with email matching
-    } else {
-      log('[grant-user-access] Metadata updated successfully');
-    }
-
-    // Step 2: Insert into public.users table (users table creation will trigger automatically)
-    log('[grant-user-access] Waiting for trigger to create user record...');
-    
-    // Wait a moment for trigger to fire
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Verify user was created
-    const { data: createdUser, error: checkError } = await supabaseAdmin
-      .from('users')
-      .select('id, role, employee_id')
-      .eq('id', newUserId)
-      .single();
-
-    if (checkError || !createdUser) {
-      console.error('[grant-user-access] User record not created by trigger:', checkError?.message);
-      
-      // Cleanup: delete the auth user
+    if (!createdUser) {
+      log('[grant-user-access] User row was not created in time, deleting auth user:', newUserId);
       await supabaseAdmin.auth.admin.deleteUser(newUserId);
-      
-      return new Response(
-        JSON.stringify({ 
-          error: 'User record creation failed. Trigger did not fire or employee not found.',
-          details: checkError?.message
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new ApiError(400, 'User record creation failed. Trigger did not fire or employee not found.');
     }
 
-    log('[grant-user-access] User created successfully:', { id: newUserId, role: createdUser.role, employee_id: createdUser.employee_id });
+    log('[grant-user-access] User created successfully:', {
+      id: newUserId,
+      role: createdUser.role,
+      employee_id: createdUser.employee_id,
+    });
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'User access granted successfully',
-        user: authData.user
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return jsonResponse({
+      success: true,
+      message: 'User access granted successfully',
+      user: { id: newUserId },
+    });
   } catch (error) {
-    console.error('Unexpected error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'Unexpected error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    if (error instanceof ApiError) {
+      return jsonResponse({ error: error.message }, error.status);
+    }
+
+    console.error('[grant-user-access] Unexpected error:', error);
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Unexpected error' }, 500);
   }
 });

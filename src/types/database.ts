@@ -735,40 +735,37 @@ export type Database = {
       }
       faqs: {
         Row: {
-          answer: string
+          content: Json
           category: string
           created_at: string
           created_by: string
           faq_order: number
           id: string
           is_active: boolean
-          question: string
           updated_at: string
           updated_by: string | null
           visible_to: string[]
         }
         Insert: {
-          answer: string
+          content: Json
           category: string
           created_at?: string
           created_by: string
           faq_order?: number
           id?: string
           is_active?: boolean
-          question: string
           updated_at?: string
           updated_by?: string | null
           visible_to?: string[]
         }
         Update: {
-          answer?: string
+          content?: Json
           category?: string
           created_at?: string
           created_by?: string
           faq_order?: number
           id?: string
           is_active?: boolean
-          question?: string
           updated_at?: string
           updated_by?: string | null
           visible_to?: string[]

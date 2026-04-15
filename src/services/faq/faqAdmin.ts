@@ -1,26 +1,31 @@
 /**
  * faqAdmin.ts
- * Admin-only FAQ management - CRUD operations
+ * Admin-only FAQ management - CRUD operations with bilingual support
  * Only admin users can call these functions
  */
 
 import { db } from '../supabase';
-import type { FAQ } from './faqQueries';
+import type { FAQ, BilingualContent } from './faqQueries';
 
+/**
+ * Input for creating a new FAQ with bilingual content
+ */
 export interface CreateFAQInput {
-  question: string;
-  answer: string;
+  content: BilingualContent; // {en: {question, answer}, ar: {question, answer}}
   category: string;
   visible_to: string[]; // Array of roles: ['staff', 'hr', 'admin']
   faq_order?: number;
 }
 
+/**
+ * Input for updating an existing FAQ with bilingual content
+ */
 export interface UpdateFAQInput extends Partial<CreateFAQInput> {
   id: string;
 }
 
 /**
- * Get all FAQs (admin view - no filtering)
+ * Get all FAQs (admin view - no filtering, returns bilingual raw content)
  */
 export async function getAllFAQs(): Promise<FAQ[]> {
   const { data, error } = await db
@@ -34,13 +39,27 @@ export async function getAllFAQs(): Promise<FAQ[]> {
     throw new Error(`Failed to fetch FAQs: ${error.message}`);
   }
 
-  return (data as FAQ[]) || [];
+  return (data as unknown as FAQ[]) || [];
 }
 
 /**
- * Create a new FAQ (admin only)
+ * Create a new FAQ with bilingual content (admin only)
  */
 export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
+  // Validate bilingual content
+  if (!input.content.en.question?.trim()) {
+    throw new Error('English question is required');
+  }
+  if (!input.content.en.answer?.trim()) {
+    throw new Error('English answer is required');
+  }
+  if (!input.content.ar.question?.trim()) {
+    throw new Error('Arabic question is required');
+  }
+  if (!input.content.ar.answer?.trim()) {
+    throw new Error('Arabic answer is required');
+  }
+
   // Get current user ID from auth
   const { data: { user } } = await db.auth.getUser();
   if (!user) {
@@ -51,8 +70,16 @@ export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
     .from('faqs')
     .insert([
       {
-        question: input.question.trim(),
-        answer: input.answer.trim(),
+        content: {
+          en: {
+            question: input.content.en.question.trim(),
+            answer: input.content.en.answer.trim(),
+          },
+          ar: {
+            question: input.content.ar.question.trim(),
+            answer: input.content.ar.answer.trim(),
+          },
+        },
         category: input.category,
         visible_to: input.visible_to,
         faq_order: input.faq_order || 999,
@@ -68,26 +95,66 @@ export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
     throw new Error(`Failed to create FAQ: ${error.message}`);
   }
 
-  return data as FAQ;
+  return data as unknown as FAQ;
 }
 
 /**
- * Update an existing FAQ (admin only)
+ * Update an existing FAQ with bilingual content (admin only)
  */
 export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
+  const { id, ...updates } = input;
+
+  // Get current FAQ first to preserve existing content
+  const { data: existingFAQ, error: fetchError } = await db
+    .from('faqs')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !existingFAQ) {
+    throw new Error(`FAQ not found: ${fetchError?.message}`);
+  }
+
   // Get current user ID from auth
   const { data: { user } } = await db.auth.getUser();
   if (!user) {
     throw new Error('User must be authenticated to update FAQs');
   }
 
-  const { id, ...updates } = input;
-
+  // Prepare update data
   const updateData: Record<string, unknown> = {
     updated_by: user.id,
   };
-  if (updates.question !== undefined) updateData.question = updates.question.trim();
-  if (updates.answer !== undefined) updateData.answer = updates.answer.trim();
+
+  // Handle content update (bilingual)
+  if (updates.content) {
+    // Validate new content
+    if (!updates.content.en.question?.trim()) {
+      throw new Error('English question is required');
+    }
+    if (!updates.content.en.answer?.trim()) {
+      throw new Error('English answer is required');
+    }
+    if (!updates.content.ar.question?.trim()) {
+      throw new Error('Arabic question is required');
+    }
+    if (!updates.content.ar.answer?.trim()) {
+      throw new Error('Arabic answer is required');
+    }
+
+    updateData.content = {
+      en: {
+        question: updates.content.en.question.trim(),
+        answer: updates.content.en.answer.trim(),
+      },
+      ar: {
+        question: updates.content.ar.question.trim(),
+        answer: updates.content.ar.answer.trim(),
+      },
+    };
+  }
+
+  // Handle other updates
   if (updates.category !== undefined) updateData.category = updates.category;
   if (updates.visible_to !== undefined) updateData.visible_to = updates.visible_to;
   if (updates.faq_order !== undefined) updateData.faq_order = updates.faq_order;
@@ -104,7 +171,7 @@ export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
     throw new Error(`Failed to update FAQ: ${error.message}`);
   }
 
-  return data as FAQ;
+  return data as unknown as FAQ;
 }
 
 /**

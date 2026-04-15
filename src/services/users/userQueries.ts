@@ -34,6 +34,21 @@ interface RawEmployeeRecord {
   departments: { name: string } | null;
 }
 
+type GrantUserAccessRequest = {
+  email: string;
+  password: string;
+  role: User['role'];
+  employeeId: string;
+};
+
+type GrantUserAccessResponse = {
+  success: boolean;
+  user?: { id: string };
+  message?: string;
+  error?: string;
+  details?: string;
+};
+
 const mapUser = (raw: RawUserRecord): User => ({
   id: raw.id,
   role: raw.role,
@@ -126,18 +141,27 @@ export async function getEmployeesWithoutUserAccess(): Promise<EmployeeWithoutAc
     .map(mapEmployee);
 }
 
-export async function grantUserAccess(request: {
-  email: string;
-  password: string;
-  role: User['role'];
-  employeeId: string;
-}): Promise<{ success?: boolean; user?: { id: string }; error?: string }> {
+const getGrantUserAccessFunctionUrl = (): string => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL not configured');
+  }
+  return `${supabaseUrl}/functions/v1/grant-user-access`;
+};
+
+const buildGrantUserAccessPayload = (request: GrantUserAccessRequest) => ({
+  email: request.email.trim(),
+  password: request.password.trim(),
+  role: request.role.trim(),
+  employee_id: request.employeeId.trim(),
+});
+
+export async function grantUserAccess(request: GrantUserAccessRequest): Promise<GrantUserAccessResponse> {
   const { data: { session } } = await db.auth.getSession();
   if (!session) {
     throw new Error('Not authenticated');
   }
 
-  // Validate request fields before sending to edge function
   if (!request.email?.trim()) {
     throw new Error('Email is required');
   }
@@ -155,22 +179,9 @@ export async function grantUserAccess(request: {
     throw new Error('Employee ID is required');
   }
 
-  const requestBody = {
-    email: request.email.trim(),
-    password: request.password.trim(),
-    role: request.role.trim(),
-    employee_id: request.employeeId.trim(),
-  };
+  const requestBody = buildGrantUserAccessPayload(request);
+  const functionUrl = getGrantUserAccessFunctionUrl();
 
-  // Get Supabase URL from environment
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  if (!supabaseUrl) {
-    throw new Error('Supabase URL not configured');
-  }
-  
-  const functionUrl = `${supabaseUrl}/functions/v1/grant-user-access`;
-  
-  let data: any;
   try {
     const response = await fetch(functionUrl, {
       method: 'POST',
@@ -181,7 +192,7 @@ export async function grantUserAccess(request: {
       body: JSON.stringify(requestBody),
     });
 
-    data = await response.json();
+    const data = (await response.json()) as GrantUserAccessResponse;
 
     if (!response.ok) {
       console.error('[grantUserAccess] Edge function HTTP error:', {
@@ -201,6 +212,8 @@ export async function grantUserAccess(request: {
       });
       throw new Error(data?.error || 'Failed to grant access');
     }
+
+    return data;
   } catch (error) {
     console.error('[grantUserAccess] Request failed:', {
       message: error instanceof Error ? error.message : String(error),
@@ -208,8 +221,6 @@ export async function grantUserAccess(request: {
     });
     throw error instanceof Error ? error : new Error(String(error));
   }
-
-  return data;
 }
 
 export async function updateManagedUserRole(userId: string, role: User['role']): Promise<void> {

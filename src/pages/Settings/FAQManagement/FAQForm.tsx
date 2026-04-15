@@ -1,12 +1,14 @@
 /**
  * pages/Settings/FAQManagement/FAQForm.tsx
- * Form component for creating and editing FAQs
+ * Form component for creating and editing FAQs with bilingual support
+ * Side-by-side English and Arabic input fields
  */
 
 import { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { type FAQ, type CreateFAQInput } from '../../../services/faq';
+import { type FAQ } from '../../../services/faq';
+import type { CreateFAQInput, BilingualContent } from '../../../services/faq/faqAdmin';
 
 const CATEGORIES = [
   'Account & Access',
@@ -26,20 +28,45 @@ interface FAQFormProps {
   onCancel: () => void;
 }
 
+interface FormState {
+  content: BilingualContent;
+  category: string;
+  visible_to: string[];
+  faq_order: number;
+}
+
 export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState<CreateFAQInput>({
-    question: faq?.question || '',
-    answer: faq?.answer || '',
+  
+  // Initialize form with bilingual content
+  const [formData, setFormData] = useState<FormState>({
+    content: faq?.content || {
+      en: { question: '', answer: '' },
+      ar: { question: '', answer: '' },
+    },
     category: faq?.category || 'General',
     visible_to: faq?.visible_to || ['staff', 'manager', 'hr', 'admin'],
     faq_order: faq?.faq_order || 0,
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedRoles, setExpandedRoles] = useState(false);
 
-  const handleChange = (field: keyof CreateFAQInput, value: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleContentChange = (language: 'en' | 'ar', field: 'question' | 'answer', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        [language]: {
+          ...prev.content[language],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const handleChange = (field: keyof Omit<FormState, 'content'>, value: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -57,14 +84,22 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.question.trim()) {
-      setError(t('question_required') || 'Question is required');
+
+    // Validation - both languages required
+    if (!formData.content.en.question.trim()) {
+      setError(t('english_question_required') || 'English question is required');
       return;
     }
-    if (!formData.answer.trim()) {
-      setError(t('answer_required') || 'Answer is required');
+    if (!formData.content.en.answer.trim()) {
+      setError(t('english_answer_required') || 'English answer is required');
+      return;
+    }
+    if (!formData.content.ar.question.trim()) {
+      setError(t('arabic_question_required') || 'Arabic question is required');
+      return;
+    }
+    if (!formData.content.ar.answer.trim()) {
+      setError(t('arabic_answer_required') || 'Arabic answer is required');
       return;
     }
     if (formData.visible_to.length === 0) {
@@ -75,7 +110,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
     try {
       setLoading(true);
       setError(null);
-      await onSubmit(formData);
+      await onSubmit(formData as CreateFAQInput);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'An error occurred';
       setError(msg);
@@ -109,37 +144,95 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
           </div>
         )}
 
-        {/* Question Field */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('question') || 'Question'} *
-          </label>
-          <input
-            type="text"
-            value={formData.question}
-            onChange={(e) => handleChange('question', e.target.value)}
-            placeholder={t('enter_question') || 'Enter FAQ question...'}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={loading}
-          />
-        </div>
-
-        {/* Answer Field */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('answer') || 'Answer'} *
-          </label>
-          <textarea
-            value={formData.answer}
-            onChange={(e) => handleChange('answer', e.target.value)}
-            placeholder={t('enter_answer') || 'Enter detailed answer...'}
-            rows={8}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-            disabled={loading}
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {t('supports_line_breaks') || 'Line breaks are preserved'}
+        {/* Bilingual Content Section */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {t('bilingual_content') || 'Bilingual Content'}
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {t('faq_both_languages_required') || 'Questions and answers must be provided in both English and Arabic'}
           </p>
+
+          {/* Two-column layout for languages */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* English Section */}
+            <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full"></span>
+                {t('english') || 'English'}
+              </h3>
+
+              {/* English Question */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  {t('question') || 'Question'} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.content.en.question}
+                  onChange={(e) => handleContentChange('en', 'question', e.target.value)}
+                  placeholder={t('enter_question_english') || 'Enter FAQ question...'}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* English Answer */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  {t('answer') || 'Answer'} *
+                </label>
+                <textarea
+                  value={formData.content.en.answer}
+                  onChange={(e) => handleContentChange('en', 'answer', e.target.value)}
+                  placeholder={t('enter_answer_english') || 'Enter detailed answer...'}
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Arabic Section */}
+            <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-amber-50 dark:bg-gray-900/50">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <span className="inline-block w-3 h-3 bg-amber-500 rounded-full"></span>
+                {t('arabic') || 'العربية'}
+              </h3>
+
+              {/* Arabic Question */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  {t('question') || 'Question'} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.content.ar.question}
+                  onChange={(e) => handleContentChange('ar', 'question', e.target.value)}
+                  placeholder={t('enter_question_arabic') || 'أدخل السؤال...'}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary text-right"
+                  dir="rtl"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Arabic Answer */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  {t('answer') || 'Answer'} *
+                </label>
+                <textarea
+                  value={formData.content.ar.answer}
+                  onChange={(e) => handleContentChange('ar', 'answer', e.target.value)}
+                  placeholder={t('enter_answer_arabic') || 'أدخل الإجابة المفصلة...'} 
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none text-right"
+                  dir="rtl"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Category Field */}

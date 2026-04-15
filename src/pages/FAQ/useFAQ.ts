@@ -1,20 +1,26 @@
 /**
  * useFAQ.ts
  * Hook for fetching and managing FAQ data with search and filters
+ * Supports bilingual content (English & Arabic) via i18n
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { getFAQsByRole, searchFAQs, getFAQCategories, type FAQ } from '../../services/faq';
 
 export function useFAQ() {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const [faqs, setFAQs] = useState<FAQ[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Get current language (en or ar)
+  const currentLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as 'en' | 'ar';
 
   // Load initial FAQs and categories
   useEffect(() => {
@@ -23,7 +29,7 @@ export function useFAQ() {
     const loadFAQs = async () => {
       try {
         setLoading(true);
-        const data = await getFAQsByRole(user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
         setFAQs(data);
 
         const cats = await getFAQCategories(user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -38,7 +44,7 @@ export function useFAQ() {
     };
 
     loadFAQs();
-  }, [user?.role]);
+  }, [user?.role, currentLanguage]);
 
   // Search FAQs
   const handleSearch = useCallback(async (query: string) => {
@@ -46,14 +52,14 @@ export function useFAQ() {
     if (!user?.role) return;
 
     try {
-      const results = await searchFAQs(query, user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      const results = await searchFAQs(query, user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
       setFAQs(results);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
       console.error('Search error:', err);
     }
-  }, [user?.role]);
+  }, [user?.role, currentLanguage]);
 
   // Filter by category
   const handleFilterCategory = useCallback(async (category: string | null) => {
@@ -68,14 +74,14 @@ export function useFAQ() {
         setFAQs(filtered);
       } else {
         // Reload all FAQs
-        const data = await getFAQsByRole(user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
         setFAQs(data);
       }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Filter failed');
     }
-  }, [user?.role, faqs]);
+  }, [user?.role, currentLanguage, faqs]);
 
   return {
     faqs,

@@ -75,7 +75,6 @@ export default function GrantAccessModal({
               >
                 <option value="staff">{t('userManagement.staff')}</option>
                 <option value="hr">{t('userManagement.hr')}</option>
-                <option value="admin">{t('userManagement.admin')}</option>
               </select>
             </FormField>
           </div>
