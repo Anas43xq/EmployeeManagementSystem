@@ -7,6 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const isDev = Deno.env.get('ENVIRONMENT') === 'development';
+const log = (msg: string, data?: any) => {
+  if (isDev) console.log(msg, data);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,7 +19,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    console.log('[grant-user-access] Auth header received:', !!authHeader);
+    log('[grant-user-access] Auth header received:', !!authHeader);
     
     if (!authHeader) {
       console.error('[grant-user-access] Missing authorization header');
@@ -30,7 +35,7 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace('Bearer ', '');
-    console.log('[grant-user-access] Token extracted, attempting to verify');
+    log('[grant-user-access] Token extracted, attempting to verify');
     
     // Use getSession with the token to verify auth
     const { data: { session }, error: authError } = await supabaseAdmin.auth.getSession();
@@ -46,14 +51,14 @@ serve(async (req) => {
         try {
           const payload = JSON.parse(atob(parts[1]));
           callerUser = { id: payload.sub };
-          console.log('[grant-user-access] JWT decoded, user ID:', callerUser.id);
+          log('[grant-user-access] JWT decoded, user ID:', callerUser.id);
         } catch (e) {
           console.error('[grant-user-access] Failed to decode JWT:', e.message);
         }
       }
     }
 
-    console.log('[grant-user-access] Auth result:', {
+    log('[grant-user-access] Auth result:', {
       hasUser: !!callerUser,
       userId: callerUser?.id,
       authError: authError?.message,
@@ -68,7 +73,7 @@ serve(async (req) => {
     }
 
     // Check if caller is admin
-    console.log('[grant-user-access] Checking if user is admin:', callerUser.id);
+    log('[grant-user-access] Checking if user is admin:', callerUser.id);
     
     const { data: callerData, error: callerError } = await supabaseAdmin
       .from('users')
@@ -76,7 +81,7 @@ serve(async (req) => {
       .eq('id', callerUser.id)
       .single();
 
-    console.log('[grant-user-access] Admin check result:', {
+    log('[grant-user-access] Admin check result:', {
       role: callerData?.role,
       error: callerError?.message,
       isAdmin: callerData?.role === 'admin',
@@ -96,7 +101,7 @@ serve(async (req) => {
     let requestBody: any;
     try {
       requestBody = await req.json();
-      console.log('[grant-user-access] Successfully parsed request body');
+      log('[grant-user-access] Successfully parsed request body');
     } catch (parseError) {
       console.error('[grant-user-access] JSON parse error:', parseError.message);
       return new Response(
@@ -107,7 +112,7 @@ serve(async (req) => {
 
     const { email, password, role, employee_id } = requestBody;
 
-    console.log('[grant-user-access] Received request with fields:', {
+    log('[grant-user-access] Received request with fields:', {
       email: email ? `${email.substring(0, 3)}...` : 'MISSING',
       password: password ? `${typeof password} - ${password.length} chars` : 'MISSING',
       role: role || 'MISSING',
@@ -141,7 +146,7 @@ serve(async (req) => {
     const cleanRole = role.trim();
     const cleanEmployeeId = employee_id.trim();
 
-    console.log('[grant-user-access] Creating auth user with:', {
+    log('[grant-user-access] Creating auth user with:', {
       email: cleanEmail,
       passwordLength: cleanPassword.length,
       role: cleanRole,
@@ -150,7 +155,7 @@ serve(async (req) => {
 
     // Step 1: Create auth user
     // First, try with the admin client (without app_metadata)
-    console.log('[grant-user-access] Creating auth user...');
+    log('[grant-user-access] Creating auth user...');
     
     const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
       email: cleanEmail,
@@ -182,10 +187,10 @@ serve(async (req) => {
     }
 
     const newUserId = authData.user.id;
-    console.log('[grant-user-access] Auth user created successfully. User ID:', newUserId);
+    log('[grant-user-access] Auth user created successfully. User ID:', newUserId);
 
     // Step 1b: Update auth user app_metadata with role and employee_id
-    console.log('[grant-user-access] Updating auth user metadata with role and employee_id...');
+    log('[grant-user-access] Updating auth user metadata with role and employee_id...');
     
     const { error: updateMetaError } = await supabaseAdmin.auth.admin.updateUserById(newUserId, {
       app_metadata: {
@@ -198,11 +203,11 @@ serve(async (req) => {
       console.error('[grant-user-access] Failed to update metadata:', updateMetaError?.message);
       // Don't fail here - trigger might still work with email matching
     } else {
-      console.log('[grant-user-access] Metadata updated successfully');
+      log('[grant-user-access] Metadata updated successfully');
     }
 
     // Step 2: Insert into public.users table (users table creation will trigger automatically)
-    console.log('[grant-user-access] Waiting for trigger to create user record...');
+    log('[grant-user-access] Waiting for trigger to create user record...');
     
     // Wait a moment for trigger to fire
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -229,7 +234,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('[grant-user-access] User created successfully:', { id: newUserId, role: createdUser.role, employee_id: createdUser.employee_id });
+    log('[grant-user-access] User created successfully:', { id: newUserId, role: createdUser.role, employee_id: createdUser.employee_id });
 
     return new Response(
       JSON.stringify({ 

@@ -85,8 +85,6 @@ async function _sendBanNotificationEmail(email: string, reason: string | null, b
       subject: 'Account Suspended - DevTeam Hub',
       html: htmlTemplate,
     });
-
-    console.log(`Ban notification email sent to ${email}`);
   } catch (error) {
     console.error(`Failed to send ban notification email: ${error.message}`);
   }
@@ -180,7 +178,6 @@ serve(async (req) => {
         // Revoke all active sessions immediately so the ban takes effect without waiting
         try {
           await supabaseAdmin.auth.admin.signOut(userId, 'others');
-          console.log(`All sessions revoked for banned user ${userId}`);
         } catch (signOutError) {
           console.error(`Failed to revoke sessions for user ${userId}:`, (signOutError as Error).message);
           // Non-fatal: user is still banned, they just won't be kicked until next request
@@ -200,7 +197,6 @@ serve(async (req) => {
             try {
               const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
               await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been suspended', html: htmlTemplate });
-              console.log(`Ban notification email sent to ${userEmail}`);
             } catch (error) {
               console.error(`Failed to send ban notification email: ${error.message}`);
             }
@@ -227,7 +223,6 @@ serve(async (req) => {
                     try {
                       const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
                       await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been reactivated', html: htmlTemplate });
-                      console.log(`Unban notification email sent to ${userEmail}`);
                     } catch (error) {
                       console.error(`Failed to send unban notification email: ${error.message}`);
                     }
@@ -269,7 +264,6 @@ serve(async (req) => {
                     try {
                       const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
                       await transporter.sendMail({ from: fromEmail, to: userEmail, subject: 'Your account has been deactivated', html: htmlTemplate });
-                      console.log(`Deactivation notification email sent to ${userEmail}`);
                     } catch (error) {
                       console.error(`Failed to send deactivation notification email: ${error.message}`);
                     }
@@ -286,7 +280,6 @@ serve(async (req) => {
         // Revoke all active sessions so deactivation takes effect immediately
         try {
           await supabaseAdmin.auth.admin.signOut(userId, 'others');
-          console.log(`All sessions revoked for deactivated user ${userId}`);
         } catch (signOutError) {
           console.error(`Failed to revoke sessions for user ${userId}:`, (signOutError as Error).message);
         }

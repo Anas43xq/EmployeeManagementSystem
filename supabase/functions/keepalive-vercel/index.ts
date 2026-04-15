@@ -13,6 +13,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const isDev = Deno.env.get('ENVIRONMENT') === 'development';
+const log = (msg: string, data?: any) => {
+  if (isDev) console.log(msg, data);
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -38,8 +43,6 @@ Deno.serve(async (req: Request) => {
 
     const endpoint = `https://${vercelUrl}/api/keepalive-supabase`;
     
-    console.log(`[Keepalive-Vercel] Calling Vercel endpoint: ${endpoint}`);
-
     const response = await fetch(endpoint, {
       method: "GET",
       headers: {
@@ -48,9 +51,6 @@ Deno.serve(async (req: Request) => {
     });
 
     const responseText = await response.text();
-    console.log(
-      `[Keepalive-Vercel] Vercel response: ${response.status} - ${responseText}`
-    );
 
     if (!response.ok) {
       throw new Error(

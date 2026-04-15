@@ -101,14 +101,6 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     }
 
     // Validate form fields
-    console.log('[handleGrantAccess] Form validation started', {
-      employeeId: grantAccessForm.employeeId,
-      passwordLength: grantAccessForm.password?.length,
-      passwordTrimmedLength: grantAccessForm.password?.trim().length,
-      role: grantAccessForm.role,
-      selectedEmployeeEmail: selectedEmployee?.email,
-    });
-
     if (!grantAccessForm.employeeId || !grantAccessForm.employeeId.trim()) {
       showNotification('error', 'Please select an employee');
       return;
@@ -133,7 +125,6 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       return;
     }
 
-    console.log('[handleGrantAccess] All validations passed, calling grantUserAccess');
     setSubmitting(true);
     try {
       const data = await grantUserAccess({

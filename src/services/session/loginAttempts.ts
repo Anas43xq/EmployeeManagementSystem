@@ -239,18 +239,8 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
       !val || val === 'unknown' || (typeof val === 'string' && val.trim() === '');
 
     if (isInvalid(macProxy.ipAddress) || isInvalid(macProxy.userAgent)) {
-      console.debug('[IP/MAC Rate Limit] Skipping check - IP/UA detection unavailable', {
-        ip: macProxy.ipAddress,
-        ua: macProxy.userAgent,
-      });
       return parseIpMacLimitResult(null);
     }
-
-    console.debug('[IP/MAC Rate Limit] Sending RPC with params:', {
-      p_ip_address: macProxy.ipAddress,
-      p_user_agent: macProxy.userAgent?.substring(0, 50),
-      p_email: email,
-    });
 
     const { data, error } = await rpc.rpc('check_ip_mac_limits', {
       p_ip_address: macProxy.ipAddress,
@@ -270,7 +260,6 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
     return parseIpMacLimitResult(data);
   } catch (_err: unknown) {
     // Network error or other issue, assume allowed
-    console.debug('[IP/MAC Rate Limit] Exception:', _err);
     return parseIpMacLimitResult(null);
   }
 }

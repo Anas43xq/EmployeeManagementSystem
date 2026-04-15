@@ -138,13 +138,6 @@ export async function grantUserAccess(request: {
   }
 
   // Validate request fields before sending to edge function
-  console.log('[grantUserAccess] Validating request fields:', {
-    email: request.email ? `${request.email.substring(0, 3)}...` : 'MISSING',
-    password: request.password ? `${request.password.length} chars` : 'MISSING',
-    role: request.role || 'MISSING',
-    employeeId: request.employeeId || 'MISSING',
-  });
-
   if (!request.email?.trim()) {
     throw new Error('Email is required');
   }
@@ -169,25 +162,6 @@ export async function grantUserAccess(request: {
     employee_id: request.employeeId.trim(),
   };
 
-  console.log('[grantUserAccess] Request body constructed:', {
-    keys: Object.keys(requestBody),
-    email: requestBody.email,
-    password_present: !!requestBody.password,
-    password_length: requestBody.password?.length,
-    role: requestBody.role,
-    employee_id: requestBody.employee_id,
-  });
-
-  // Log the exact body being sent
-  console.log('[grantUserAccess] Full request body for debugging:', JSON.stringify({
-    email: requestBody.email,
-    password: '***REDACTED***',
-    role: requestBody.role,
-    employee_id: requestBody.employee_id,
-  }));
-
-  console.log('[grantUserAccess] Sending request to edge function...');
-  
   // Get Supabase URL from environment
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   if (!supabaseUrl) {
@@ -195,8 +169,6 @@ export async function grantUserAccess(request: {
   }
   
   const functionUrl = `${supabaseUrl}/functions/v1/grant-user-access`;
-  
-  console.log('[grantUserAccess] Calling edge function at:', functionUrl);
   
   let data: any;
   try {
@@ -210,13 +182,6 @@ export async function grantUserAccess(request: {
     });
 
     data = await response.json();
-
-    console.log('[grantUserAccess] Edge function response received:', {
-      status: response.status,
-      success: data?.success,
-      error: data?.error,
-      hasUserId: !!data?.user?.id,
-    });
 
     if (!response.ok) {
       console.error('[grantUserAccess] Edge function HTTP error:', {
@@ -244,7 +209,6 @@ export async function grantUserAccess(request: {
     throw error instanceof Error ? error : new Error(String(error));
   }
 
-  console.log('[grantUserAccess] Success! User created:', data?.user?.id);
   return data;
 }
 
@@ -261,12 +225,33 @@ export async function updateManagedUserRole(userId: string, role: User['role']):
 }
 
 export async function revokeManagedUserAccess(userId: string): Promise<void> {
-  const { error } = await db
-    .from('users')
-    .delete()
-    .eq('id', userId);
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    throw new Error('Not authenticated');
+  }
 
-  if (error) throw error;
+  // Get Supabase URL from environment
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('Supabase URL not configured');
+  }
+  
+  const functionUrl = `${supabaseUrl}/functions/v1/revoke-user-access`;
+  
+  const response = await fetch(functionUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('[revokeManagedUserAccess] Error response:', errorData);
+    throw new Error(errorData.error || `Failed to revoke user access: ${response.statusText}`);
+  }
 }
 
 export async function requestManagedUserPasswordReset(email: string, redirectTo: string): Promise<void> {

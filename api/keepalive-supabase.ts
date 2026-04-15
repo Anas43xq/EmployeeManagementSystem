@@ -33,8 +33,6 @@ export default async function handler(
     const results = [];
 
     for (let cycle = 1; cycle <= totalCycles; cycle++) {
-      console.log(`[Keepalive-Supabase] Starting cycle ${cycle}/${totalCycles}`);
-
       // Get a test employee ID from the database
       const { data: testEmployee, error: empError } = await supabase
         .from('employees')
@@ -78,7 +76,6 @@ export default async function handler(
 
         // 1. CREATE task
         const taskTitle = `[Keepalive Test] ${new Date().toISOString()}`;
-        console.log(`[Keepalive-Supabase] Cycle ${cycle}: Creating test task`);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: createdTask, error: createError } = await (
@@ -100,13 +97,9 @@ export default async function handler(
         }
 
         const taskId = createdTask.id;
-        console.log(`[Keepalive-Supabase] Cycle ${cycle}: Task created (ID: ${taskId})`);
 
         // 2. WAIT 1 second and VIEW task
         await sleep(1000);
-        console.log(
-          `[Keepalive-Supabase] Cycle ${cycle}: Viewing task after 1 second`
-        );
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: viewedTask, error: viewError } = await (
@@ -120,11 +113,8 @@ export default async function handler(
           throw new Error(`Failed to view task: ${viewError?.message || 'Unknown error'}`);
         }
 
-        console.log(`[Keepalive-Supabase] Cycle ${cycle}: Task viewed successfully`);
-
         // 3. WAIT 1 more second and DELETE task
         await sleep(1000);
-        console.log(`[Keepalive-Supabase] Cycle ${cycle}: Deleting task after 2 seconds`);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error: deleteError } = await (supabase.from('employee_tasks') as any)
@@ -135,7 +125,6 @@ export default async function handler(
           throw new Error(`Failed to delete task: ${deleteError.message}`);
         }
 
-        console.log(`[Keepalive-Supabase] Cycle ${cycle}: Task deleted successfully`);
         results.push({
           cycle,
           status: 'success',
@@ -153,8 +142,6 @@ export default async function handler(
         });
       }
     }
-
-    console.log('[Keepalive-Supabase] All cycles completed');
 
     return res.status(200).json({
       success: true,
