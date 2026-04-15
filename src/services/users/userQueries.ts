@@ -137,20 +137,48 @@ export async function grantUserAccess(request: {
     throw new Error('Not authenticated');
   }
 
+  // Validate request fields before sending to edge function
+  if (!request.email?.trim()) {
+    throw new Error('Email is required');
+  }
+  if (!request.password?.trim()) {
+    throw new Error('Password is required');
+  }
+  if (!request.role?.trim()) {
+    throw new Error('Role is required');
+  }
+  if (!request.employeeId?.trim()) {
+    throw new Error('Employee ID is required');
+  }
+
+  const requestBody = {
+    email: request.email.trim(),
+    password: request.password.trim(),
+    role: request.role.trim(),
+    employee_id: request.employeeId.trim(),
+  };
+
+  console.log('[grantUserAccess] Sending request to edge function:', {
+    email: requestBody.email,
+    role: requestBody.role,
+    employee_id: requestBody.employee_id,
+  });
+
   const { data, error } = await db.functions.invoke('grant-user-access', {
-    body: {
-      email: request.email,
-      password: request.password,
-      role: request.role,
-      employee_id: request.employeeId,
-    },
+    body: requestBody,
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
   });
 
-  if (error || !data?.success) {
-    throw new Error(error?.message || data?.error || 'Failed to grant access');
+  if (error) {
+    console.error('[grantUserAccess] Edge function error:', error);
+    throw new Error(error?.message || 'Failed to grant access');
+  }
+
+  if (!data?.success) {
+    console.error('[grantUserAccess] Edge function returned error:', data?.error);
+    throw new Error(data?.error || 'Failed to grant access');
   }
 
   return data;

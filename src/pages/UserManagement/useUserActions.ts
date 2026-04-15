@@ -100,11 +100,32 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       return;
     }
 
+    // Validate form fields
+    if (!grantAccessForm.employeeId || !grantAccessForm.employeeId.trim()) {
+      showNotification('error', 'Please select an employee');
+      return;
+    }
+
+    if (!grantAccessForm.password || grantAccessForm.password.trim().length < 6) {
+      showNotification('error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!grantAccessForm.role) {
+      showNotification('error', 'Please select a role');
+      return;
+    }
+
+    if (!selectedEmployee.email || !selectedEmployee.email.trim()) {
+      showNotification('error', 'Employee email is missing');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const data = await grantUserAccess({
-        email: selectedEmployee.email,
-        password: grantAccessForm.password,
+        email: selectedEmployee.email.trim(),
+        password: grantAccessForm.password.trim(),
         role: grantAccessForm.role,
         employeeId: selectedEmployee.id,
       });

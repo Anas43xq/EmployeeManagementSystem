@@ -52,7 +52,20 @@ serve(async (req) => {
 
     const { email, password, role, employee_id } = await req.json();
 
+    console.log('[grant-user-access] Received request with fields:', {
+      email: email ? `${email.substring(0, 3)}...` : 'MISSING',
+      password: password ? '***' : 'MISSING',
+      role: role || 'MISSING',
+      employee_id: employee_id || 'MISSING',
+    });
+
     if (!email || !password || !role || !employee_id) {
+      console.error('[grant-user-access] Validation failed for fields:', {
+        email: !email,
+        password: !password,
+        role: !role,
+        employee_id: !employee_id,
+      });
       return new Response(
         JSON.stringify({ error: 'Missing required fields: email, password, role, employee_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -70,7 +83,11 @@ serve(async (req) => {
     });
 
     if (signupError || !authData.user) {
-      console.error('Auth signup error:', signupError?.message);
+      console.error('Auth signup error:', {
+        message: signupError?.message,
+        status: signupError?.status,
+        userCreated: !!authData.user,
+      });
       return new Response(
         JSON.stringify({ error: `Failed to create auth user: ${signupError?.message}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
