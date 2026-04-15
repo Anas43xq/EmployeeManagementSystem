@@ -169,14 +169,24 @@ export async function grantUserAccess(request: {
     employee_id: request.employeeId.trim(),
   };
 
-  console.log('[grantUserAccess] Sending request to edge function:', {
+  console.log('[grantUserAccess] Request body constructed:', {
+    keys: Object.keys(requestBody),
     email: requestBody.email,
+    password_present: !!requestBody.password,
+    password_length: requestBody.password?.length,
     role: requestBody.role,
     employee_id: requestBody.employee_id,
-    passwordIncluded: !!requestBody.password,
-    passwordLength: requestBody.password?.length,
   });
 
+  // Log the exact body being sent
+  console.log('[grantUserAccess] Full request body for debugging:', JSON.stringify({
+    email: requestBody.email,
+    password: '***REDACTED***',
+    role: requestBody.role,
+    employee_id: requestBody.employee_id,
+  }));
+
+  console.log('[grantUserAccess] Sending request to edge function...');
   const { data, error } = await db.functions.invoke('grant-user-access', {
     body: requestBody,
     headers: {
@@ -184,16 +194,38 @@ export async function grantUserAccess(request: {
     },
   });
 
+  console.log('[grantUserAccess] Edge function response received:', {
+    hasError: !!error,
+    hasData: !!data,
+    errorMessage: error?.message,
+    dataSuccess: data?.success,
+  });
+
   if (error) {
-    console.error('[grantUserAccess] Edge function error:', error);
+    console.error('[grantUserAccess] Edge function error:', {
+      message: error?.message,
+      status: error?.status,
+      code: error?.code,
+    });
+    
+    // Try to extract more details from the error
+    if (error instanceof Error) {
+      console.error('[grantUserAccess] Error details:', error.toString());
+    }
+    
     throw new Error(error?.message || 'Failed to grant access');
   }
 
   if (!data?.success) {
-    console.error('[grantUserAccess] Edge function returned error:', data?.error);
+    console.error('[grantUserAccess] Edge function returned error:', {
+      error: data?.error,
+      details: data?.details,
+      received: data,
+    });
     throw new Error(data?.error || 'Failed to grant access');
   }
 
+  console.log('[grantUserAccess] Success! User created:', data?.user?.id);
   return data;
 }
 
