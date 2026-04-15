@@ -24,7 +24,6 @@ export async function fetchActiveEmployees(
   const { data, error } = await dbClient.select({
     from: 'employees',
     columns,
-    filters: [{ column: 'status', operator: 'neq', value: 'deactivated' }],
     orderBy: { column: 'first_name' },
   });
 
