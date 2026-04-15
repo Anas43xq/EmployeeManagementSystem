@@ -53,10 +53,11 @@ export function useWarnings() {
     try {
       const data = await fetchActiveEmployeesWithDefaults(true);
       setEmployees(data as (EmployeeBasic & { employee_number: string })[]);
-    } catch {
-      // silent
+    } catch (_error) {
+      logError(extractError(_error), 'useWarnings.loadEmployees');
+      showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
-  }, [isStaff]);
+  }, [isStaff, showNotification, t]);
 
   useEffect(() => {
     loadWarnings();
