@@ -100,7 +100,7 @@ export async function getDashboardData(
         return [];
       }
     })(),
-  ];
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const activeEmployees = employeesRes.data?.filter((e: unknown) => (e as any).status === 'active').length || 0;
