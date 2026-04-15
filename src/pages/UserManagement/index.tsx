@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { UserPlus, ShieldAlert, ShieldCheck, Shield } from 'lucide-react';
-import { PageSpinner, PageHeader, Button } from '../../components/ui';
+import { ShieldAlert, ShieldCheck, Shield } from 'lucide-react';
+import { PageSpinner, PageHeader } from '../../components/ui';
 import { useUserManagement } from './useUserManagement';
 import UserStatsCards from './UserStatsCards';
 import UserFilters from './UserFilters';
 import UsersTable from './UsersTable';
-import GrantAccessModal from './GrantAccessModal';
 import EditUserModal from './EditUserModal';
 import RevokeAccessModal from './RevokeAccessModal';
 import ResetPasswordModal from './ResetPasswordModal';
@@ -15,7 +14,6 @@ import UnbanUserModal from './UnbanUserModal';
 export default function UserManagement() {
   const { t } = useTranslation();
   const {
-    employeesWithoutAccess,
     loading,
     searchTerm,
     setSearchTerm,
@@ -24,10 +22,6 @@ export default function UserManagement() {
     activeModal,
     selectedUser,
     submitting,
-    showPassword,
-    setShowPassword,
-    grantAccessForm,
-    setGrantAccessForm,
     editForm,
     setEditForm,
     banForm,
@@ -35,7 +29,6 @@ export default function UserManagement() {
     currentUserId,
     loadUsers,
     loadEmployeesWithoutAccess,
-    handleGrantAccess,
     handleEditUser,
     handleRevokeAccess,
     handleResetPassword,
@@ -43,7 +36,7 @@ export default function UserManagement() {
     handleUnbanUser,
     handleDeactivateUser,
     handleActivateUser,
-    openGrantAccessModal,
+
     openEditModal,
     openRevokeAccessModal,
     openResetPasswordModal,
@@ -85,18 +78,6 @@ export default function UserManagement() {
       <PageHeader
         title={t('userManagement.title')}
         subtitle={t('userManagement.subtitleNew')}
-        action={
-          <Button
-            onClick={() => {
-              setGrantAccessForm({ employeeId: '', password: '', role: 'staff' });
-              openGrantAccessModal();
-            }}
-            icon={<UserPlus className="w-5 h-5" />}
-            disabled={employeesWithoutAccess.length === 0}
-          >
-            {t('userManagement.grantAccess')}
-          </Button>
-        }
       />
 
       <UserStatsCards stats={stats} />
@@ -123,17 +104,6 @@ export default function UserManagement() {
         getRoleBadge={getRoleBadge}
       />
 
-      <GrantAccessModal
-        show={activeModal === 'grantAccess'}
-        onClose={closeModal}
-        employeesWithoutAccess={employeesWithoutAccess}
-        formData={grantAccessForm}
-        setFormData={setGrantAccessForm}
-        onSubmit={handleGrantAccess}
-        submitting={submitting}
-        showPassword={showPassword}
-        setShowPassword={setShowPassword}
-      />
 
       <EditUserModal
         show={activeModal === 'edit'}

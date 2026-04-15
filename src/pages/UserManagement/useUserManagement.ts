@@ -42,7 +42,6 @@ export function useUserManagement() {
 
   // --- Actions hook ---
   const actions = useUserActions({
-    employeesWithoutAccess,
     loadUsers,
     loadEmployeesWithoutAccess,
   });
