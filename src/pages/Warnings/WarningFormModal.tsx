@@ -44,20 +44,26 @@ export default function WarningFormModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {t('warnings.employee')} <span className="text-red-500">*</span>
             </label>
-            <select
-              name="employee_id"
-              value={formData.employee_id}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="">{t('warnings.selectEmployee')}</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.first_name} {emp.last_name} ({emp.employee_number})
-                </option>
-              ))}
-            </select>
+            {employees.length === 0 ? (
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 text-sm">
+                {t('common.noEmployeesAvailable', 'No active employees available')}
+              </div>
+            ) : (
+              <select
+                name="employee_id"
+                value={formData.employee_id}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">{t('warnings.selectEmployee')}</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.first_name} {emp.last_name} ({emp.employee_number})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div>

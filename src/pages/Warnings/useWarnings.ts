@@ -52,6 +52,9 @@ export function useWarnings() {
     if (isStaff) return;
     try {
       const data = await fetchActiveEmployeesWithDefaults(true);
+      if (!data || data.length === 0) {
+        console.warn('[Warnings] No active employees found');
+      }
       setEmployees(data as (EmployeeBasic & { employee_number: string })[]);
     } catch (_error) {
       logError(extractError(_error), 'useWarnings.loadEmployees');

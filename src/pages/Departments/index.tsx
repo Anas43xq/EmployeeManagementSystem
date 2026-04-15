@@ -63,6 +63,7 @@ export default function Departments() {
         formData={formData}
         setFormData={setFormData}
         employees={employees}
+        departments={departments}
         onSubmit={handleSubmit}
         submitting={submitting}
       />

@@ -9,6 +9,7 @@ interface DepartmentFormModalProps {
   formData: DepartmentForm;
   setFormData: React.Dispatch<React.SetStateAction<DepartmentForm>>;
   employees: Employee[];
+  departments: Department[];
   onSubmit: (e: React.FormEvent) => void;
   submitting: boolean;
 }
@@ -20,10 +21,18 @@ export default function DepartmentFormModal({
   formData,
   setFormData,
   employees,
+  departments,
   onSubmit,
   submitting,
 }: DepartmentFormModalProps) {
   const { t } = useTranslation();
+
+  const availableEmployees = employees.filter((emp) => {
+    const isHeadOfOtherDept = departments.some(
+      (dept) => dept.head_id === emp.id && dept.id !== editingDept?.id
+    );
+    return !isHeadOfOtherDept;
+  });
 
   return (
     <Modal show={show} onClose={onClose}>
@@ -68,7 +77,7 @@ export default function DepartmentFormModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">{t('departments.notAssigned')}</option>
-              {employees.map((emp) => (
+              {availableEmployees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
                   {emp.first_name} {emp.last_name}
                 </option>

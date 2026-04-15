@@ -51,8 +51,12 @@ export function useTasks() {
     if (isStaff) return;
     try {
       const data = await fetchActiveEmployeesWithDefaults(true);
+      if (!data || data.length === 0) {
+        console.warn('[Tasks] No active employees found');
+      }
       setEmployees(data as (EmployeeBasic & { employee_number: string })[]);
     } catch (_error) {
+      console.error('[Tasks] Failed to load employees:', _error);
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
   }, [isStaff, showNotification, t]);

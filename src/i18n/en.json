@@ -37,7 +37,9 @@
     "days": "days",
     "back": "Back",
     "points": "pts",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "noEmployeesAvailable": "No active employees available",
+    "failedToLoad": "Failed to load"
   },
   "auth": {
     "ems": "DevTeam",

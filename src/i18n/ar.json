@@ -37,7 +37,9 @@
     "days": "أيام",
     "back": "رجوع",
     "points": "نقاط",
-    "saveChanges": "حفظ التغييرات"
+    "saveChanges": "حفظ التغييرات",
+    "noEmployeesAvailable": "لا توجد موظفون نشطون متاحون",
+    "failedToLoad": "فشل التحميل"
   },
   "auth": {
     "ems": "ديف تيم",
