@@ -2,12 +2,15 @@ import { useTranslation } from 'react-i18next';
 import { Trophy, Star, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Card } from '../../components/ui';
-import { getEmployeeOfWeek } from '../../services/performance';
-import { useAsync } from '../../hooks';
+import type { EmployeeOfWeek } from '../../types';
 
-export default function EmployeeOfWeekWidget() {
+interface EmployeeOfWeekWidgetProps {
+  employeeOfWeek: EmployeeOfWeek | null;
+  loading: boolean;
+}
+
+export default function EmployeeOfWeekWidget({ employeeOfWeek, loading }: EmployeeOfWeekWidgetProps) {
   const { t } = useTranslation();
-  const { data: employeeOfWeek, loading } = useAsync(() => getEmployeeOfWeek());
 
   if (loading) {
     return (

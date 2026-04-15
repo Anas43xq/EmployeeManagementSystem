@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getDashboardData } from '../../services/dashboard';
 import { useAsync } from '../../hooks/useAsync';
 import type { Stats, RecentActivity, DepartmentData, LeaveStatusData } from './types';
+import type { EmployeeOfWeek, EmployeePerformance } from '../../types';
 
 const DEFAULT_STATS: Stats = {
   totalEmployees: 0,
@@ -30,7 +31,9 @@ export function useDashboard() {
   const recentActivities: RecentActivity[] = data?.recentActivities ?? [];
   const departmentData: DepartmentData[] = data?.departmentData ?? [];
   const leaveStatusData: LeaveStatusData[] = data?.leaveStatusData ?? [];
+  const employeeOfWeek: EmployeeOfWeek | null = data?.employeeOfWeek ?? null;
+  const topPerformers: EmployeePerformance[] = data?.topPerformers ?? [];
 
-  return { stats, recentActivities, departmentData, leaveStatusData, loading };
+  return { stats, recentActivities, departmentData, leaveStatusData, employeeOfWeek, topPerformers, loading };
 }
 

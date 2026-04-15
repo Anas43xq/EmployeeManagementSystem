@@ -82,34 +82,37 @@ export async function getTopPerformers(weekStart?: string) {
     const latestPeriod = periodData?.[0] ?? null;
 
     if (!latestPeriod?.period_start) {
-      // Table empty — trigger calculation and return empty array
-      // Calculation will populate data for next call
+      // Table empty — trigger calculation and WAIT for it
       await triggerWeeklyPerformanceCalculation();
-      return [];
-    }
+      
+      // Re-fetch after calculation
+      const { data: newPeriodData } = await db
+        .from('employee_performance')
+        .select('period_start')
+        .order('period_start', { ascending: false })
+        .limit(1);
 
-    query = query.eq('period_start', latestPeriod.period_start);
+      const newLatestPeriod = newPeriodData?.[0] ?? null;
+      if (!newLatestPeriod?.period_start) return []; // still empty, give up
+      
+      query = query.eq('period_start', newLatestPeriod.period_start);
+    } else {
+      query = query.eq('period_start', latestPeriod.period_start);
+    }
   }
 
   const { data, error } = await query
     .order('total_score', { ascending: false })
     .limit(50);
 
-  if (error) {
-    return [];
-  }
+  if (error) return [];
 
-  // Sort by score DESC, then by hire_date ASC for consistent tie-breaking with Employee of Week
   const sortedData = (data || []).sort((a: unknown, b: unknown) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const aData = a as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bData = b as any;
-    // First, sort by total_score descending
     if (bData.total_score !== aData.total_score) {
       return bData.total_score - aData.total_score;
     }
-    // If scores are equal, sort by hire_date ascending (earliest first)
     const aHireDate = aData.employees?.hire_date ? new Date(aData.employees.hire_date).getTime() : Infinity;
     const bHireDate = bData.employees?.hire_date ? new Date(bData.employees.hire_date).getTime() : Infinity;
     return aHireDate - bHireDate;
@@ -121,10 +124,7 @@ export async function getTopPerformers(weekStart?: string) {
 export async function getEmployeeOfWeek(weekStart?: string) {
   let query = db
     .from('employee_of_week')
-    .select(`
-      *,
-      employees (*)
-    `);
+    .select(`*, employees (*)`);
 
   if (weekStart) {
     query = query.eq('week_start', weekStart);
@@ -133,10 +133,27 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   }
 
   const { data, error } = await query;
-  if (error) {
-    return null;
+  if (error) return null;
+
+  if (!data?.[0]) {
+    // Empty — trigger selection and wait
+    await triggerWeeklyPerformanceCalculation();
+    
+    try {
+      await rpc.rpc('select_employee_of_week', {});
+    } catch (_err) { /* silent */ }
+
+    // Re-fetch after selection
+    const { data: newData } = await db
+      .from('employee_of_week')
+      .select(`*, employees (*)`)
+      .order('week_start', { ascending: false })
+      .limit(1);
+
+    return newData?.[0] ? mapEmployeeOfWeekRecord(newData[0]) : null;
   }
-  return data?.[0] ? mapEmployeeOfWeekRecord(data[0]) : null;
+
+  return mapEmployeeOfWeekRecord(data[0]);
 }
 
 export async function getEmployeeOfWeekHistory(limit: number = 10) {

@@ -794,7 +794,68 @@ DO $$
 DECLARE
   v_current_week DATE := (date_trunc('week', CURRENT_DATE))::DATE;
   v_last_week DATE := (date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::DATE;
+  v_admin_id UUID;
 BEGIN
-  PERFORM select_employee_of_week(v_last_week);
-  PERFORM select_employee_of_week(v_current_week);
+  SELECT u.id INTO v_admin_id FROM public.users u WHERE u.role = 'admin' LIMIT 1;
+
+  -- Explicitly trigger performance calculation for both weeks
+  PERFORM calculate_weekly_performance(v_last_week);
+  PERFORM calculate_weekly_performance(v_current_week);
+
+  -- Then select employee of the week for both weeks
+  PERFORM select_employee_of_week(v_last_week, true);
+  PERFORM select_employee_of_week(v_current_week, true);
+  
+  -- Seed employee_performance data directly for current week (for immediate dashboard display)
+  INSERT INTO public.employee_performance (
+    employee_id, period_start, period_end, attendance_score, task_score, warning_deduction,
+    total_score, tasks_completed, tasks_overdue, attendance_days, absent_days, late_days, notes, calculated_at
+  )
+  SELECT 
+    e.id,
+    v_current_week,
+    v_current_week + INTERVAL '6 days',
+    -- Attendance score (0-30 based on attendance records this week)
+    COALESCE(
+      CASE 
+        WHEN COUNT(CASE WHEN a.status = 'present' THEN 1 END) >= 5 THEN 30
+        WHEN COUNT(CASE WHEN a.status = 'present' THEN 1 END) >= 4 THEN 25
+        WHEN COUNT(CASE WHEN a.status = 'present' THEN 1 END) >= 3 THEN 20
+        WHEN COUNT(CASE WHEN a.status IS NOT NULL THEN 1 END) > 0 THEN 10
+        ELSE 0
+      END,
+      0
+    ),
+    -- Task score (0-40 based on completed tasks this week)
+    COALESCE(
+      (COUNT(CASE WHEN t.status = 'completed' AND DATE(t.completed_at) BETWEEN v_current_week AND v_current_week + INTERVAL '6 days' THEN t.points END) * 10),
+      0
+    ),
+    -- Warning deduction (negative points for warnings)
+    -1 * COALESCE(
+      COUNT(CASE WHEN w.severity = 'critical' THEN 5 WHEN w.severity = 'major' THEN 3 WHEN w.severity = 'moderate' THEN 2 WHEN w.severity = 'minor' THEN 1 END),
+      0
+    ),
+    -- Total score
+    0, -- Will be calculated below
+    COUNT(CASE WHEN t.status = 'completed' AND DATE(t.completed_at) BETWEEN v_current_week AND v_current_week + INTERVAL '6 days' THEN 1 END),
+    COUNT(CASE WHEN t.status = 'overdue' AND t.deadline < CURRENT_DATE THEN 1 END),
+    COUNT(CASE WHEN a.status IN ('present', 'late', 'half-day') THEN 1 END),
+    COUNT(CASE WHEN a.status = 'absent' THEN 1 END),
+    COUNT(CASE WHEN a.status = 'late' THEN 1 END),
+    'Seeded performance data',
+    now()
+  FROM public.employees e
+  LEFT JOIN public.attendance a ON a.employee_id = e.id AND a.date BETWEEN v_current_week AND v_current_week + INTERVAL '6 days'
+  LEFT JOIN public.employee_tasks t ON t.employee_id = e.id
+  LEFT JOIN public.employee_warnings w ON w.employee_id = e.id AND w.status IN ('active', 'acknowledged')
+  WHERE e.status = 'active'
+  GROUP BY e.id
+  ON CONFLICT (employee_id, period_start, period_end) DO NOTHING;
+
+  -- Update total_score for seeded performance data
+  UPDATE public.employee_performance 
+  SET total_score = GREATEST(0, attendance_score + task_score + warning_deduction)
+  WHERE period_start = v_current_week AND employee_id IN (SELECT id FROM public.employees WHERE status = 'active');
+
 END $$;

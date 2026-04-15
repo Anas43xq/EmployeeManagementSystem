@@ -1,5 +1,7 @@
 import { db } from '../shared/dbClient';
 import type { UserRole } from '../auth/authHelpers';
+import type { EmployeePerformance, EmployeeOfWeek } from '../../types';
+import { getEmployeeOfWeek, getTopPerformers } from '../performance';
 
 interface DashboardStats {
   totalEmployees: number;
@@ -36,6 +38,8 @@ export async function getDashboardData(
   recentActivities: RecentActivity[];
   departmentData: Array<{ name: string; count: number }>;
   leaveStatusData: Array<{ name: string; value: number }>;
+  employeeOfWeek: EmployeeOfWeek | null;
+  topPerformers: EmployeePerformance[];
 }> {
   const today = new Date().toISOString().split('T')[0];
 
@@ -65,6 +69,8 @@ export async function getDashboardData(
     attendanceRes,
     departmentEmployeesRes,
     departmentNamesRes,
+    employeeOfWeekData,
+    topPerfomersData,
   ] = await Promise.all([
     db.from('employees').select('id, status', { count: 'exact' }),
     db.from('departments').select('id', { count: 'exact' }),
@@ -78,7 +84,23 @@ export async function getDashboardData(
     attendanceQuery,
     db.from('employees').select('department_id').eq('status', 'active'),
     db.from('departments').select('id, name'),
-  ]);
+    // Fetch employee of week (may trigger calculation if empty)
+    (async () => {
+      try {
+        return await getEmployeeOfWeek();
+      } catch (_error) {
+        return null;
+      }
+    })(),
+    // Fetch top performers (may trigger calculation if empty)
+    (async () => {
+      try {
+        return await getTopPerformers();
+      } catch (_error) {
+        return [];
+      }
+    })(),
+  ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const activeEmployees = employeesRes.data?.filter((e: unknown) => (e as any).status === 'active').length || 0;
@@ -129,5 +151,7 @@ export async function getDashboardData(
     recentActivities: (activitiesRes.data || []) as RecentActivity[],
     departmentData,
     leaveStatusData,
+    employeeOfWeek: employeeOfWeekData || null,
+    topPerformers: topPerfomersData || [],
   };
 }

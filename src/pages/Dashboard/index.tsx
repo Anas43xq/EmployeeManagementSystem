@@ -16,7 +16,7 @@ import PerformanceCalculationStatus from './PerformanceCalculationStatus';
 const LEAVE_COLORS = { Pending: '#f59e0b', Approved: '#10b981', Rejected: '#ef4444' };
 
 export default function Dashboard() {
-  const { stats, recentActivities, departmentData, leaveStatusData, loading } = useDashboard();
+  const { stats, recentActivities, departmentData, leaveStatusData, employeeOfWeek, topPerformers, loading } = useDashboard();
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,10 +40,10 @@ export default function Dashboard() {
       {(isWidgetVisible('employeeOfWeek', userRole) || isWidgetVisible('performanceChart', userRole)) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isWidgetVisible('employeeOfWeek', userRole) && (
-            <EmployeeOfWeekWidget />
+            <EmployeeOfWeekWidget employeeOfWeek={employeeOfWeek} loading={loading} />
           )}
           {isWidgetVisible('performanceChart', userRole) && (
-            <PerformanceChartWidget />
+            <PerformanceChartWidget topPerformers={topPerformers.slice(0, 5)} loading={loading} />
           )}
         </div>
       )}

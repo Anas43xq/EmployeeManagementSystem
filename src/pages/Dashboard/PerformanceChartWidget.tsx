@@ -1,28 +1,15 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, Award, Users } from 'lucide-react';
 import { Card } from '../../components/ui';
-import { getTopPerformers } from '../../services/performance';
 import type { EmployeePerformance } from '../../types';
 
-export default function PerformanceChartWidget() {
+interface PerformanceChartWidgetProps {
+  topPerformers: EmployeePerformance[];
+  loading: boolean;
+}
+
+export default function PerformanceChartWidget({ topPerformers, loading }: PerformanceChartWidgetProps) {
   const { t } = useTranslation();
-  const [topPerformers, setTopPerformers] = useState<EmployeePerformance[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadTopPerformers();
-  }, []);
-
-  const loadTopPerformers = async () => {
-    try {
-      const data = await getTopPerformers();
-      setTopPerformers(data.slice(0, 5)); // Top 5 performers
-    } catch (_error) {
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
