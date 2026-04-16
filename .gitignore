@@ -34,16 +34,11 @@ yarn-error.log*
 Text.ts
 structure.txt
 
-FEATURES.md
 DOCUMENTATION.md
 scripts/git-push.ps1
 supabase/.temp/
 DATABASE_SCHEMA.md
-PROJECT_PLAN.md
-PROJECT_PLAN.html
 PRE_SUBMISSION_CHECKLIST.md
-supabase/DATABASE_SCHEMA_GUIDE.md
-SOLID_REFACTORING_GUIDE.md
 scripts/__TEMP_AUTOMATED_TESTS__.ts
 supabase/migrations/20260415000000_faq_bilingual_jsonb.sql
 scripts/project-structure.md
