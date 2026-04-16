@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { signOutCurrentSession } from '../../services/session/sessionManager';
+import { signOutCurrentSession } from '../../services/session';
 import {
   getUserNotificationPreferences,
   saveUserNotificationPreferences,

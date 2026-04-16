@@ -29,7 +29,7 @@ export default async function handler(
       supabaseServiceKey
     );
 
-    let totalCycles = 2;
+    const totalCycles = 2;
     const results = [];
 
     for (let cycle = 1; cycle <= totalCycles; cycle++) {
@@ -77,9 +77,8 @@ export default async function handler(
         // 1. CREATE task
         const taskTitle = `[Keepalive Test] ${new Date().toISOString()}`;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: createdTask, error: createError } = await (
-          supabase.from('employee_tasks') as any
+          supabase.from('employee_tasks') as unknown
         )
           .insert({
             employee_id: testEmployeeId,
@@ -101,9 +100,8 @@ export default async function handler(
         // 2. WAIT 1 second and VIEW task
         await sleep(1000);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: viewedTask, error: viewError } = await (
-          supabase.from('employee_tasks') as any
+          supabase.from('employee_tasks') as unknown
         )
           .select('*')
           .eq('id', taskId)

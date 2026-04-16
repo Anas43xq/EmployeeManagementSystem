@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
+import { extractError, getErrorMessage, logError } from '../../lib/errorHandler';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { logActivity } from '../../services/activityLog';

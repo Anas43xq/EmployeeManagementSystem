@@ -1,0 +1,151 @@
+
+
+// File: attendanceQueries.ts
+
+import { db } from '../lib/db';
+import type { AttendanceRecord } from '../types/pages';
+import type { EmployeeWithNumber as Employee } from '../types';
+
+/**
+ * Fetches all active employees for attendance selection.
+ */
+export async function getAttendanceEmployees(): Promise<Employee[]> {
+  const { data, error } = await db
+    .from('employees')
+    .select('id, first_name, last_name, employee_number')
+    .eq('status', 'active')
+    .order('first_name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Fetches attendance records for a specific date,
+ * optionally filtered by employee_id.
+ */
+export async function getAttendanceRecords(
+  date: string,
+  employeeId?: string
+): Promise<AttendanceRecord[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = db
+    .from('attendance')
+    .select(
+      `
+        *,
+        employees (
+          first_name,
+          last_name,
+          employee_number
+        )
+      `
+    )
+    .eq('date', date)
+    .order('created_at', { ascending: false });
+
+  if (employeeId) {
+    query = query.eq('employee_id', employeeId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Checks if an attendance record already exists for an employee on a given date.
+ */
+export async function checkAttendanceExists(
+  employeeId: string,
+  date: string
+): Promise<{ id: string; check_in: string | null } | null> {
+  const { data, error } = await db
+    .from('attendance')
+    .select('id, check_in')
+    .eq('employee_id', employeeId)
+    .eq('date', date)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Creates a check-in attendance record for an employee.
+ */
+export async function markAttendance(
+  employeeId: string,
+  date: string,
+  checkInTime: string
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db.from('attendance') as any).insert({
+    employee_id: employeeId,
+    date,
+    check_in: checkInTime,
+    status: 'present',
+  });
+
+  if (error) throw error;
+}
+
+/**
+ * Updates the check-out time for an attendance record.
+ */
+export async function updateCheckOut(
+  recordId: string,
+  employeeId: string,
+  checkOutTime: string
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db.from('attendance') as any)
+    .update({ check_out: checkOutTime })
+    .eq('id', recordId)
+    .eq('employee_id', employeeId);
+
+  if (error) throw error;
+}
+
+/**
+ * Creates a manual attendance record (usually by admin/hr).
+ */
+export async function createAttendanceRecord(data: {
+  employee_id: string;
+  date: string;
+  check_in?: string | null;
+  check_out?: string | null;
+  status: 'present' | 'absent' | 'late' | 'half-day';
+  notes?: string;
+}): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db.from('attendance') as any).insert({
+    employee_id: data.employee_id,
+    date: data.date,
+    check_in: data.check_in || null,
+    check_out: data.check_out || null,
+    status: data.status,
+    notes: data.notes || null,
+  });
+
+  if (error) throw error;
+}
+
+/**
+ * Checks if an attendance record already exists for a given employee and date.
+ */
+export async function attendanceRecordExists(
+  employeeId: string,
+  date: string
+): Promise<boolean> {
+  const { data, error } = await db
+    .from('attendance')
+    .select('id')
+    .eq('employee_id', employeeId)
+    .eq('date', date)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !!data;
+}
+

@@ -10,7 +10,7 @@ import {
   deleteComplaint,
   subscribeToComplaintChanges,
 } from '../../services/complaints';
-import { notifyHRAndAdmins, createNotification } from '../../services/notifications/dbNotifications';
+import { notifyHRAndAdmins, createNotification } from '../../services/notifications';
 import { getEmployeeNameById, getUserAccountIdForEmployee } from '../../services/employees';
 import type { EmployeeComplaint, ComplaintStatus, ComplaintFormData } from './types';
 import { initialComplaintFormData } from './types';

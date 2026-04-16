@@ -1,14 +1,13 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp } from '../services/session/sessionManager';
-import { getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session/loginAttempts';
-import { clearAllCache } from '../services/shared/cacheManager';
-import { isRefreshTokenError, isAuthTransientError } from '../services/auth/authHelpers';
+import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp, getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session';
+import { clearAllCache } from '../lib/cache';
+import { isRefreshTokenError, isAuthTransientError } from '../services/auth';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
 
-export type { AuthUser } from '../services/auth/authHelpers';
-import type { AuthUser, UserRole } from '../services/auth/authHelpers';
+export type { AuthUser } from '../services/auth';
+import type { AuthUser, UserRole } from '../services/auth';
 import type { User } from '../services/supabase';
 
 const USER_ROLES: UserRole[] = ['admin', 'hr', 'staff'];

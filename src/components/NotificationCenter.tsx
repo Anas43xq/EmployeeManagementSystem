@@ -7,7 +7,7 @@ import {
   fetchNotifications,
   deleteNotification,
   subscribeToUserNotifications,
-} from '../services/notifications/dbNotifications';
+} from '../services/notifications';
 
 export default function NotificationCenter() {
   const { t } = useTranslation();

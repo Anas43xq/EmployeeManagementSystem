@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useForgotPassword, getDirectionClass } from '../../hooks/useAuthHooks';
-import { handleError } from '../../services/errorHandler';
+import { handleError } from '../../lib/errorHandler';
 import { ArrowLeft, Briefcase } from 'lucide-react';
 
 interface ForgotPasswordScreenProps {

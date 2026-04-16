@@ -13,7 +13,7 @@ import {
   subscribeToTaskChanges,
 } from '../../services/tasks';
 import { fetchActiveEmployeesWithDefaults, getUserAccountIdForEmployee } from '../../services/employees';
-import { notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
+import { notifyHRAndAdmins } from '../../services/notifications';
 import type { EmployeeTask, TaskStatus, TaskFormData } from './types';
 import { initialTaskFormData } from './types';
 import type { EmployeeBasic } from '../../types';

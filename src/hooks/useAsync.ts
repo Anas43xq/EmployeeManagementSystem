@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getErrorMessage } from '../services/errorHandler';
+import { getErrorMessage } from '../lib/errorHandler';
 
 /** Generic async data fetcher with loading and error state. */
 export function useAsync<T>(fn: () => Promise<T>) {

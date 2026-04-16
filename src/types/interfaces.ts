@@ -6,7 +6,7 @@
  * Enables testing, swapping implementations, and loose coupling
  */
 
-import type { AppError } from '../services/errorHandler';
+import type { AppError } from '../lib/errorHandler';
 
 /**
  * Abstract database client interface

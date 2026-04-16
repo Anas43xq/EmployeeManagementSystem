@@ -33,7 +33,6 @@ BEGIN
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
   DROP TRIGGER IF EXISTS on_auth_user_email_changed ON auth.users;
   DROP TRIGGER IF EXISTS check_leave_overlap_trigger ON public.leaves;
-  DROP TRIGGER IF EXISTS faqs_updated_at_trigger ON public.faqs;
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 
@@ -1073,18 +1072,9 @@ CREATE TRIGGER update_login_attempts_updated_at_trigger
   BEFORE UPDATE ON public.login_attempts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE OR REPLACE FUNCTION public.update_faqs_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE TRIGGER faqs_updated_at_trigger
   BEFORE UPDATE ON public.faqs
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_faqs_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 
 -- ============================================================

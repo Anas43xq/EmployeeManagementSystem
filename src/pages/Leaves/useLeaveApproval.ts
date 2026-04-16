@@ -8,7 +8,7 @@ import {
   getUserIdForEmployee,
   subscribeToLeavesChanges,
 } from '../../services/leaves';
-import { createNotification } from '../../services/notifications/dbNotifications';
+import { createNotification } from '../../services/notifications';
 import { logActivity } from '../../services/activityLog';
 import type { Leave } from './types';
 

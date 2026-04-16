@@ -301,6 +301,28 @@ serve(async (req) => {
         break;
       }
 
+      case 'revoke': {
+        // Delete from auth.users
+        const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        if (authDeleteError) {
+          console.error('[manage-user-status] revoke: Auth delete failed:', authDeleteError.message);
+        }
+
+        // Delete from public.users
+        const { error: publicDeleteError } = await supabaseAdmin
+          .from('users')
+          .delete()
+          .eq('id', userId);
+
+        if (publicDeleteError) {
+          console.error('[manage-user-status] revoke: Public delete failed:', publicDeleteError.message);
+          throw publicDeleteError;
+        }
+
+        result = { success: true, message: 'User access revoked successfully', userId };
+        break;
+      }
+
       case 'get-status': {
         const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
         
@@ -329,7 +351,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action. Use: ban, unban, deactivate, activate, or get-status' }),
+          JSON.stringify({ error: 'Invalid action. Use: ban, unban, deactivate, activate, revoke, or get-status' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }

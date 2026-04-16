@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
-import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
+import { extractError, getErrorMessage, logError } from '../../lib/errorHandler';
 import {
   generateMonthlyPayroll,
   getPayrollRecords,

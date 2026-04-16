@@ -4,7 +4,7 @@ import { Users, Calendar, Clock, TrendingUp, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { PieChart, Pie, Cell, Legend, Tooltip as PieTooltip } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
-import { isWidgetVisible, getVisibleQuickActions } from '../../services/dashboard/dashboardConfig';
+import { isWidgetVisible, getVisibleQuickActions } from '../../services/dashboard';
 import AnnouncementsWidget from '../../components/AnnouncementsWidget';
 import { PageSpinner, PageHeader, Card } from '../../components/ui';
 import { useDashboard } from './useDashboard';

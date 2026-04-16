@@ -5,8 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { extractError, getErrorMessage, logError, handleError } from '../services/errorHandler';
-import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session/loginAttempts';
+import { extractError, getErrorMessage, logError, handleError } from '../lib/errorHandler';
+import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session';
 import { isWebAuthnSupported, authenticateWithPasskey } from '../services/passkeys';
 import { sendPasswordResetEmail } from '../services/auth';
 

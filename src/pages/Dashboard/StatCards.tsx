@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Users, Building2, Calendar, CheckCircle, UserCheck, XCircle } from 'lucide-react';
-import { isWidgetVisible } from '../../services/dashboard/dashboardConfig';
+import { isWidgetVisible } from '../../services/dashboard';
 import { StatsCard } from '../../components/ui';
 import type { Stats } from './types';
 

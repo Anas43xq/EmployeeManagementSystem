@@ -3,7 +3,7 @@ import {
   getSessionEnforcementState,
   subscribeToSessionEnforcement,
   type SessionEnforcementState,
-} from '../services/session/sessionManager';
+} from '../services/session';
 
 interface UseSessionEnforcementParams {
   userId: string | undefined;

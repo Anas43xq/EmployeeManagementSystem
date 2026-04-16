@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useOtp } from '../../hooks/useAuthHooks';
-import { handleError } from '../../services/errorHandler';
+import { handleError } from '../../lib/errorHandler';
 import { Mail, Clock } from 'lucide-react';
 
 interface OtpScreenProps {

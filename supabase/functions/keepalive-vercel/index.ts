@@ -14,9 +14,9 @@ const corsHeaders = {
 };
 
 const isDev = Deno.env.get('ENVIRONMENT') === 'development';
-const log = (msg: string, data?: any) => {
-  if (isDev) console.log(msg, data);
-};
+if (isDev) {
+  const _log = (msg: string, data?: unknown) => console.log(msg, data);
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {

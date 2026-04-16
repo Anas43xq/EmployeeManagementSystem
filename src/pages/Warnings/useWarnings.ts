@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
+import { extractError, getErrorMessage, logError } from '../../lib/errorHandler';
 import { logActivity } from '../../services/activityLog';
 import {
   getWarnings,

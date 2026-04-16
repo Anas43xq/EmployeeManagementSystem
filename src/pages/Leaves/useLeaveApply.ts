@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { createLeave, checkLeaveConflicts, getEmployeeForLeave } from '../../services/leaves';
-import { notifyHRAndAdmins } from '../../services/notifications/dbNotifications';
+import { notifyHRAndAdmins } from '../../services/notifications';
 import { logActivity } from '../../services/activityLog';
 import type { LeaveFormData, LeaveConflict } from './types';
 

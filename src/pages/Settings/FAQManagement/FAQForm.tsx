@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { type FAQ } from '../../../services/faq';
-import type { CreateFAQInput, BilingualContent } from '../../../services/faq/faqAdmin';
+import type { CreateFAQInput, BilingualContent } from '../../../services/faq';
 
 const CATEGORIES = [
   'Account & Access',

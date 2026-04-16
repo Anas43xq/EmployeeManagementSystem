@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.5";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.38.5";
+import type { Database } from "../../../src/types/database.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +9,7 @@ const corsHeaders = {
 };
 
 const isDev = Deno.env.get('ENVIRONMENT') === 'development';
-const log = (msg: string, data?: any) => {
+const log = (msg: string, data?: unknown) => {
   if (isDev) console.log(msg, data);
 };
 
@@ -56,7 +57,7 @@ const decodeJwtUserId = (token: string): string | null => {
   }
 };
 
-const verifyAdminCaller = async (supabaseAdmin: any, token: string) => {
+const verifyAdminCaller = async (supabaseAdmin: SupabaseClient<Database>, token: string) => {
   const callerId = decodeJwtUserId(token);
   if (!callerId) {
     throw new ApiError(401, 'Invalid authentication token');
@@ -114,7 +115,7 @@ const parseGrantAccessRequest = async (req: Request): Promise<GrantAccessRequest
   };
 };
 
-const createAuthUser = async (supabaseAdmin: any, payload: GrantAccessRequest) => {
+const createAuthUser = async (supabaseAdmin: SupabaseClient<Database>, payload: GrantAccessRequest) => {
   log('[grant-user-access] Creating auth user for email:', payload.email);
 
   const { data: authData, error: signupError } = await supabaseAdmin.auth.admin.createUser({
@@ -136,7 +137,7 @@ const createAuthUser = async (supabaseAdmin: any, payload: GrantAccessRequest) =
 };
 
 const updateAuthUserMetadata = async (
-  supabaseAdmin: any,
+  supabaseAdmin: SupabaseClient<Database>,
   userId: string,
   role: string,
   employeeId: string
@@ -157,7 +158,7 @@ const updateAuthUserMetadata = async (
   return true;
 };
 
-const getUserRow = async (supabaseAdmin: any, userId: string) => {
+const getUserRow = async (supabaseAdmin: SupabaseClient<Database>, userId: string) => {
   const { data, error } = await supabaseAdmin
     .from('users')
     .select('id, role, employee_id')
@@ -172,7 +173,7 @@ const getUserRow = async (supabaseAdmin: any, userId: string) => {
   return data;
 };
 
-const waitForUserRow = async (supabaseAdmin: any, userId: string, attempts = 6, delayMs = 300) => {
+const waitForUserRow = async (supabaseAdmin: SupabaseClient<Database>, userId: string, attempts = 6, delayMs = 300) => {
   for (let i = 0; i < attempts; i += 1) {
     const user = await getUserRow(supabaseAdmin, userId);
     if (user) {

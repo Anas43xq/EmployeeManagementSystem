@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { extractError, getErrorMessage, logError } from '../../services/errorHandler';
+import { extractError, getErrorMessage, logError } from '../../lib/errorHandler';
 import { getCurrentAuthUser, signInForVerification, updateCurrentUserPassword } from '../../services/auth';
-import { signOutCurrentSession } from '../../services/session/sessionManager';
+import { signOutCurrentSession } from '../../services/session';
 import { useNotification } from '../../contexts/NotificationContext';
 import {
   getUserPasskeys,

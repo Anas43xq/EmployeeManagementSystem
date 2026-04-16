@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { sendLoginOtp } from '../services/session/loginAttempts';
+import { sendLoginOtp } from '../services/session';
 
 export interface OtpFlowState {
   otpEmail: string;

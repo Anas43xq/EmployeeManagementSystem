@@ -9,7 +9,7 @@ import {
   isPlatformAuthenticatorAvailable,
   type Passkey
 } from '../services/passkeys';
-import { extractError, getErrorMessage, logError } from '../services/errorHandler';
+import { extractError, getErrorMessage, logError } from '../lib/errorHandler';
 import { Card, Button } from './ui';
 import { Fingerprint, Shield, Plus } from 'lucide-react';
 import { PasskeyList } from './PasskeyList';
