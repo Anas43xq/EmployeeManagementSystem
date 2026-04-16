@@ -111,6 +111,7 @@
     "attendance": "الحضور",
     "announcements": "الإعلانات",
     "reports": "التقارير",
+    "faq": "الأسئلة الشائعة",
     "userManagement": "إدارة المستخدمين",
     "payroll": "الرواتب",
     "myPayslips": "قسائم راتبي",
@@ -118,7 +119,8 @@
     "warnings": "الإنذارات",
     "complaints": "الشكاوى",
     "settings": "الإعدادات",
-    "activityLogs": "سجلات النشاط"
+    "activityLogs": "سجلات النشاط",
+    "faqManagement": "إدارة الأسئلة الشائعة"
   },
   "navCategory": {
     "overview": "نظرة عامة",

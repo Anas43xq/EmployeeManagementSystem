@@ -20,7 +20,7 @@ const CATEGORIES = [
   'General',
 ];
 
-const ROLES = ['admin', 'hr', 'manager', 'staff'];
+const ROLES = ['admin', 'hr','staff'];
 
 interface FAQFormProps {
   faq?: FAQ | null;
@@ -45,7 +45,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
       ar: { question: '', answer: '' },
     },
     category: faq?.category || 'General',
-    visible_to: faq?.visible_to || ['staff', 'manager', 'hr', 'admin'],
+    visible_to: faq?.visible_to || ['staff', 'hr', 'admin'],
     faq_order: faq?.faq_order || 0,
   });
 
@@ -125,7 +125,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {faq ? (t('edit_faq') || 'Edit FAQ') : (t('create_faq') || 'Create FAQ')}
+          {faq ? (t('faq.editFaq') || 'Edit FAQ') : (t('faq.createFaq') || 'Create FAQ')}
         </h1>
         <button
           onClick={onCancel}
@@ -266,7 +266,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             disabled={loading}
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {t('lower_order_appears_first') || 'Lower order appears first'}
+            {t('faq.lowerOrderAppearsFirst') || 'Lower order appears first'}
           </p>
         </div>
 

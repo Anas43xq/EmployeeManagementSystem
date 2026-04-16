@@ -119,9 +119,9 @@ export const FAQManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('manage_faqs') || 'Manage FAQs'}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('faq.manageFaqs') || 'Manage FAQs'}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t('manage_faqs_desc') || 'Create, edit, and manage FAQs for all users'}
+            {t('faq.manageFaqsDesc') || 'Create, edit, and manage FAQs for all users'}
           </p>
         </div>
         <button
@@ -129,7 +129,7 @@ export const FAQManagement = () => {
           className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
         >
           <Plus className="h-5 w-5" />
-          {t('add_faq') || 'Add FAQ'}
+          {t('faq.addFaq') || 'Add FAQ'}
         </button>
       </div>
 
@@ -156,7 +156,7 @@ export const FAQManagement = () => {
       <div className="relative">
         <input
           type="text"
-          placeholder={t('search_faqs') || 'Search FAQs...'}
+          placeholder={t('faq.searchFaqs') || 'Search FAQs...'}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -176,11 +176,11 @@ export const FAQManagement = () => {
             <table className="w-full">
               <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('question') || 'Question'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('category') || 'Category'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('languages') || 'Languages'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('visible_to') || 'Visible To'}</th>
-                  <th className="text-right px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('actions') || 'Actions'}</th>
+                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.question') || 'Question'}</th>
+                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.category') || 'Category'}</th>
+                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.languages') || 'Languages'}</th>
+                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.visibleTo') || 'Visible To'}</th>
+                  <th className="text-right px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('common.actions') || 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>

@@ -116,11 +116,13 @@
     "complaints": "Complaints",
     "announcements": "Announcements",
     "reports": "Reports",
+    "faq": "FAQ",
     "userManagement": "User Management",
     "payroll": "Payroll",
     "myPayslips": "My Payslips",
     "settings": "Settings",
-    "activityLogs": "Activity Logs"
+    "activityLogs": "Activity Logs",
+    "faqManagement": "FAQ Management"
   },
   "navCategory": {
     "overview": "OVERVIEW",
