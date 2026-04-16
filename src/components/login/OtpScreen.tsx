@@ -129,7 +129,7 @@ export default function OtpScreen({
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
             maxLength={8}
-            disabled={loading || isVerifyDisabled}
+            disabled={loading}
             autoFocus
             className="w-full px-4 py-4 text-center text-3xl tracking-[0.5em] font-mono border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 disabled:bg-gray-100 transition-colors"
           />

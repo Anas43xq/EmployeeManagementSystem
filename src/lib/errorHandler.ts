@@ -237,14 +237,12 @@ export async function handleError(
     if (!context.otp?.triggerOtpFlow || !context.setScreen) {
       return;
     }
-    const { success, error } = await context.otp.triggerOtpFlow(context.email || '');
-    if (!success && error) {
-      if (context.form?.setError) {
-        context.form.setError(error);
-      }
-    } else {
-      context.setScreen('otp');
+    const { error } = await context.otp.triggerOtpFlow(context.email || '');
+    if (error && context.form?.setError) {
+      context.form.setError(error);
     }
+    // Always move to OTP page after 5 attempts - user can retry there
+    context.setScreen('otp');
     return;
   }
 
