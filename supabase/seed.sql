@@ -796,11 +796,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I mark my attendance?',
-          'answer', 'You can mark attendance in two ways:\n1. **Quick Mark**: Click **Mark Attendance** on Dashboard\n2. **Attendance Page**: Go to **Attendance** → **Mark Now**\n\nAttendance must be marked between 8:00 AM and 11:59 PM. Early/late markers are tracked.'
+          'answer', E'You can mark attendance in two ways:\n1. **Quick Mark**: Click **Mark Attendance** on Dashboard\n2. **Attendance Page**: Go to **Attendance** → **Mark Now**\n\nAttendance must be marked between 8:00 AM and 11:59 PM. Early/late markers are tracked.'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أسجل الحضور؟',
-          'answer', 'يمكنك تسجيل الحضور بطريقتين:\n1. **تسجيل سريع**: انقر على **تسجيل الحضور** في لوحة التحكم\n2. **صفحة الحضور**: انتقل إلى **الحضور** → **سجل الآن**\n\nيجب تسجيل الحضور بين الساعة 8:00 صباحاً والساعة 11:59 مساءً. يتم تتبع التسجيلات المبكرة/المتأخرة.'
+          'answer', E'يمكنك تسجيل الحضور بطريقتين:\n1. **تسجيل سريع**: انقر على **تسجيل الحضور** في لوحة التحكم\n2. **صفحة الحضور**: انتقل إلى **الحضور** → **سجل الآن**\n\nيجب تسجيل الحضور بين الساعة 8:00 صباحاً والساعة 11:59 مساءً. يتم تتبع التسجيلات المبكرة/المتأخرة.'
         )
       ),
       'attendance',

@@ -44,7 +44,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
       en: { question: '', answer: '' },
       ar: { question: '', answer: '' },
     },
-    category: faq?.category || 'General',
+    category: (faq?.category && CATEGORIES.includes(faq.category)) ? faq.category : 'General',
     visible_to: faq?.visible_to || ['staff', 'hr', 'admin'],
     faq_order: faq?.faq_order || 0,
   });
@@ -87,23 +87,23 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
 
     // Validation - both languages required
     if (!formData.content.en.question.trim()) {
-      setError(t('english_question_required') || 'English question is required');
+      setError(t('faq.englishQuestionRequired') || 'English question is required');
       return;
     }
     if (!formData.content.en.answer.trim()) {
-      setError(t('english_answer_required') || 'English answer is required');
+      setError(t('faq.englishAnswerRequired') || 'English answer is required');
       return;
     }
     if (!formData.content.ar.question.trim()) {
-      setError(t('arabic_question_required') || 'Arabic question is required');
+      setError(t('faq.arabicQuestionRequired') || 'Arabic question is required');
       return;
     }
     if (!formData.content.ar.answer.trim()) {
-      setError(t('arabic_answer_required') || 'Arabic answer is required');
+      setError(t('faq.arabicAnswerRequired') || 'Arabic answer is required');
       return;
     }
     if (formData.visible_to.length === 0) {
-      setError(t('select_at_least_one_role') || 'Select at least one role');
+      setError(t('faq.selectAtLeastOneRole') || 'Select at least one role');
       return;
     }
 
@@ -129,6 +129,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         </h1>
         <button
           onClick={onCancel}
+          title={t('common.cancel') || 'Cancel'}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <X className="h-6 w-6 text-gray-500" />
@@ -147,10 +148,10 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         {/* Bilingual Content Section */}
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {t('bilingual_content') || 'Bilingual Content'}
+            {t('faq.bilingualContent') || 'Bilingual Content'}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('faq_both_languages_required') || 'Questions and answers must be provided in both English and Arabic'}
+            {t('faq.faqBothLanguagesRequired') || 'Questions and answers must be provided in both English and Arabic'}
           </p>
 
           {/* Two-column layout for languages */}
@@ -159,7 +160,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="inline-block w-3 h-3 bg-blue-500 rounded-full"></span>
-                {t('english') || 'English'}
+                {t('faq.english') || 'English'}
               </h3>
 
               {/* English Question */}
@@ -171,7 +172,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                   type="text"
                   value={formData.content.en.question}
                   onChange={(e) => handleContentChange('en', 'question', e.target.value)}
-                  placeholder={t('enter_question_english') || 'Enter FAQ question...'}
+                  placeholder={t('faq.enterQuestionEnglish') || 'Enter FAQ question...'}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={loading}
                 />
@@ -185,7 +186,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                 <textarea
                   value={formData.content.en.answer}
                   onChange={(e) => handleContentChange('en', 'answer', e.target.value)}
-                  placeholder={t('enter_answer_english') || 'Enter detailed answer...'}
+                  placeholder={t('faq.enterAnswerEnglish') || 'Enter detailed answer...'}
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   disabled={loading}
@@ -197,7 +198,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-amber-50 dark:bg-gray-900/50">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="inline-block w-3 h-3 bg-amber-500 rounded-full"></span>
-                {t('arabic') || 'العربية'}
+                {t('faq.arabic') || 'العربية'}
               </h3>
 
               {/* Arabic Question */}
@@ -209,7 +210,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                   type="text"
                   value={formData.content.ar.question}
                   onChange={(e) => handleContentChange('ar', 'question', e.target.value)}
-                  placeholder={t('enter_question_arabic') || 'أدخل السؤال...'}
+                  placeholder={t('faq.enterQuestionArabic') || 'أدخل السؤال...'}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary text-right"
                   dir="rtl"
                   disabled={loading}
@@ -224,7 +225,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                 <textarea
                   value={formData.content.ar.answer}
                   onChange={(e) => handleContentChange('ar', 'answer', e.target.value)}
-                  placeholder={t('enter_answer_arabic') || 'أدخل الإجابة المفصلة...'} 
+                  placeholder={t('faq.enterAnswerArabic') || 'أدخل الإجابة المفصلة...'} 
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none text-right"
                   dir="rtl"
@@ -238,7 +239,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         {/* Category Field */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('category') || 'Category'} *
+            {t('faq.category') || 'Category'} *
           </label>
           <select
             value={formData.category}
@@ -246,7 +247,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={loading}
           >
-            {CATEGORIES.map(cat => (
+            {[...new Set([...CATEGORIES, formData.category])].map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
@@ -255,7 +256,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         {/* Order Field */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('display_order') || 'Display Order'}
+            {t('faq.displayOrder') || 'Display Order'}
           </label>
           <input
             type="number"
@@ -273,7 +274,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         {/* Visible To (Roles) */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('visible_to_roles') || 'Visible To Roles'} *
+            {t('faq.visibleToRoles') || 'Visible To Roles'} *
           </label>
           <div className="relative">
             <button
@@ -283,7 +284,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             >
               <span>
                 {formData.visible_to.length === 0
-                  ? t('select_roles') || 'Select roles...'
+                  ? t('faq.selectRoles') || 'Select roles...'
                   : `${formData.visible_to.length} role(s) selected`}
               </span>
               <ChevronDown className={`h-5 w-5 transition-transform ${expandedRoles ? 'rotate-180' : ''}`} />
@@ -319,7 +320,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             disabled={loading}
             className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            {t('cancel') || 'Cancel'}
+            {t('common.cancel') || 'Cancel'}
           </button>
           <button
             type="submit"
@@ -327,7 +328,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             className="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-            {faq ? (t('update_faq') || 'Update FAQ') : (t('create_faq') || 'Create FAQ')}
+            {faq ? (t('faq.updateFaq') || 'Update FAQ') : (t('faq.createFaq') || 'Create FAQ')}
           </button>
         </div>
       </form>
