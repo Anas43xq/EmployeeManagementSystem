@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -46,43 +46,48 @@ export function useLeaves() {
   const [processingLeaves, setProcessingLeaves] = useState<Set<string>>(new Set());
 
   // --- Leaves loading ---
-  const loadLeaves = async () => {
+  const loadLeaves = useCallback(async () => {
     try {
       const data = await getLeaves(
         user?.role === 'staff' && user?.employeeId ? user.employeeId : undefined
       );
       setLeaves(data);
-    } catch {
+    } catch (err) {
+      console.error('[useLeaves] loadLeaves failed:', err);
+      setLeaves([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { loadLeaves(); }, [user]);
+  useEffect(() => { loadLeaves(); }, [loadLeaves]);
 
   useEffect(() => {
     if (!user) return;
 
-    return subscribeToLeavesChanges(() => { loadLeaves(); });
-  }, [user]);
+    return subscribeToLeavesChanges(loadLeaves);
+  }, [user, loadLeaves]);
 
   // --- Leave balance ---
-  const loadLeaveBalance = async () => {
+  const loadLeaveBalance = useCallback(async () => {
     if (!user?.employeeId) return;
     const currentYear = new Date().getFullYear();
     try {
       const data = await getOrCreateLeaveBalance(user.employeeId, currentYear);
       setLeaveBalance(data);
-    } catch {}
-  };
+    } catch (err) {
+      console.error('[useLeaves] loadLeaveBalance failed:', err);
+      setLeaveBalance(null);
+    }
+  }, [user?.employeeId]);
 
-  useEffect(() => { loadLeaveBalance(); }, [user]);
+  useEffect(() => { loadLeaveBalance(); }, [loadLeaveBalance]);
 
   useEffect(() => {
     if (!user?.employeeId) return;
 
-    return subscribeToLeaveBalanceChanges(user.employeeId, () => { loadLeaveBalance(); });
-  }, [user?.employeeId]);
+    return subscribeToLeaveBalanceChanges(user.employeeId, loadLeaveBalance);
+  }, [user?.employeeId, loadLeaveBalance]);
 
   const getAvailableBalance = (leaveType: string): number => {
     if (!leaveBalance) return 0;
@@ -115,7 +120,10 @@ export function useLeaves() {
       const rec = balance as unknown as Record<string, number>;
       const newValue = action === 'add' ? (rec[fieldToUpdate] || 0) + days : Math.max(0, (rec[fieldToUpdate] || 0) - days);
       await updateLeaveBalance(employeeId, currentYear, fieldToUpdate, newValue);
-    } catch {}
+    } catch (err) {
+      console.error('[useLeaves] updateLeaveBalanceField failed:', err);
+      throw err;
+    }
   };
 
   // --- Leave actions ---
@@ -135,7 +143,8 @@ export function useLeaves() {
       const conflicts = await checkLeaveConflicts(targetEmployeeId, startDate, endDate);
       setLeaveConflicts(conflicts);
       return conflicts;
-    } catch {
+    } catch (err) {
+      console.error('[useLeaves] checkLeaveConflictsHandler failed:', err);
       setLeaveConflicts([]);
       return [];
     } finally {
@@ -207,33 +216,49 @@ export function useLeaves() {
       setFormData({ leave_type: 'annual', start_date: '', end_date: '', reason: '' });
       setShowApplyModal(false);
       loadLeaves();
-    } catch {
+    } catch (err) {
+      console.error('[useLeaves] handleApplyLeave failed:', err);
       showNotification('error', 'Failed to submit leave request');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleApprove = async (leaveId: string) => {
+  const handleLeaveDecision = async (
+    leaveId: string,
+    decision: 'approved' | 'rejected'
+  ) => {
     if (processingLeaves.has(leaveId)) return;
     try {
       setProcessingLeaves((prev) => new Set(prev).add(leaveId));
       const leave = leaves.find((l) => l.id === leaveId);
       if (!leave) return;
-      if (leave.status === 'approved') {
-        showNotification('info', 'Leave request is already approved');
+      if (leave.status === decision) {
+        showNotification('info', `Leave request is already ${decision}`);
         return;
       }
       if (leave.status !== 'pending') {
-        showNotification('error', 'Can only approve pending leave requests');
+        showNotification('error', 'Can only action pending leave requests');
         return;
       }
 
-      await updateLeaveStatus(leaveId, 'approved', user?.id || '');
-      await updateLeaveBalanceField(leave.employee_id, leave.leave_type, leave.days_count, 'add');
-      showNotification('success', t('leaves.leaveApproved'));
+      await updateLeaveStatus(leaveId, decision, user?.id || '');
+
+      if (decision === 'approved') {
+        await updateLeaveBalanceField(
+          leave.employee_id,
+          leave.leave_type,
+          leave.days_count,
+          'add'
+        );
+      }
+
+      const successKey =
+        decision === 'approved' ? 'leaves.leaveApproved' : 'leaves.leaveRejected';
+      showNotification('success', t(successKey));
+
       if (user)
-        logActivity(user.id, 'leave_approved', 'leave', leaveId, {
+        logActivity(user.id, `leave_${decision}`, 'leave', leaveId, {
           employee_id: leave.employee_id,
           leave_type: leave.leave_type,
         });
@@ -242,15 +267,20 @@ export function useLeaves() {
       if (employeeUserId) {
         await createNotification(
           employeeUserId,
-          'Leave Approved',
-          `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been approved.`,
+          decision === 'approved' ? 'Leave Approved' : 'Leave Rejected',
+          `Your ${leave.leave_type} leave request (${new Date(
+            leave.start_date
+          ).toLocaleDateString()} - ${new Date(
+            leave.end_date
+          ).toLocaleDateString()}) has been ${decision}.`,
           'leave',
           true
         );
       }
       loadLeaves();
-    } catch {
-      showNotification('error', 'Failed to approve leave request');
+    } catch (err) {
+      console.error(`[useLeaves] handleLeaveDecision(${decision}) failed:`, err);
+      showNotification('error', `Failed to ${decision} leave request`);
     } finally {
       setProcessingLeaves((prev) => {
         const s = new Set(prev);
@@ -260,50 +290,10 @@ export function useLeaves() {
     }
   };
 
-  const handleReject = async (leaveId: string) => {
-    if (processingLeaves.has(leaveId)) return;
-    try {
-      setProcessingLeaves((prev) => new Set(prev).add(leaveId));
-      const leave = leaves.find((l) => l.id === leaveId);
-      if (!leave) return;
-      if (leave.status === 'rejected') {
-        showNotification('info', 'Leave request is already rejected');
-        return;
-      }
-      if (leave.status !== 'pending') {
-        showNotification('error', 'Can only reject pending leave requests');
-        return;
-      }
-
-      await updateLeaveStatus(leaveId, 'rejected', user?.id || '');
-      showNotification('success', t('leaves.leaveRejected'));
-      if (user)
-        logActivity(user.id, 'leave_rejected', 'leave', leaveId, {
-          employee_id: leave.employee_id,
-          leave_type: leave.leave_type,
-        });
-
-      const employeeUserId = await getUserIdForEmployee(leave.employee_id);
-      if (employeeUserId) {
-        await createNotification(
-          employeeUserId,
-          'Leave Rejected',
-          `Your ${leave.leave_type} leave request (${new Date(leave.start_date).toLocaleDateString()} - ${new Date(leave.end_date).toLocaleDateString()}) has been rejected.`,
-          'leave',
-          true
-        );
-      }
-      loadLeaves();
-    } catch {
-      showNotification('error', 'Failed to reject leave request');
-    } finally {
-      setProcessingLeaves((prev) => {
-        const s = new Set(prev);
-        s.delete(leaveId);
-        return s;
-      });
-    }
-  };
+  const handleApprove = (leaveId: string) =>
+    handleLeaveDecision(leaveId, 'approved');
+  const handleReject = (leaveId: string) =>
+    handleLeaveDecision(leaveId, 'rejected');
 
   const filteredLeaves = leaves.filter(leave => filter === 'all' ? true : leave.status === filter);
 

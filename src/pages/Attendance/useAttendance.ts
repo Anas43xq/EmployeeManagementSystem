@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -35,13 +35,6 @@ export function useAttendance() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadAttendance();
-    if (user?.role === 'admin' || user?.role === 'hr') {
-      loadEmployees();
-    }
-  }, [user, selectedDate]);
-
   const calculateHoursWorked = (checkIn: string | null, checkOut: string | null): string | null => {
     if (!checkIn || !checkOut) return null;
     try {
@@ -61,31 +54,40 @@ export function useAttendance() {
       const minutes = diffMinutes % 60;
 
       return `${hours}h ${minutes}m`;
-    } catch {
+    } catch (err) {
+      console.error('[useAttendance] calculateHoursWorked failed:', err);
       return null;
     }
   };
 
-  const loadEmployees = async () => {
-    try {
-      const data = await getAttendanceEmployees();
-      setEmployees(data);
-    } catch (_err) {
-    }
-  };
-
-  const loadAttendance = async () => {
+  const loadAttendance = useCallback(async () => {
     try {
       const data = await getAttendanceRecords(
         selectedDate,
         user?.role === 'staff' && user?.employeeId ? user.employeeId : undefined
       );
       setAttendanceRecords(data);
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useAttendance] loadAttendance failed:', error);
+      setAttendanceRecords([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.role, user?.employeeId, selectedDate]);
+
+  const loadEmployees = useCallback(async () => {
+    try {
+      const data = await getAttendanceEmployees();
+      setEmployees(data);
+    } catch (error) {
+      console.error('[useAttendance] loadEmployees failed:', error);
+      setEmployees([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEmployees();
+  }, [loadEmployees]);
 
   const handleMarkAttendance = async () => {
     if (!user?.employeeId) return;

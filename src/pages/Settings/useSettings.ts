@@ -43,8 +43,8 @@ export function useSettings() {
           complaints: data.email_complaints ?? true,
         });
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('[useSettings] loadNotificationPreferences failed:', err);
     }
   };
 
@@ -64,7 +64,8 @@ export function useSettings() {
     try {
       await saveUserNotificationPreferences(user.id, notificationPrefs);
       showNotification('success', t('settings.prefsSaved'));
-    } catch {
+    } catch (err) {
+      console.error('[useSettings] handleSavePreferences failed:', err);
       showNotification('error', 'Failed to save preferences');
     } finally {
       setSavingPrefs(false);

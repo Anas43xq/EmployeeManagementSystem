@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDeleteConfirmation } from '../../hooks/useDeleteConfirmation';
@@ -38,20 +38,21 @@ export function useAnnouncements() {
     urgent: { label: t('announcements.urgent'), color: 'bg-red-100 text-red-700', icon: AlertCircle },
   };
 
-  useEffect(() => {
-    loadAnnouncements();
-  }, []);
-
-  const loadAnnouncements = async () => {
+  const loadAnnouncements = useCallback(async () => {
     try {
       const data = await getAnnouncements();
       setAnnouncements(data);
-    } catch (_) {
-      // silently fail
+    } catch (err) {
+      console.error('[useAnnouncements] loadAnnouncements failed:', err);
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, [loadAnnouncements]);
 
   const openCreateModal = () => {
     setEditingAnnouncement(null);
@@ -138,8 +139,8 @@ export function useAnnouncements() {
         logActivity(user.id, 'announcement_deleted', 'announcement', id);
       }
       loadAnnouncements();
-    } catch (_) {
-      // Error silently handled
+    } catch (err) {
+      console.error('[useAnnouncements] confirmDeleteHandler failed:', err);
     }
   };
 
@@ -152,8 +153,8 @@ export function useAnnouncements() {
         });
       }
       loadAnnouncements();
-    } catch (_) {
-      // Error silently handled
+    } catch (err) {
+      console.error('[useAnnouncements] toggleActive failed:', err);
     }
   };
 

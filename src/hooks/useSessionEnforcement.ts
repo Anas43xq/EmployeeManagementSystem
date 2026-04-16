@@ -41,8 +41,9 @@ export function useSessionEnforcement({ userId, onForceLogout, onDeactivate }: U
       try {
         const row = await getSessionEnforcementState(userId);
         enforceSessionState(row, onForceLogout, onDeactivate);
-      } catch {
+      } catch (err) {
         // ignore transient network errors in the fallback poll
+        console.debug('[useSessionEnforcement] checkStatus failed:', err);
       }
     };
 

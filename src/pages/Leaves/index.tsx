@@ -51,6 +51,11 @@ export default function Leaves() {
     await handleApproveBase(leaveId, updateLeaveBalanceField);
   };
 
+  // Wire reject handler with balance update
+  const handleRejectWrapper = async (leaveId: string) => {
+    await handleReject(leaveId, updateLeaveBalanceField);
+  };
+
   if (loading) {
     return <PageSpinner />;
   }
@@ -81,7 +86,7 @@ export default function Leaves() {
               leave={leave}
               userRole={user?.role}
               onApprove={handleApprove}
-              onReject={handleReject}
+              onReject={handleRejectWrapper}
               processingLeaves={processingLeaves}
             />
           ))}

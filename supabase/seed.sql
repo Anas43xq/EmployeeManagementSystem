@@ -731,11 +731,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I apply for leave?',
-          'answer', 'To apply for leave:\n1. Go to **Leaves** from the sidebar\n2. Click **Apply Leave**\n3. Select leave type (sick, casual, annual, etc.)\n4. Choose start and end dates\n5. Add any comments (optional)\n6. Click **Submit**\n\nYour manager will review and approve/reject within 2-3 business days.'
+          'answer', E'To apply for leave:\n1. Go to **Leaves** from the sidebar\n2. Click **Apply Leave**\n3. Select leave type (sick, casual, annual, etc.)\n4. Choose start and end dates\n5. Add any comments (optional)\n6. Click **Submit**\n\nYour manager will review and approve/reject within 2-3 business days.'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أتقدم بطلب إجازة؟',
-          'answer', 'للتقدم بطلب إجازة:\n1. انتقل إلى **الإجازات** من الشريط الجانبي\n2. انقر على **تقديم طلب إجازة**\n3. اختر نوع الإجازة (مرضية، شخصية، سنوية، إلخ)\n4. اختر تاريخي البداية والنهاية\n5. أضف أي تعليقات (اختياري)\n6. انقر على **إرسال**\n\nسيراجع مديرك ويوافق/برفض خلال 2-3 أيام عمل.'
+          'answer', E'للتقدم بطلب إجازة:\n1. انتقل إلى **الإجازات** من الشريط الجانبي\n2. انقر على **تقديم طلب إجازة**\n3. اختر نوع الإجازة (مرضية، شخصية، سنوية، إلخ)\n4. اختر تاريخي البداية والنهاية\n5. أضف أي تعليقات (اختياري)\n6. انقر على **إرسال**\n\nسيراجع مديرك ويوافق/برفض خلال 2-3 أيام عمل.'
         )
       ),
       'leaves',
@@ -763,11 +763,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'What is the leave approval process?',
-          'answer', 'Leave requests go through these statuses:\n- **Pending**: Waiting for manager review\n- **Approved**: Manager approved, leave confirmed\n- **Rejected**: Manager denied the request\n\nStaff typically hear back within 2-3 business days. HR and Managers can expedite approvals.'
+          'answer', E'Leave requests go through these statuses:\n- **Pending**: Waiting for manager review\n- **Approved**: Manager approved, leave confirmed\n- **Rejected**: Manager denied the request\n\nStaff typically hear back within 2-3 business days. HR and Managers can expedite approvals.'
         ),
         'ar', jsonb_build_object(
           'question', 'ما هي عملية الموافقة على الإجازة؟',
-          'answer', 'تمر طلبات الإجازة بهذه الحالات:\n- **قيد الانتظار**: في انتظار مراجعة المدير\n- **معتمد**: وافق المدير، تم تأكيد الإجازة\n- **مرفوض**: رفض المدير الطلب\n\nعادة ما يسمع الموظفون برد خلال 2-3 أيام عمل. يمكن لموظفي الموارد البشرية والمديرين التعجيل بالموافقات.'
+          'answer', E'تمر طلبات الإجازة بهذه الحالات:\n- **قيد الانتظار**: في انتظار مراجعة المدير\n- **معتمد**: وافق المدير، تم تأكيد الإجازة\n- **مرفوض**: رفض المدير الطلب\n\nعادة ما يسمع الموظفون برد خلال 2-3 أيام عمل. يمكن لموظفي الموارد البشرية والمديرين التعجيل بالموافقات.'
         )
       ),
       'leaves',
@@ -779,11 +779,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How many leave days do I have?',
-          'answer', 'Check your leave balance in the **Leave Balance** section on **Leaves** page. It shows:\n- Annual leave balance\n- Sick leave balance\n- Other leave types\n\nYour balance resets on January 1st each year.'
+          'answer', E'Check your leave balance in the **Leave Balance** section on **Leaves** page. It shows:\n- Annual leave balance\n- Sick leave balance\n- Other leave types\n\nYour balance resets on January 1st each year.'
         ),
         'ar', jsonb_build_object(
           'question', 'كم عدد أيام الإجازات المتاحة لي؟',
-          'answer', 'تحقق من رصيد إجازتك في قسم **رصيد الإجازة** على صفحة **الإجازات**. يعرض:\n- رصيد الإجازة السنوية\n- رصيد الإجازات المرضية\n- أنواع إجازات أخرى\n\nتُعاد تعيين رصيدك في 1 يناير من كل عام.'
+          'answer', E'تحقق من رصيد إجازتك في قسم **رصيد الإجازة** على صفحة **الإجازات**. يعرض:\n- رصيد الإجازة السنوية\n- رصيد الإجازات المرضية\n- أنواع إجازات أخرى\n\nتُعاد تعيين رصيدك في 1 يناير من كل عام.'
         )
       ),
       'leaves',
@@ -812,11 +812,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'What if I forget to mark attendance?',
-          'answer', 'If you forget to mark attendance:\n1. Go to **Attendance** → **Request Correction**\n2. Select the date and provide a reason\n3. Submit for manager review\n\nManagers can approve corrections within 48 hours. Repeated missed marks may affect your record.'
+          'answer', E'If you forget to mark attendance:\n1. Go to **Attendance** → **Request Correction**\n2. Select the date and provide a reason\n3. Submit for manager review\n\nManagers can approve corrections within 48 hours. Repeated missed marks may affect your record.'
         ),
         'ar', jsonb_build_object(
           'question', 'ماذا لو نسيت تسجيل الحضور؟',
-          'answer', 'إذا نسيت تسجيل الحضور:\n1. انتقل إلى **الحضور** → **طلب تصحيح**\n2. حدد التاريخ وقدم السبب\n3. قدّم للمراجعة من قبل المدير\n\nيمكن للمديرين الموافقة على التصحيحات خلال 48 ساعة. قد تؤثر التسجيلات المفقودة المتكررة على سجلك.'
+          'answer', E'إذا نسيت تسجيل الحضور:\n1. انتقل إلى **الحضور** → **طلب تصحيح**\n2. حدد التاريخ وقدم السبب\n3. قدّم للمراجعة من قبل المدير\n\nيمكن للمديرين الموافقة على التصحيحات خلال 48 ساعة. قد تؤثر التسجيلات المفقودة المتكررة على سجلك.'
         )
       ),
       'attendance',
@@ -829,11 +829,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I add a new employee?',
-          'answer', 'To add a new employee (HR/Admin only):\n1. Go to **Employees** → **Add Employee**\n2. Fill in employee details (name, email, position, department, etc.)\n3. Set user role (staff, hr, admin)\n4. Click **Create**\n\nThe employee will receive an invitation email to set up their account.'
+          'answer', E'To add a new employee (HR/Admin only):\n1. Go to **Employees** → **Add Employee**\n2. Fill in employee details (name, email, position, department, etc.)\n3. Set user role (staff, hr, admin)\n4. Click **Create**\n\nThe employee will receive an invitation email to set up their account.'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أضيف موظفاً جديداً؟',
-          'answer', 'لإضافة موظف جديد (الموارد البشرية/المسؤول فقط):\n1. انتقل إلى **الموظفون** → **إضافة موظف**\n2. املأ بيانات الموظف (الاسم والبريد الإلكتروني والمنصب والقسم، إلخ)\n3. اتبع دور المستخدم (موظف، موارد بشرية، مسؤول)\n4. انقر على **إنشاء**\n\nسيتلقى الموظف بريداً إلكترونياً للدعوة لإعداد حسابه.'
+          'answer', E'لإضافة موظف جديد (الموارد البشرية/المسؤول فقط):\n1. انتقل إلى **الموظفون** → **إضافة موظف**\n2. املأ بيانات الموظف (الاسم والبريد الإلكتروني والمنصب والقسم، إلخ)\n3. اتبع دور المستخدم (موظف، موارد بشرية، مسؤول)\n4. انقر على **إنشاء**\n\nسيتلقى الموظف بريداً إلكترونياً للدعوة لإعداد حسابه.'
         )
       ),
       'employees',
@@ -845,11 +845,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I edit employee information?',
-          'answer', 'To edit employee details:\n1. Go to **Employees**\n2. Find the employee and click their name\n3. Click **Edit** button\n4. Update information as needed\n5. Click **Save**\n\nChanges are logged for audit purposes.'
+          'answer', E'To edit employee details:\n1. Go to **Employees**\n2. Find the employee and click their name\n3. Click **Edit** button\n4. Update information as needed\n5. Click **Save**\n\nChanges are logged for audit purposes.'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أعدل معلومات الموظف؟',
-          'answer', 'لتحرير تفاصيل الموظف:\n1. انتقل إلى **الموظفون**\n2. ابحث عن الموظف وانقر على اسمه\n3. انقر على زر **تحرير**\n4. حدّث المعلومات حسب الحاجة\n5. انقر على **حفظ**\n\nتسجل التغييرات لأغراض التدقيق.'
+          'answer', E'لتحرير تفاصيل الموظف:\n1. انتقل إلى **الموظفون**\n2. ابحث عن الموظف وانقر على اسمه\n3. انقر على زر **تحرير**\n4. حدّث المعلومات حسب الحاجة\n5. انقر على **حفظ**\n\nتسجل التغييرات لأغراض التدقيق.'
         )
       ),
       'employees',
@@ -861,11 +861,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'Can I deactivate an employee without deleting them?',
-          'answer', 'Yes, you should **deactivate** rather than delete employees:\n1. Go to **Employees** → find employee\n2. Click **Deactivate**\n3. Deactivated employees cannot log in but their records remain (audit trail)\n4. To reactivate: Click **Activate** on deactivated employee profile'
+          'answer', E'Yes, you should **deactivate** rather than delete employees:\n1. Go to **Employees** → find employee\n2. Click **Deactivate**\n3. Deactivated employees cannot log in but their records remain (audit trail)\n4. To reactivate: Click **Activate** on deactivated employee profile'
         ),
         'ar', jsonb_build_object(
           'question', 'هل يمكنني إلغاء تفعيل موظف دون حذفه؟',
-          'answer', 'نعم، يجب عليك **إلغاء تفعيل** بدلاً من حذف الموظفين:\n1. انتقل إلى **الموظفون** → ابحث عن الموظف\n2. انقر على **إلغاء التفعيل**\n3. لا يمكن للموظفين الذين تم إلغاء تفعيلهم تسجيل الدخول لكن سجلاتهم تبقى (مسار التدقيق)\n4. لإعادة التفعيل: انقر على **تفعيل** في ملف الموظف الذي تم إلغاء تفعيله'
+          'answer', E'نعم، يجب عليك **إلغاء تفعيل** بدلاً من حذف الموظفين:\n1. انتقل إلى **الموظفون** → ابحث عن الموظف\n2. انقر على **إلغاء التفعيل**\n3. لا يمكن للموظفين الذين تم إلغاء تفعيلهم تسجيل الدخول لكن سجلاتهم تبقى (مسار التدقيق)\n4. لإعادة التفعيل: انقر على **تفعيل** في ملف الموظف الذي تم إلغاء تفعيله'
         )
       ),
       'employees',
@@ -878,11 +878,11 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I manage FAQs?',
-          'answer', 'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).'
+          'answer', E'To manage FAQs (admin only):\n1. Go to **Settings** → **Help & FAQ Management**\n2. View all FAQs\n3. Click **Edit** to modify\n4. Click **Delete** to remove\n5. Click **Create New** to add FAQ\n\nYou can control which roles see each FAQ (staff/hr/admin).'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أدير الأسئلة الشائعة؟',
-          'answer', 'لإدارة الأسئلة الشائعة (مسؤول فقط):\n1. انتقل إلى **الإعدادات** → **إدارة الأسئلة الشائعة**\n2. عرض جميع الأسئلة الشائعة\n3. انقر على **تحرير** للتعديل\n4. انقر على **حذف** للإزالة\n5. انقر على **إنشاء جديد** لإضافة سؤال شائع\n\nيمكنك التحكم في الأدوار التي ترى كل سؤال شائع (موظف/موارد بشرية/مسؤول).'
+          'answer', E'لإدارة الأسئلة الشائعة (مسؤول فقط):\n1. انتقل إلى **الإعدادات** → **إدارة الأسئلة الشائعة**\n2. عرض جميع الأسئلة الشائعة\n3. انقر على **تحرير** للتعديل\n4. انقر على **حذف** للإزالة\n5. انقر على **إنشاء جديد** لإضافة سؤال شائع\n\nيمكنك التحكم في الأدوار التي ترى كل سؤال شائع (موظف/موارد بشرية/مسؤول).'
         )
       ),
       'system',
@@ -894,16 +894,300 @@ BEGIN
       jsonb_build_object(
         'en', jsonb_build_object(
           'question', 'How do I manage user roles and permissions?',
-          'answer', 'User role management is in **Settings** → **User Management** (admin only):\n- **Staff**: Regular employees with basic access\n- **HR**: Can manage employees, approve leaves, view reports\n- **Admin**: Full access to all features and settings\n\nAssign roles when creating employees or edit existing user roles in User Management.'
+          'answer', E'User role management is in **Settings** → **User Management** (admin only):\n- **Staff**: Regular employees with basic access\n- **HR**: Can manage employees, approve leaves, view reports\n- **Admin**: Full access to all features and settings\n\nAssign roles when creating employees or edit existing user roles in User Management.'
         ),
         'ar', jsonb_build_object(
           'question', 'كيف أدير أدوار وأذونات المستخدم؟',
-          'answer', 'إدارة دور المستخدم في **الإعدادات** → **إدارة المستخدمين** (مسؤول فقط):\n- **موظف**: الموظفون العاديون مع الوصول الأساسي\n- **الموارد البشرية**: يمكنهم إدارة الموظفين والموافقة على الإجازات وعرض التقارير\n- **مسؤول**: وصول كامل إلى جميع الميزات والإعدادات\n\nحدد الأدوار عند إنشاء الموظفين أو عدّل أدوار المستخدمين الموجودة في إدارة المستخدمين.'
+          'answer', E'إدارة دور المستخدم في **الإعدادات** → **إدارة المستخدمين** (مسؤول فقط):\n- **موظف**: الموظفون العاديون مع الوصول الأساسي\n- **الموارد البشرية**: يمكنهم إدارة الموظفين والموافقة على الإجازات وعرض التقارير\n- **مسؤول**: وصول كامل إلى جميع الميزات والإعدادات\n\nحدد الأدوار عند إنشاء الموظفين أو عدّل أدوار المستخدمين الموجودة في إدارة المستخدمين.'
         )
       ),
       'employees',
       ARRAY['admin'],
       4,
+      v_admin_id
+    ),
+    -- More General FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I view announcements?',
+          'answer', E'View company announcements:\n1. Check the **Announcements Widget** on your Dashboard\n2. Go to **Announcements** page for full list\n3. Click on any announcement to see details\n4. Important announcements are pinned at the top\n\nAll announcements are visible to staff based on their role.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أعرض الإعلانات؟',
+          'answer', E'اعرض إعلانات الشركة:\n1. تحقق من **أداة الإعلانات** على لوحة التحكم الخاصة بك\n2. انتقل إلى صفحة **الإعلانات** للحصول على القائمة الكاملة\n3. انقر على أي إعلان لرؤية التفاصيل\n4. يتم تثبيت الإعلانات المهمة في الأعلى\n\nجميع الإعلانات مرئية للموظفين بناءً على دورهم.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      4,
+      v_admin_id
+    ),
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I report a complaint?',
+          'answer', E'To file a complaint:\n1. Go to **Complaints** from the sidebar\n2. Click **Submit Complaint**\n3. Select complaint type and category\n4. Describe the issue in detail\n5. Optionally attach files or evidence\n6. Click **Submit**\n\nYour complaint will be reviewed by HR and marked confidential.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أقدم شكوى؟',
+          'answer', E'لتقديم شكوى:\n1. انتقل إلى **الشكاوى** من الشريط الجانبي\n2. انقر على **تقديم شكوى**\n3. حدد نوع الشكوى والفئة\n4. صف المشكلة بالتفصيل\n5. يمكنك إرفاق الملفات أو الأدلة (اختياري)\n6. انقر على **إرسال**\n\nستتم مراجعة شكواك من قبل الموارد البشرية وتحديدها كسرية.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- Tasks & Performance FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I view my assigned tasks?',
+          'answer', E'View your tasks:\n1. Go to **Tasks** from the sidebar\n2. See all tasks assigned to you\n3. Filter by status (pending, in progress, completed)\n4. Sort by priority or due date\n5. Click on a task to see full details and add updates\n\nCompleting tasks contributes to your performance score.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أعرض المهام المخصصة لي؟',
+          'answer', E'اعرض مهامك:\n1. انتقل إلى **المهام** من الشريط الجانبي\n2. اعرض جميع المهام المخصصة لك\n3. تصفية حسب الحالة (معلق، قيد التقدم، مكتمل)\n4. الترتيب حسب الأولوية أو تاريخ الاستحقاق\n5. انقر على مهمة لرؤية التفاصيل الكاملة وإضافة تحديثات\n\nيساهم إكمال المهام في درجة أدائك.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      6,
+      v_admin_id
+    ),
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How is Employee of the Week selected?',
+          'answer', E'Employee of the Week is automatically calculated weekly based on:\n- Task completion and performance\n- Attendance (no absences or lates)\n- Behavioral factors (warnings deductions)\n- Overall weekly score\n\nThe winner is displayed on the Dashboard and receives recognition in the notification center.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف يتم اختيار موظف الأسبوع؟',
+          'answer', E'يتم اختيار موظف الأسبوع تلقائياً أسبوعياً بناءً على:\n- إكمال المهام والأداء\n- الحضور (لا توجد غيابات أو تأخيرات)\n- العوامل السلوكية (خصومات التحذيرات)\n- درجة الأسبوع الإجمالية\n\nيتم عرض الفائز على لوحة التحكم ويحصل على الاعتراف في مركز الإخطارات.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      7,
+      v_admin_id
+    ),
+    -- Leave Management Additional FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What happens if I apply for overlapping leave?',
+          'answer', E'The system prevents overlapping leave applications:\n- You cannot apply for dates you''re already on leave\n- System shows your existing leave dates\n- Manager cannot approve conflicting leave requests\n- If needed, cancel the first leave request before applying for new dates'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ماذا يحدث إذا تقدمت بطلب إجازة متداخلة؟',
+          'answer', E'يمنع النظام طلبات الإجازة المتداخلة:\n- لا يمكنك التقديم بطلب للتواريخ التي تكون فيها بالفعل في إجازة\n- يعرض النظام تواريخ إجازتك الحالية\n- لا يمكن للمدير الموافقة على طلبات الإجازة المتعارضة\n- إذا لزم الأمر، ألغِ طلب الإجازة الأول قبل التقديم بتواريخ جديدة'
+        )
+      ),
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- Warnings & Disciplinary FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What is the warnings system?',
+          'answer', E'The warnings system tracks disciplinary actions:\n- **Verbal Warning**: First level of discipline\n- **Written Warning**: Documented formal warning\n- **Final Warning**: Last step before termination\n- Warnings can be for:\n  - Performance issues\n  - Attendance violations\n  - Behavioral concerns\n  - Misconduct\n\nEach warning is logged and may affect performance scores.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هو نظام التحذيرات؟',
+          'answer', E'يتتبع نظام التحذيرات الإجراءات التأديبية:\n- **تحذير شفهي**: المستوى الأول من التأديب\n- **تحذير مكتوب**: تحذير رسمي موثق\n- **تحذير نهائي**: الخطوة الأخيرة قبل الإنهاء\n- قد تكون التحذيرات لـ:\n  - مشاكل الأداء\n  - انتهاكات الحضور\n  - المخاوف السلوكية\n  - سوء السلوك\n\nيتم تسجيل كل تحذير وقد يؤثر على درجات الأداء.'
+        )
+      ),
+      'general',
+      ARRAY['hr', 'admin'],
+      8,
+      v_admin_id
+    ),
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'Can I view my warnings?',
+          'answer', E'To view your warnings:\n1. Go to **Warnings** from the sidebar\n2. View all warnings against your record\n3. Details include: date, type, reason, and issuing manager\n4. You can acknowledge warnings\n5. You can add notes or responses\n\nWarnings are confidential and only visible to you, HR, and admin.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'هل يمكنني عرض التحذيرات الخاصة بي؟',
+          'answer', E'لعرض التحذيرات الخاصة بك:\n1. انتقل إلى **التحذيرات** من الشريط الجانبي\n2. اعرض جميع التحذيرات في سجلك\n3. التفاصيل تتضمن: التاريخ والنوع والسبب والمدير المصدر\n4. يمكنك الاعتراف بالتحذيرات\n5. يمكنك إضافة ملاحظات أو ردود\n\nالتحذيرات سرية وتكون مرئية فقط لك وموظفي الموارد البشرية والمسؤول.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      9,
+      v_admin_id
+    ),
+    -- Department & Organization FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What is a department?',
+          'answer', E'Departments organize employees by function:\n- **Engineering**: Software developers, QA, DevOps\n- **Sales**: Account managers, business development\n- **Marketing**: Content, design, campaigns\n- **HR**: Human resources and recruitment\n- **Finance**: Accounting and payroll management\n\nEmployees are assigned to a department on hiring. Changes require HR approval.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هو القسم؟',
+          'answer', E'تنظم الأقسام الموظفين حسب الوظيفة:\n- **الهندسة**: مطورو البرامج وضمان الجودة والعمليات\n- **المبيعات**: مديرو الحسابات والتطوير الأعمال\n- **التسويق**: المحتوى والتصميم والحملات\n- **الموارد البشرية**: الموارد البشرية والتوظيف\n- **المالية**: إدارة المحاسبة والرواتب\n\nيتم تعيين الموظفين لقسم عند التوظيف. التغييرات تتطلب موافقة الموارد البشرية.'
+        )
+      ),
+      'employees',
+      ARRAY['staff', 'hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- Reports FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What reports are available?',
+          'answer', E'HR and Admin can generate reports:\n- **Employee Reports**: Full employee directory, contact info\n- **Attendance Reports**: By date, department, or employee\n- **Leave Reports**: Approved, pending, and rejected leaves\n- **Performance Reports**: Weekly scores, rankings\n- **Payroll Reports**: Monthly payroll data, deductions\n- **Complaint/Warning Reports**: Discipline actions\n\nAll reports can be filtered by date range and department.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هي التقارير المتاحة؟',
+          'answer', E'يمكن لموارد البشرية والمسؤول إنشاء تقارير:\n- **تقارير الموظفين**: دليل الموظفين الكامل، معلومات الاتصال\n- **تقارير الحضور**: حسب التاريخ أو القسم أو الموظف\n- **تقارير الإجازات**: الإجازات المعتمدة والمعلقة والمرفوضة\n- **تقارير الأداء**: درجات أسبوعية وترتيبات\n- **تقارير الرواتب**: بيانات الرواتب الشهرية والخصومات\n- **تقارير الشكاوى/التحذيرات**: الإجراءات التأديبية\n\nيمكن تصفية جميع التقارير حسب نطاق التاريخ والقسم.'
+        )
+      ),
+      'system',
+      ARRAY['hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- Passkey/Security FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What is WebAuthn/Passkey login?',
+          'answer', E'WebAuthn (Passkey) is a secure passwordless login method:\n- No passwords needed - use biometric or security key\n- Faster and more secure than typed passwords\n- Supported on most modern devices (Face ID, fingerprint, security keys)\n- You can register multiple passkeys for backup\n\nPasskeys prevent phishing attacks and unauthorized access.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هو تسجيل دخول WebAuthn/Passkey؟',
+          'answer', E'WebAuthn (Passkey) طريقة تسجيل دخول آمنة بدون كلمات المرور:\n- لا تحتاج إلى كلمات مرور - استخدم البيومترية أو مفتاح الأمان\n- أسرع وأكثر أماناً من كلمات المرور المكتوبة\n- مدعوم على معظم الأجهزة الحديثة (Face ID, fingerprint, مفاتيح الأمان)\n- يمكنك تسجيل عدة مفاتيح كنسخة احتياطية\n\nتمنع المفاتيح هجمات التصيد الاحتيالي والوصول غير المصرح به.'
+        )
+      ),
+      'settings',
+      ARRAY['staff', 'hr', 'admin'],
+      2,
+      v_admin_id
+    ),
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I register a passkey?',
+          'answer', E'To add a passkey for login:\n1. Go to **Settings** → **Passkey Management**\n2. Click **Register New Passkey**\n3. Follow the device prompts (biometric or security key)\n4. Confirm and save\n5. You can now login with your passkey\n\nStore backup passphrases securely in case you lose access to the device.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أسجل مفتاح دخول؟',
+          'answer', E'لإضافة مفتاح دخول:\n1. انتقل إلى **الإعدادات** → **إدارة المفاتيح**\n2. انقر على **تسجيل مفتاح جديد**\n3. اتبع تعليمات الجهاز (البيومترية أو مفتاح الأمان)\n4. تأكيد وحفظ\n5. يمكنك الآن تسجيل الدخول باستخدام مفتاحك\n\nخزّن عبارات المرور الاحتياطية بأمان في حالة فقدانك الوصول إلى الجهاز.'
+        )
+      ),
+      'settings',
+      ARRAY['staff', 'hr', 'admin'],
+      3,
+      v_admin_id
+    ),
+    -- Payroll FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I view my payslip?',
+          'answer', E'To view your salary details:\n1. Go to **Payroll** → **My Payslips**\n2. Select month and year\n3. View earnings breakdown:\n   - Base salary\n   - Bonuses/Allowances\n   - Deductions (taxes, absences, etc.)\n   - Net pay\n4. Download PDF copy for your records\n\nPayslips are generated monthly on the last working day.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أعرض كشف الراتب الخاص بي؟',
+          'answer', E'لعرض تفاصيل راتبك:\n1. انتقل إلى **الرواتب** → **كشوف الرواتب الخاصة بي**\n2. حدد الشهر والسنة\n3. اعرض تقسيم الأرباح:\n   - الراتب الأساسي\n   - المكافآت/البدلات\n   - الخصومات (الضرائب والغيابات وما إلى ذلك)\n   - الراتب الصافي\n4. تحميل نسخة PDF لسجلاتك\n\nيتم إنشاء كشوف الرواتب شهرياً في آخر يوم عمل.'
+        )
+      ),
+      'system',
+      ARRAY['staff', 'hr', 'admin'],
+      6,
+      v_admin_id
+    ),
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I contact IT support?',
+          'answer', E'For technical issues:\n1. Check the FAQs and Help section first\n2. Contact your IT department or manager\n3. Email: support@company.com\n4. Response time: Within 24 business hours\n\nInclude error messages and steps to reproduce issues for faster resolution.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أتواصل مع دعم تكنولوجيا المعلومات؟',
+          'answer', E'للمشاكل التقنية:\n1. تحقق أولاً من الأسئلة الشائعة وقسم المساعدة\n2. اتصل بقسم تكنولوجيا المعلومات أو مديرك\n3. البريد الإلكتروني: support@company.com\n4. وقت الاستجابة: خلال 24 ساعة عمل\n\nأدرج رسائل الخطأ وخطوات إعادة إنتاج المشاكل لحل أسرع.'
+        )
+      ),
+      'general',
+      ARRAY['staff', 'hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- More Leave Management FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What are the different leave types?',
+          'answer', E'Available leave types:\n- **Annual Leave**: Yearly vacation days (typically 20-30 days)\n- **Sick Leave**: For illness or medical appointments\n- **Casual Leave**: Short notice personal leave\n- **Emergency Leave**: For urgent situations\n- **Maternity/Paternity Leave**: For new parents\n- **Unpaid Leave**: Leave without pay (approval required)\n\nEach type has different rules and balance requirements.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'ما هي أنواع الإجازات المختلفة؟',
+          'answer', E'أنواع الإجازات المتاحة:\n- **الإجازة السنوية**: أيام الإجازة السنوية (عادة 20-30 يوماً)\n- **إجازة مرضية**: للمرض أو المواعيد الطبية\n- **إجازة شخصية**: إجازة شخصية بإشعار قصير\n- **إجازة طوارئ**: للحالات الطارئة\n- **إجازة الأمومة/الأبوة**: للوالدين الجدد\n- **إجازة غير مدفوعة**: إجازة بدون رواتب (يتطلب موافقة)\n\nلكل نوع قواعد ومتطلبات توازن مختلفة.'
+        )
+      ),
+      'leaves',
+      ARRAY['staff', 'hr', 'admin'],
+      5,
+      v_admin_id
+    ),
+    -- More Attendance FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How is attendance used for payroll deductions?',
+          'answer', E'Attendance affects payroll:\n- **Present**: Full day pay\n- **Absent**: Deduction equal to daily rate\n- **Half Day**: 50% deduction\n- **Late > 1 hour**: May reduce daily pay\n\nDeductions are automatically calculated in monthly payroll generation.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف يتم استخدام الحضور لخصومات الرواتب؟',
+          'answer', E'يؤثر الحضور على الرواتب:\n- **حاضر**: الراتب الكامل ليوم واحد\n- **غائب**: خصم يساوي الراتب اليومي\n- **نصف يوم**: خصم 50 بالمئة\n- **متأخر > ساعة واحدة**: قد يقلل من الراتب اليومي\n\nيتم حساب الخصومات تلقائياً في توليد كشوف الرواتب الشهرية.'
+        )
+      ),
+      'attendance',
+      ARRAY['staff', 'hr', 'admin'],
+      3,
+      v_admin_id
+    ),
+    -- More Employee Management FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'How do I search for employees?',
+          'answer', E'Use the employee search feature:\n1. Go to **Employees**\n2. Use the search bar to find by:\n   - Name\n   - Email\n   - Employee ID\n   - Department\n3. Use filters for advanced search (status, role, etc.)\n4. Sort by different columns\n\nSearch is case-insensitive and supports partial matches.'
+        ),
+        'ar', jsonb_build_object(
+          'question', 'كيف أبحث عن الموظفين؟',
+          'answer', E'استخدم ميزة البحث عن الموظفين:\n1. انتقل إلى **الموظفون**\n2. استخدم شريط البحث للبحث عن:\n   - الاسم\n   - البريد الإلكتروني\n   - معرف الموظف\n   - القسم\n3. استخدم المرشحات للبحث المتقدم (الحالة والدور وما إلى ذلك)\n4. الترتيب حسب أعمدة مختلفة\n\nالبحث غير حساس لحالة الأحرف ويدعم التطابقات الجزئية.'
+        )
+      ),
+      'employees',
+      ARRAY['hr', 'admin'],
+      4,
+      v_admin_id
+    ),
+    -- More Settings FAQs
+    (
+      jsonb_build_object(
+        'en', jsonb_build_object(
+          'question', 'What are best practices for account security?',
+          'answer', E'To keep your account secure:\n1. Use strong, unique passwords\n2. Register Passkeys for faster login\n3. Never share your login credentials\n4. Log out after using shared computers\n5. Report suspicious activity to HR immediately\n\nYour account security is your responsibility.'
+        ),
+        'ar', jsonb_build_object(
+          'question', '\u0645\u0627 \u0647\u064a \u0623\u0641\u0636\u0644 \u0627\u0644\u0645\u0645\u0627\u0631\u0633\u0627\u062a \u0644\u0623\u0645\u0627\u0646 \u0627\u0644\u062d\u0633\u0627\u0628\u061f',
+          'answer', E'\u0644\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u062d\u0633\u0627\u0628\u0643 \u0622\u0645\u0646\u0627\u064b:\n1. \u0627\u0633\u062a\u062e\u062f\u0645 \u0643\u0644\u0645\u0627\u062a \u0645\u0631\u0648\u0631 \u0642\u0648\u064a\u0629 \u0648\u0641\u0631\u064a\u062f\u0629\n2. \u0633\u062c\u0644 \u0645\u0641\u0627\u062a\u064a\u062d \u0644\u062a\u0633\u062c\u064a\u0644 \u062f\u062e\u0648\u0644 \u0623\u0633\u0631\u0639\n3. \u0644\u0627 \u062a\u0634\u0627\u0631\u0643 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062f\u062e\u0648\u0644 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0643\n4. \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c \u0628\u0639\u062f \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0623\u062c\u0647\u0632\u0629 \u0645\u0634\u0627\u0631\u0643\u0629\n5. \u0628\u0644\u063a \u0639\u0646 \u0623\u064a \u0646\u0634\u0627\u0637 \u0645\u0631\u064a\u0628 \u0644\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0628\u0634\u0631\u064a\u0629 \u0639\u0644\u0649 \u0627\u0644\u0641\u0648\u0631\n\n\u0623\u0645\u0627\u0646 \u062d\u0633\u0627\u0628\u0643 \u0647\u0648 \u0645\u0633\u0626\u0648\u0644\u064a\u062a\u0643 \u0627\u0644\u0634\u062e\u0635\u064a\u0629.'
+        )
+      ),
+      'settings',
+      ARRAY['staff', 'hr', 'admin'],
+      2,
       v_admin_id
     );
   END IF;

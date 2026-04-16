@@ -241,126 +241,123 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     }
   };
 
-  const handleBanUser = async () => {
-    if (!selectedUser) return;
-
-    if (selectedUser.id === currentUser?.id) {
-      showNotification('error', t('userManagement.cannotBanSelf'));
+  const handleUserStatusToggle = async (
+    user: User,
+    action: 'ban' | 'unban' | 'deactivate' | 'activate'
+  ) => {
+    if ((action === 'ban' || action === 'deactivate') && user.id === currentUser?.id) {
+      const errorKey =
+        action === 'ban'
+          ? t('userManagement.cannotBanSelf')
+          : t('userManagement.cannotDeactivateSelf');
+      showNotification('error', errorKey);
       return;
     }
 
     setSubmitting(true);
     try {
-      const result = await banUser(selectedUser.id, banForm.banDuration, banForm.reason);
+      let result: { success: boolean; error?: string };
+
+      switch (action) {
+        case 'ban':
+          result = await banUser(user.id, banForm.banDuration, banForm.reason);
+          break;
+        case 'unban':
+          result = await unbanUser(user.id);
+          break;
+        case 'deactivate':
+          result = await deactivateUser(user.id);
+          break;
+        case 'activate':
+          result = await activateUser(user.id);
+          break;
+      }
 
       if (!result.success) {
         throw new Error(result.error);
       }
 
-      showNotification('success', t('userManagement.userBanned'));
+      const successKey =
+        action === 'ban'
+          ? 'userManagement.userBanned'
+          : action === 'unban'
+            ? 'userManagement.userUnbanned'
+            : action === 'deactivate'
+              ? 'userManagement.userDeactivated'
+              : 'userManagement.userActivated';
+
+      showNotification('success', t(successKey));
 
       if (currentUser) {
-        logActivity(currentUser.id, 'user_banned', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-          ban_duration: banForm.banDuration,
-          reason: banForm.reason,
-        });
+        const activityAction =
+          action === 'ban'
+            ? 'user_banned'
+            : action === 'unban'
+              ? 'user_unbanned'
+              : action === 'deactivate'
+                ? 'user_deactivated'
+                : 'user_activated';
+
+        const metadata =
+          action === 'ban'
+            ? {
+                employee_email: getUserEmail(user),
+                ban_duration: banForm.banDuration,
+                reason: banForm.reason,
+              }
+            : {
+                employee_email: getUserEmail(user),
+              };
+
+        logActivity(currentUser.id, activityAction, 'user', user.id, metadata);
       }
 
-      closeModal();
+      if (action === 'ban') {
+        closeModal();
+      }
       loadUsers();
     } catch (_error: unknown) {
-      logError(extractError(_error), 'useUserActions.handleBanUser');
-      showNotification('error', getErrorMessage(_error, t('userManagement.failedToBan')));
+      const errorAction =
+        action === 'ban'
+          ? 'useUserActions.handleBanUser'
+          : action === 'unban'
+            ? 'useUserActions.handleUnbanUser'
+            : action === 'deactivate'
+              ? 'useUserActions.handleDeactivateUser'
+              : 'useUserActions.handleActivateUser';
+      logError(extractError(_error), errorAction);
+
+      const errorKey =
+        action === 'ban'
+          ? 'userManagement.failedToBan'
+          : action === 'unban'
+            ? 'userManagement.failedToUnban'
+            : action === 'deactivate'
+              ? 'userManagement.failedToDeactivate'
+              : 'userManagement.failedToActivate';
+
+      showNotification('error', getErrorMessage(_error, t(errorKey)));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleBanUser = async () => {
+    if (!selectedUser) return;
+    await handleUserStatusToggle(selectedUser, 'ban');
   };
 
   const handleUnbanUser = async () => {
     if (!selectedUser) return;
-
-    setSubmitting(true);
-    try {
-      const result = await unbanUser(selectedUser.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userUnbanned'));
-
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_unbanned', 'user', selectedUser.id, {
-          employee_email: getUserEmail(selectedUser),
-        });
-      }
-
-      closeModal();
-      loadUsers();
-    } catch (_error: unknown) {
-      logError(extractError(_error), 'useUserActions.handleUnbanUser');
-      showNotification('error', getErrorMessage(_error, t('userManagement.failedToUnban')));
-    } finally {
-      setSubmitting(false);
-    }
+    await handleUserStatusToggle(selectedUser, 'unban');
   };
 
   const handleDeactivateUser = async (user: User) => {
-    if (user.id === currentUser?.id) {
-      showNotification('error', t('userManagement.cannotDeactivateSelf'));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const result = await deactivateUser(user.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userDeactivated'));
-
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_deactivated', 'user', user.id, {
-          employee_email: getUserEmail(user),
-        });
-      }
-
-      loadUsers();
-    } catch (_error: unknown) {
-      logError(extractError(_error), 'useUserActions.handleDeactivateUser');
-      showNotification('error', getErrorMessage(_error, t('userManagement.failedToDeactivate')));
-    } finally {
-      setSubmitting(false);
-    }
+    await handleUserStatusToggle(user, 'deactivate');
   };
 
   const handleActivateUser = async (user: User) => {
-    setSubmitting(true);
-    try {
-      const result = await activateUser(user.id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      showNotification('success', t('userManagement.userActivated'));
-
-      if (currentUser) {
-        logActivity(currentUser.id, 'user_activated', 'user', user.id, {
-          employee_email: getUserEmail(user),
-        });
-      }
-
-      loadUsers();
-    } catch (_error: unknown) {
-      logError(extractError(_error), 'useUserActions.handleActivateUser');
-      showNotification('error', getErrorMessage(_error, t('userManagement.failedToActivate')));
-    } finally {
-      setSubmitting(false);
-    }
+    await handleUserStatusToggle(user, 'activate');
   };
 
   return {

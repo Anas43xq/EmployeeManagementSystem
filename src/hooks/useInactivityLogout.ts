@@ -45,8 +45,9 @@ export function useInactivityLogout(user: AuthUser | null, onLogout: () => void)
 
         try {
           await signOutCurrentSession();
-        } catch {
+        } catch (err) {
           // ensure user is cleared even if the network call fails
+          console.error('[useInactivityLogout] signOutCurrentSession failed:', err);
         }
 
         onLogout();

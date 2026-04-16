@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { logActivity } from '../../services/activityLog';
@@ -30,30 +30,32 @@ export function useDepartments() {
   const { t } = useTranslation();
   const isAdminOrHR = user?.role === 'admin' || user?.role === 'hr';
 
-  useEffect(() => {
-    loadDepartments();
-    if (isAdminOrHR) loadEmployees();
-  }, []);
-
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     try {
       const data = await getDepartments();
       setDepartments(data);
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useDepartments] loadDepartments failed:', error);
       showNotification('error', 'Failed to load departments');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showNotification]);
 
-  const loadEmployees = async () => {
+  const loadEmployees = useCallback(async () => {
     try {
       const data = await fetchActiveEmployeesWithDefaults();
       setEmployees(data as Employee[]);
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useDepartments] loadEmployees failed:', error);
       showNotification('error', t('common.failedToLoad', 'Failed to load employees'));
     }
-  };
+  }, [showNotification, t]);
+
+  useEffect(() => {
+    loadDepartments();
+    if (isAdminOrHR) loadEmployees();
+  }, [isAdminOrHR, loadDepartments, loadEmployees]);
 
   const openAddModal = () => {
     setEditingDept(null);

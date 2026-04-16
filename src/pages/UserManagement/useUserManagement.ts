@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { getManagedUsers, getEmployeesWithoutUserAccess } from '../../services/users';
@@ -15,30 +15,31 @@ export function useUserManagement() {
   const { showNotification } = useNotification();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    loadUsers();
-    loadEmployeesWithoutAccess();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const data = await getManagedUsers();
       setUsers(data);
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useUserManagement] loadUsers failed:', error);
       showNotification('error', t('userManagement.failedToLoad'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [showNotification, t]);
 
-  const loadEmployeesWithoutAccess = async () => {
+  const loadEmployeesWithoutAccess = useCallback(async () => {
     try {
       const data = await getEmployeesWithoutUserAccess();
       setEmployeesWithoutAccess(data);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('[useUserManagement] loadEmployeesWithoutAccess failed:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+    loadEmployeesWithoutAccess();
+  }, [loadUsers, loadEmployeesWithoutAccess]);
 
   // --- Actions hook ---
   const actions = useUserActions({

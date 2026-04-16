@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOrCreateLeaveBalance, updateLeaveBalance, subscribeToLeaveBalanceChanges } from '../../services/leaves';
 import { calculateWorkingDays } from '../../utils/dateUtils';
@@ -12,26 +12,27 @@ export function useLeaveBalance() {
   const { user } = useAuth();
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
 
-  const loadLeaveBalance = async () => {
+  const loadLeaveBalance = useCallback(async () => {
     if (!user?.employeeId) return;
     const currentYear = new Date().getFullYear();
     try {
       const data = await getOrCreateLeaveBalance(user.employeeId, currentYear);
       setLeaveBalance(data);
-    } catch {}
-  };
+    } catch (err) {
+      console.error('[useLeaveBalance] loadLeaveBalance failed:', err);
+      setLeaveBalance(null);
+    }
+  }, [user?.employeeId]);
 
   useEffect(() => {
     loadLeaveBalance();
-  }, [user]);
+  }, [loadLeaveBalance]);
 
   useEffect(() => {
     if (!user?.employeeId) return;
 
-    return subscribeToLeaveBalanceChanges(user.employeeId, () => {
-      loadLeaveBalance();
-    });
-  }, [user?.employeeId]);
+    return subscribeToLeaveBalanceChanges(user.employeeId, loadLeaveBalance);
+  }, [user?.employeeId, loadLeaveBalance]);
 
   const getAvailableBalance = (leaveType: string): number => {
     if (!leaveBalance) return 0;
@@ -75,7 +76,10 @@ export function useLeaveBalance() {
         ? (rec[fieldToUpdate] || 0) + days
         : Math.max(0, (rec[fieldToUpdate] || 0) - days);
       await updateLeaveBalance(employeeId, currentYear, fieldToUpdate, newValue);
-    } catch {}
+    } catch (err) {
+      console.error('[useLeaveBalance] updateLeaveBalanceField failed:', err);
+      throw err;
+    }
   };
 
   return {

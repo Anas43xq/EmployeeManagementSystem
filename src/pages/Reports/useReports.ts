@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { format } from 'date-fns';
@@ -22,18 +22,19 @@ export function useReports() {
 
   const { showNotification } = useNotification();
 
-  useEffect(() => {
-    loadDepartments();
-  }, []);
-
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     try {
       const data = await getReportDepartments();
       setDepartments(data);
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useReports] loadDepartments failed:', error);
       showNotification('error', t('common.failedToLoad', 'Failed to load departments'));
     }
-  };
+  }, [showNotification, t]);
+
+  useEffect(() => {
+    loadDepartments();
+  }, [loadDepartments]);
 
   const getDateFilter = () => {
     const today = new Date();
@@ -192,7 +193,8 @@ export function useReports() {
       } else {
         showNotification('warning', t('reports.noData'));
       }
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useReports] generateReport failed:', error);
       showNotification('error', t('reports.reportFailed'));
     } finally {
       setLoading(false);

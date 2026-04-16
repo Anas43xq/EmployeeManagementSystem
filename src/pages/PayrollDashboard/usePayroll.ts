@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,21 +46,22 @@ export function usePayroll() {
   const [deductions, setDeductions] = useState<DeductionData[]>([]);
   const [loadingPayslipDetails, setLoadingPayslipDetails] = useState(false);
 
-  useEffect(() => {
-    loadPayrollRecords();
-  }, [selectedMonth, selectedYear, statusFilter]);
-
-  const loadPayrollRecords = async () => {
+  const loadPayrollRecords = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getPayrollRecords(selectedMonth, selectedYear, undefined, statusFilter || undefined);
       setPayrolls(data);
-    } catch {
+    } catch (err) {
+      console.error('[usePayroll] loadPayrollRecords failed:', err);
       showNotification('error', t('payroll.failedToLoad', 'Failed to load payroll records'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedMonth, selectedYear, statusFilter, showNotification, t]);
+
+  useEffect(() => {
+    loadPayrollRecords();
+  }, [loadPayrollRecords]);
 
   const openPayslipModal = async (payroll: PayrollData) => {
     setViewingPayroll(payroll);
@@ -74,7 +75,8 @@ export function usePayroll() {
       ]);
       setBonuses(bonusData);
       setDeductions(deductionData);
-    } catch {
+    } catch (err) {
+      console.error('[usePayroll] openPayslipModal failed:', err);
       showNotification('error', t('payslip.failedToLoadDetails', 'Failed to load payslip details'));
     } finally {
       setLoadingPayslipDetails(false);
@@ -114,7 +116,8 @@ export function usePayroll() {
     try {
       generatePayslipPDF(viewingPayroll, bonuses, deductions);
       showNotification('success', t('payslip.downloadStarted', 'Payslip download started'));
-    } catch {
+    } catch (err) {
+      console.error('[usePayroll] handleDownloadPDF failed:', err);
       showNotification('error', t('payslip.downloadFailed', 'Failed to generate payslip PDF'));
     }
   };

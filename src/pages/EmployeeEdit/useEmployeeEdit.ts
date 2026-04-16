@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -48,27 +48,19 @@ export function useEmployeeEdit() {
     qualifications: [],
   });
 
-  useEffect(() => {
-    loadDepartments();
-    if (id && id !== 'new') {
-      loadEmployee();
-    } else {
-      loadNextEmployeeNumber();
-    }
-  }, [id]);
-
-  const loadNextEmployeeNumber = async () => {
+  const loadNextEmployeeNumber = useCallback(async () => {
     try {
       const preview = await getNextEmployeeNumber();
       setFormData((prev) => ({ ...prev, employee_number: preview }));
-    } catch {
+    } catch (err) {
+      console.error('[useEmployeeEdit] loadNextEmployeeNumber failed:', err);
       // fallback — DB will assign the real number on save
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadDepartments = async () => {
+  const loadDepartments = useCallback(async () => {
     try {
       const data = await getDepartments();
       setDepartments(
@@ -77,12 +69,13 @@ export function useEmployeeEdit() {
           name: dept.name,
         }))
       );
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useEmployeeEdit] loadDepartments failed:', error);
       showNotification('error', t('employees.failedToLoadDepartments'));
     }
-  };
+  }, [showNotification, t]);
 
-  const loadEmployee = async () => {
+  const loadEmployee = useCallback(async () => {
     try {
       const data = await getEmployeeById(id!);
       if (!data) {
@@ -116,13 +109,23 @@ export function useEmployeeEdit() {
         photo_url: employee.photo_url || '',
         qualifications: employee.qualifications,
       });
-    } catch (_error) {
+    } catch (error) {
+      console.error('[useEmployeeEdit] loadEmployee failed:', error);
       showNotification('error', t('employees.failedToLoadDetails'));
       navigate('/employees');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showNotification, t, navigate]);
+
+  useEffect(() => {
+    loadDepartments();
+    if (id && id !== 'new') {
+      loadEmployee();
+    } else {
+      loadNextEmployeeNumber();
+    }
+  }, [id, loadDepartments, loadEmployee, loadNextEmployeeNumber]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

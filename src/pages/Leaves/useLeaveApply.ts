@@ -38,7 +38,8 @@ export function useLeaveApply() {
       const conflicts = await checkLeaveConflicts(targetEmployeeId, startDate, endDate);
       setLeaveConflicts(conflicts);
       return conflicts;
-    } catch {
+    } catch (err) {
+      console.error('[useLeaveApply] checkLeaveConflictsHandler failed:', err);
       setLeaveConflicts([]);
       return [];
     } finally {
@@ -113,7 +114,8 @@ export function useLeaveApply() {
 
       setFormData({ leave_type: 'annual', start_date: '', end_date: '', reason: '' });
       setShowApplyModal(false);
-    } catch {
+    } catch (err) {
+      console.error('[useLeaveApply] handleApplyLeave failed:', err);
       showNotification('error', 'Failed to submit leave request');
     } finally {
       setSubmitting(false);
