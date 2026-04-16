@@ -11,7 +11,6 @@ import { useDashboard } from './useDashboard';
 import StatCards from './StatCards';
 import EmployeeOfWeekWidget from './EmployeeOfWeekWidget';
 import PerformanceChartWidget from './PerformanceChartWidget';
-import PerformanceCalculationStatus from './PerformanceCalculationStatus';
 
 const LEAVE_COLORS = { Pending: '#f59e0b', Approved: '#10b981', Rejected: '#ef4444' };
 
@@ -149,13 +148,6 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
-
-      {/* Admin-only: manual performance calculation trigger */}
-      {userRole === 'admin' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <PerformanceCalculationStatus />
-        </div>
-      )}
     </div>
   );
 }
