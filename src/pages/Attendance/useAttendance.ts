@@ -89,6 +89,10 @@ export function useAttendance() {
     loadEmployees();
   }, [loadEmployees]);
 
+  useEffect(() => {
+    loadAttendance();
+  }, [loadAttendance]);
+
   const handleMarkAttendance = async () => {
     if (!user?.employeeId) return;
 
