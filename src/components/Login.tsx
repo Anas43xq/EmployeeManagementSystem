@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { extractError, getErrorMessage, logError, handleError } from '../lib/errorHandler';
 import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session';
-import { isWebAuthnSupported, authenticateWithPasskey } from '../services/passkeys';
+import { isWebAuthnSupported } from '../services/passkeys';
 import { sendPasswordResetEmail } from '../services/auth';
 
 
@@ -18,11 +17,10 @@ import { useProgressiveCountdown } from '../hooks/useProgressiveCountdown';
 
 import OtpScreen from './login/OtpScreen';
 import OtpLockoutScreen from './login/OtpLockoutScreen';
-import PasskeyScreen from './login/PasskeyScreen';
 import ForgotPasswordScreen from './login/ForgotPasswordScreen';
 import EmailScreen from './login/EmailScreen';
 
-type Screen = 'login' | 'otp' | 'otp-lockout' | 'passkey' | 'forgot';
+type Screen = 'login' | 'otp' | 'otp-lockout' | 'forgot';
 type LoginLocationState = { successMessage?: string } | null;
 
 function getSuccessMessage(state: unknown): string | undefined {
@@ -33,7 +31,7 @@ function getSuccessMessage(state: unknown): string | undefined {
   return typeof state.successMessage === 'string' ? state.successMessage : undefined;
 }
 
-/** Renders the login flow and routes between sign-in, OTP, passkey, and password reset screens. */
+/** Renders the login flow and routes between sign-in, OTP, and password reset screens. */
 export default function Login() {
   // Extract form state management
   const form = useLoginForm();
@@ -164,20 +162,6 @@ export default function Login() {
     );
   }
 
-  // Screen: Passkey
-  if (screen === 'passkey') {
-    return (
-      <PasskeyScreen
-        onBack={() => setScreen('login')}
-        authenticate={authenticateWithPasskey}
-        onSuccess={() => {
-          showNotification('success', t('auth.signedInSuccess'));
-          navigate('/dashboard', { replace: true });
-        }}
-      />
-    );
-  }
-
   // Screen: Forgot Password
   if (screen === 'forgot') {
     const resetPasswordFn = async (email: string, redirectUrl: string) => {
@@ -208,8 +192,11 @@ export default function Login() {
       successMessage={successMessage}
       onSubmit={handleSubmit}
       onForgotPassword={() => setScreen('forgot')}
-      onPasskey={() => setScreen('passkey')}
       toggleLanguage={toggleLanguage}
+      onSuccessfulLogin={() => {
+        showNotification('success', t('auth.signedInSuccess'));
+        navigate('/dashboard', { replace: true });
+      }}
     />
   );
 }

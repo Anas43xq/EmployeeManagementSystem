@@ -43,3 +43,4 @@ scripts/__TEMP_AUTOMATED_TESTS__.ts
 supabase/migrations/20260415000000_faq_bilingual_jsonb.sql
 scripts/project-structure.md
 scripts/scan-structure.ps1
+src/components/login/PasskeyScreen.tsx.archived

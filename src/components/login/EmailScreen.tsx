@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Clock } from 'lucide-react';
 import type { useLoginForm } from '../../hooks/useLoginForm';
+import { useIntegratedPasskeyLogin } from '../../hooks/useAuthHooks';
+import { authenticateWithPasskey } from '../../services/passkeys';
 
 interface EmailScreenProps {
   form: ReturnType<typeof useLoginForm>;
@@ -11,11 +13,11 @@ interface EmailScreenProps {
   successMessage?: string;
   onSubmit: (e: React.FormEvent) => void;
   onForgotPassword: () => void;
-  onPasskey: () => void;
   toggleLanguage: () => void;
+  onSuccessfulLogin?: () => void;
 }
 
-/** Renders the main email-and-password login screen. */
+/** Renders the main email-and-password login screen with integrated passkey option. */
 export default function EmailScreen({
   form,
   delayCountdown,
@@ -25,10 +27,22 @@ export default function EmailScreen({
   successMessage,
   onSubmit,
   onForgotPassword,
-  onPasskey,
   toggleLanguage,
+  onSuccessfulLogin,
 }: EmailScreenProps) {
   const { t } = useTranslation();
+  const passkey = useIntegratedPasskeyLogin({ authenticate: authenticateWithPasskey });
+
+  const handlePasskeyClick = async () => {
+    if (!form.email || !form.email.trim()) {
+      passkey.authenticate('');
+      return;
+    }
+    const success = await passkey.authenticate(form.email);
+    if (success) {
+      onSuccessfulLogin?.();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -66,6 +80,23 @@ export default function EmailScreen({
 
         {/* Error Message */}
         {form.error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-2">{form.error}</div>}
+
+        {/* Passkey Error Message */}
+        {passkey.error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-2 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-sm">{passkey.error}</p>
+              <button
+                type="button"
+                onClick={() => passkey.clearError()}
+                className="text-xs underline hover:no-underline mt-1"
+              >
+                {t('auth.dismiss')}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Warning Message */}
         {form.warnMessage && (
@@ -157,11 +188,21 @@ export default function EmailScreen({
           {passkeySupported && (
             <button
               type="button"
-              onClick={onPasskey}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+              onClick={handlePasskeyClick}
+              disabled={passkey.loading || form.loading || delayCountdown > 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Fingerprint className="w-5 h-5" />
-              {t('auth.signInWithPasskey')}
+              {passkey.loading ? (
+                <>
+                  <span className="inline-block animate-spin">⏳</span>
+                  {t('auth.authenticating', 'Authenticating...')}
+                </>
+              ) : (
+                <>
+                  <Fingerprint className="w-5 h-5" />
+                  {t('auth.signInWithPasskey')}
+                </>
+              )}
             </button>
           )}
         </div>
