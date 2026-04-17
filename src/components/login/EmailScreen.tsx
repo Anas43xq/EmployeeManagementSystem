@@ -44,6 +44,9 @@ export default function EmailScreen({
   };
 
   const handlePasskeyClick = async () => {
+    // Clear any previous form errors
+    form.clearErrors?.();
+    
     if (!form.email || !form.email.trim()) {
       passkey.authenticate('');
       return;
@@ -59,6 +62,9 @@ export default function EmailScreen({
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Clear any previous passkey errors
+    passkey.clearError();
+    
     if (!isValidEmail(form.email)) {
       form.setError(t('auth.emailInvalid'));
       return;
@@ -83,6 +89,9 @@ export default function EmailScreen({
   };
 
   const handleForgotPassword = () => {
+    // Clear any previous passkey errors
+    passkey.clearError();
+    
     // Validate email before switching to forgot password screen
     if (!form.email || !form.email.trim()) {
       form.setError(t('auth.emailRequired', 'Email is required'));
