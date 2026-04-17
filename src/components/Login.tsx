@@ -162,24 +162,26 @@ export default function Login() {
     );
   }
 
-  // Screen: Forgot Password
-  if (screen === 'forgot') {
-    const resetPasswordFn = async (email: string, redirectUrl: string) => {
-      try {
-        const error = await sendPasswordResetEmail(email, redirectUrl);
-        return { error };
-      } catch (err) {
-        return { error: new Error(getErrorMessage(err)) };
-      }
-    };
 
-    return (
-      <ForgotPasswordScreen
-        onBack={() => setScreen('login')}
-        resetPassword={resetPasswordFn}
-      />
-    );
-  }
+  // Screen: Forgot Password
+if (screen === 'forgot') {
+  const resetPasswordFn = async (email: string, redirectUrl: string) => {
+    try {
+      const error = await sendPasswordResetEmail(email, redirectUrl);
+      return { error };
+    } catch (err) {
+      return { error: new Error(getErrorMessage(err)) };
+    }
+  };
+
+  return (
+    <ForgotPasswordScreen
+      onBack={() => setScreen('login')}
+      resetPassword={resetPasswordFn}
+      initialEmail={form.email}
+    />
+  );
+}
 
   // Screen: Login Form (main)
   return (

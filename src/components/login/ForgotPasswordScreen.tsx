@@ -1,26 +1,72 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useForgotPassword, getDirectionClass } from '../../hooks/useAuthHooks';
 import { handleError } from '../../lib/errorHandler';
-import { ArrowLeft, Briefcase } from 'lucide-react';
+import { ArrowLeft, Briefcase, Clock } from 'lucide-react';
 
 interface ForgotPasswordScreenProps {
   onBack: () => void;
   resetPassword: (email: string, redirectUrl: string) => Promise<{ error?: Error | null }>;
+  initialEmail?: string;
 }
 
-export default function ForgotPasswordScreen({ onBack, resetPassword }: ForgotPasswordScreenProps) {
+const AUTO_SUBMIT_DELAY = 3; // 3 seconds before auto-submit
+
+export default function ForgotPasswordScreen({ onBack, resetPassword, initialEmail = '' }: ForgotPasswordScreenProps) {
   const { showNotification } = useNotification();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
+  const [countdown, setCountdown] = useState<number>(0);
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
   const { email, setEmail, loading, error, submit } = useForgotPassword({
     onBack,
     resetPassword,
   });
 
+  // Auto-fill email on mount if initialEmail provided
+  useEffect(() => {
+    if (initialEmail && !email) {
+      setEmail(initialEmail);
+      setCountdown(AUTO_SUBMIT_DELAY);
+    }
+  }, [initialEmail, email, setEmail]);
+
+  // Countdown timer for auto-submit
+  useEffect(() => {
+    if (countdown > 0 && !loading && !hasAutoSubmitted) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    // Auto-submit when countdown reaches 0 and email is valid
+    if (countdown === 0 && email && initialEmail && !loading && !hasAutoSubmitted) {
+      setHasAutoSubmitted(true);
+      handleAutoSubmit();
+    }
+  }, [countdown, email, initialEmail, loading, hasAutoSubmitted]);
+
+  const handleAutoSubmit = async () => {
+    const success = await submit(email);
+    if (!success && error) {
+      // Route error through registry
+      await handleError(error, {
+        form: { setError: () => {} },
+        t,
+        showNotification,
+      });
+    } else if (success) {
+      showNotification('success', t('auth.resetEmailSent'));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCountdown(0);
+    setHasAutoSubmitted(true);
     const success = await submit(email);
     if (!success && error) {
       // Route error through registry
@@ -60,6 +106,14 @@ export default function ForgotPasswordScreen({ onBack, resetPassword }: ForgotPa
           </div>
         )}
 
+        {/* Auto-submit countdown */}
+        {countdown > 0 && initialEmail && !hasAutoSubmitted && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{t('auth.autoSubmitIn', { seconds: countdown, defaultValue: `Sending reset link in ${countdown}s...` })}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -69,7 +123,11 @@ export default function ForgotPasswordScreen({ onBack, resetPassword }: ForgotPa
               id="reset-email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setCountdown(0); // Reset countdown if user edits email
+                setHasAutoSubmitted(false);
+              }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             />
