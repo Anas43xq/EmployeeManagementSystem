@@ -82,6 +82,20 @@ export default function EmailScreen({
     setPendingAction(null);
   };
 
+  const handleForgotPassword = () => {
+    // Validate email before switching to forgot password screen
+    if (!form.email || !form.email.trim()) {
+      form.setError(t('auth.emailRequired', 'Email is required'));
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      form.setError(t('auth.emailInvalid'));
+      return;
+    }
+    // Email is valid, proceed to forgot password screen
+    onForgotPassword();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
@@ -177,7 +191,7 @@ export default function EmailScreen({
               </label>
               <button
                 type="button"
-                onClick={onForgotPassword}
+                onClick={handleForgotPassword}
                 className="text-sm text-primary-900 hover:text-primary-700 transition-colors"
               >
                 {t('auth.forgotPassword')}
