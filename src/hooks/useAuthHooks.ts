@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Extract error message from unknown error type
@@ -280,6 +281,7 @@ export function useIntegratedPasskeyLogin({
 }: UseIntegratedPasskeyLoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useTranslation();
 
   const authenticate_passkey = async (email: string): Promise<boolean> => {
     setError('');
@@ -288,7 +290,7 @@ export function useIntegratedPasskeyLogin({
     try {
       // Validate email is not empty
       if (!email || !email.trim()) {
-        setError('Email is required for passkey authentication');
+        setError(t('auth.emailRequired', 'Email is required for passkey authentication'));
         setLoading(false);
         return false;
       }
@@ -302,28 +304,30 @@ export function useIntegratedPasskeyLogin({
 
       const msg = result.error?.toLowerCase() || '';
       if (msg.includes('banned') || msg.includes('user is banned')) {
-        setError('Your account has been banned');
+        setError(t('auth.passkeyAccountBanned'));
       } else if (msg.includes('no passkey')) {
-        setError('No passkey registered for this account. Please use password login or register a passkey in settings.');
+        setError(t('auth.passkeyNoPasskey'));
       } else if (msg.includes('not found')) {
-        setError('User not found. Please check your email address.');
-      } else if (msg.includes('cancelled') || msg.includes('timeout')) {
-        setError('Passkey authentication was cancelled or timed out.');
+        setError(t('auth.passkeyUserNotFound'));
+      } else if (msg.includes('cancelled')) {
+        setError(t('auth.passkeyCancelled'));
+      } else if (msg.includes('timeout')) {
+        setError(t('auth.passkeyTimeout'));
       } else if (msg.includes('not supported') || msg.includes('unavailable')) {
-        setError('Passkey authentication is not supported on your device.');
+        setError(t('auth.passkeyNotSupported'));
       } else {
-        setError(result.error || 'Passkey authentication failed. Please try password login.');
+        setError(t('auth.passkeyFallback'));
       }
       setLoading(false);
       return false;
     } catch (err) {
       const msg = extractErrorMessage(err).toLowerCase();
       if (msg.includes('banned') || msg.includes('user is banned')) {
-        setError('Your account has been banned');
+        setError(t('auth.passkeyAccountBanned'));
       } else if (msg.includes('network') || msg.includes('connection')) {
-        setError('Connection failed. Please check your internet and try again.');
+        setError(t('auth.passkeyNetworkError'));
       } else {
-        setError('Passkey authentication failed. Please try password login.');
+        setError(t('auth.passkeyFallback'));
       }
       setLoading(false);
       return false;

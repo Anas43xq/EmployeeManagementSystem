@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Clock } from 'lucide-react';
 import type { useLoginForm } from '../../hooks/useLoginForm';
 import { useIntegratedPasskeyLogin } from '../../hooks/useAuthHooks';
 import { authenticateWithPasskey } from '../../services/passkeys';
+import EmailConfirmationModal from './EmailConfirmationModal';
 
 interface EmailScreenProps {
   form: ReturnType<typeof useLoginForm>;
@@ -32,16 +34,52 @@ export default function EmailScreen({
 }: EmailScreenProps) {
   const { t } = useTranslation();
   const passkey = useIntegratedPasskeyLogin({ authenticate: authenticateWithPasskey });
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'passkey' | 'password' | null>(null);
+
+  // Validate email format
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handlePasskeyClick = async () => {
     if (!form.email || !form.email.trim()) {
       passkey.authenticate('');
       return;
     }
-    const success = await passkey.authenticate(form.email);
-    if (success) {
-      onSuccessfulLogin?.();
+    if (!isValidEmail(form.email)) {
+      form.setError(t('auth.emailInvalid'));
+      return;
     }
+    // Show email confirmation before passkey
+    setPendingAction('passkey');
+    setShowEmailConfirm(true);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValidEmail(form.email)) {
+      form.setError(t('auth.emailInvalid'));
+      return;
+    }
+    // Show email confirmation before password
+    setPendingAction('password');
+    setShowEmailConfirm(true);
+  };
+
+  const handleEmailConfirmed = async () => {
+    if (pendingAction === 'passkey') {
+      setShowEmailConfirm(false);
+      const success = await passkey.authenticate(form.email);
+      if (success) {
+        onSuccessfulLogin?.();
+      }
+    } else if (pendingAction === 'password') {
+      setShowEmailConfirm(false);
+      onSubmit(new Event('submit') as any);
+    }
+    setPendingAction(null);
   };
 
   return (
@@ -115,7 +153,7 @@ export default function EmailScreen({
         )}
 
         {/* Login Form */}
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={handlePasswordSubmit} className="space-y-6">
           {/* Email Input */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -207,6 +245,19 @@ export default function EmailScreen({
           )}
         </div>
       </div>
+
+      {/* Email Confirmation Modal */}
+      <EmailConfirmationModal
+        email={form.email}
+        isOpen={showEmailConfirm}
+        onConfirm={handleEmailConfirmed}
+        onCancel={() => {
+          setShowEmailConfirm(false);
+          setPendingAction(null);
+        }}
+        isLoading={form.loading || passkey.loading}
+        isRTL={isRTL}
+      />
     </div>
   );
 }
