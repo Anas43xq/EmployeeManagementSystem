@@ -5,7 +5,7 @@ import { Megaphone, AlertCircle, AlertTriangle, Info, Bell } from 'lucide-react'
 
 const PRIORITY_CONFIG = {
   low: { labelKey: 'announcements.low', color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Info },
-  normal: { labelKey: 'announcements.medium', color: 'bg-primary-50 text-primary-700 border-primary-200', icon: Bell },
+  normal: { labelKey: 'announcements.normal', color: 'bg-primary-50 text-primary-700 border-primary-200', icon: Bell },
   high: { labelKey: 'announcements.high', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: AlertTriangle },
   urgent: { labelKey: 'announcements.urgent', color: 'bg-red-50 text-red-700 border-red-200', icon: AlertCircle },
 };
