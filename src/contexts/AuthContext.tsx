@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp, getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session';
+import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp, getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts, escalateToOtp } from '../services/session';
 import { clearAllCache } from '../lib/cache';
 import { isRefreshTokenError, isAuthTransientError } from '../services/auth';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
@@ -213,12 +213,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const status = await getLoginAttemptStatus(email);
     if (!status.userId) throw new Error('EMAIL_NOT_FOUND');
-    if (status.requiresOtp && status.otpSecondsLeft > 0) throw new Error('REQUIRES_OTP_ACTIVE');
+    
+    // TASK 1: Mask user enumeration risk
+    // Both REQUIRES_OTP_ACTIVE (existing OTP) and a fresh OTP (at 5 attempts)
+    // are presented with the same generic message "Check your email for a verification code"
+    // to prevent attackers from enumerating which accounts have active OTPs.
+    // The distinct state is only handled internally.
+    if (status.requiresOtp && status.otpSecondsLeft > 0) {
+      throw new Error('REQUIRES_OTP_GENERIC');
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       const updated = await recordFailedAttempt(email);
-      if (updated.requiresOtp) throw new Error('REQUIRES_OTP_NEW');
+      
+      // TASK 2: Collapse the 4-hop OTP escalation chain
+      // Previously: throw REQUIRES_OTP_NEW → catch in errorHandler → triggerOtpFlow → sendLoginOtp
+      // Now: call escalateToOtp directly when failedAttempts reaches 5
+      if (updated.failedAttempts >= 5) {
+        const { error: otpError } = await escalateToOtp(email);
+        if (otpError) {
+          throw new Error(`OTP_ESCALATION_FAILED: ${otpError}`);
+        }
+        // Success: user will be prompted to check email on login page with countdown check
+        throw new Error('REQUIRES_OTP_GENERIC');
+      }
+      
       if (updated.attemptsRemaining > 0 && updated.attemptsRemaining < 5) {
         throw new Error(`ATTEMPTS_REMAINING:${updated.attemptsRemaining}`);
       }

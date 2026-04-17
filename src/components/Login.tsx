@@ -17,11 +17,12 @@ import { useOtpFlow } from '../hooks/useOtpFlow';
 import { useProgressiveCountdown } from '../hooks/useProgressiveCountdown';
 
 import OtpScreen from './login/OtpScreen';
+import OtpLockoutScreen from './login/OtpLockoutScreen';
 import PasskeyScreen from './login/PasskeyScreen';
 import ForgotPasswordScreen from './login/ForgotPasswordScreen';
 import EmailScreen from './login/EmailScreen';
 
-type Screen = 'login' | 'otp' | 'passkey' | 'forgot';
+type Screen = 'login' | 'otp' | 'otp-lockout' | 'passkey' | 'forgot';
 type LoginLocationState = { successMessage?: string } | null;
 
 function getSuccessMessage(state: unknown): string | undefined {
@@ -121,11 +122,29 @@ export default function Login() {
         email: form.email,
         setScreen: (screenValue: string) => setScreen(screenValue as Screen),
         navigate,
+        getCooldown: getOtpRequestCooldownRemaining,
       });
     } finally {
       form.setLoading(false);
     }
   };
+
+  // Screen: OTP Lockout (TASK 4)
+  if (screen === 'otp-lockout') {
+    return (
+      <OtpLockoutScreen
+        email={otp.otpEmail}
+        onBack={() => setScreen('login')}
+        getCooldown={getOtpRequestCooldownRemaining}
+        sendOtp={sendLoginOtp}
+        onRetryAllowed={() => {
+          // Reset OTP attempt counter server-side happens on successful send
+          // Now allow user to proceed to regular OTP entry screen
+          setScreen('otp');
+        }}
+      />
+    );
+  }
 
   // Screen: OTP
   if (screen === 'otp') {
@@ -140,6 +159,7 @@ export default function Login() {
           showNotification('success', t('auth.signedInSuccess'));
           navigate('/dashboard', { replace: true });
         }}
+        onLockout={() => setScreen('otp-lockout')}
       />
     );
   }

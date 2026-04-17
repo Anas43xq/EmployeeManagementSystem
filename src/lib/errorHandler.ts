@@ -29,6 +29,7 @@ export interface ErrorContext {
   email?: string;
   setScreen?: (screen: string) => void;
   navigate?: (path: string, options?: Record<string, unknown>) => void;
+  getCooldown?: (email: string) => Promise<number>;
 }
 
 export type ErrorCategory = 'auth' | 'otp' | 'session' | 'network' | 'validation' | 'unknown';
@@ -232,7 +233,8 @@ export async function handleError(
     return;
   }
 
-  // REQUIRES_OTP_NEW (exact match)
+  // REQUIRES_OTP_NEW (exact match) - DEPRECATED: replaced by REQUIRES_OTP_GENERIC
+  // Kept for backwards compatibility with old code paths
   if (msg === 'REQUIRES_OTP_NEW') {
     if (!context.otp?.triggerOtpFlow || !context.setScreen) {
       return;
@@ -246,7 +248,39 @@ export async function handleError(
     return;
   }
 
-  // REQUIRES_OTP_ACTIVE (exact match)
+  // REQUIRES_OTP_GENERIC (exact match) - TASK 1: Masked enumeration risk
+  // Used for both:
+  // 1. Existing active OTP (REQUIRES_OTP_ACTIVE state masked)
+  // 2. Fresh OTP just sent (after 5 failed password attempts)
+  // Same generic message for both prevents account enumeration attacks.
+  if (msg === 'REQUIRES_OTP_GENERIC') {
+    // TASK 3: Check cooldown BEFORE navigating to OTP page
+    // If cooldown is active, show countdown on login page instead
+    if (context.form?.setWarnMessage && context.email) {
+      const cooldownSeconds = context.getCooldown 
+        ? await context.getCooldown(context.email) 
+        : 0;
+      
+      if (cooldownSeconds > 0) {
+        // Cooldown active: show countdown on login page, don't navigate yet
+        const minutes = Math.ceil(cooldownSeconds / 60);
+        context.form.setWarnMessage(
+          `A code was already sent. You can request a new one in ${minutes} minute(s).`
+        );
+        return; // Stay on login page with countdown
+      }
+    }
+    
+    // No cooldown: safe to navigate to OTP page
+    if (context.otp?.setOtpEmail && context.setScreen) {
+      context.otp.setOtpEmail(context.email || '');
+      context.setScreen('otp');
+    }
+    return;
+  }
+
+  // REQUIRES_OTP_ACTIVE (exact match) - DEPRECATED: subsumed by REQUIRES_OTP_GENERIC
+  // Kept for backwards compatibility
   if (msg === 'REQUIRES_OTP_ACTIVE') {
     if (!context.otp?.setOtpEmail || !context.setScreen) {
       return;

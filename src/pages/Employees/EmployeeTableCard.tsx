@@ -21,11 +21,15 @@ export function EmployeeTableCard({ employees, onDeleteClick }: Props) {
   const [employmentTypeFilter, setEmploymentTypeFilter] = useState('all');
 
   const filtered = employees.filter(emp => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      emp.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employee_number.toLowerCase().includes(searchTerm.toLowerCase());
+      emp.first_name.toLowerCase().includes(searchLower) ||
+      emp.last_name.toLowerCase().includes(searchLower) ||
+      emp.email.toLowerCase().includes(searchLower) ||
+      emp.employee_number.toLowerCase().includes(searchLower) ||
+      emp.position.toLowerCase().includes(searchLower) ||
+      emp.phone.toLowerCase().includes(searchLower) ||
+      (emp.departments?.name?.toLowerCase().includes(searchLower) ?? false);
     const matchesStatus = statusFilter === 'all' || emp.status === statusFilter;
     const matchesType = employmentTypeFilter === 'all' || emp.employment_type === employmentTypeFilter;
     return matchesSearch && matchesStatus && matchesType;

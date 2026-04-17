@@ -30,7 +30,7 @@ const rpc = supabase as any;
 // ─── Configuration ─────────────────────────────────────────────────────────────
 export const OTP_TRIGGER_THRESHOLD = 5;
 export const OTP_VERIFICATION_ATTEMPTS_MAX = 5;
-export const OTP_REQUEST_COOLDOWN_SECONDS = 60;
+export const OTP_REQUEST_COOLDOWN_SECONDS = 120;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface LoginAttemptStatus {
@@ -58,13 +58,15 @@ export interface IpMacLimitStatus {
 
 /**
  * Calculate progressive delay in seconds based on attempt count
- * 1st attempt: 0s, 2nd: 5s, 3rd: 15s, 4th+: 30s
+ * 1st attempt: 0s, 2nd: 5s, 3rd: 15s, 4th: 30s, 5th: 0s (escalate to OTP immediately)
  */
 export function getProgressiveDelaySeconds(attemptCount: number): number {
   if (attemptCount < 2) return 0;
   if (attemptCount === 2) return 5;
   if (attemptCount === 3) return 15;
-  return 30; // 4th attempt and beyond
+  if (attemptCount === 4) return 30;
+  if (attemptCount === 5) return 0; // Escalate to OTP immediately, no delay
+  return 30; // 6th+ attempts (shouldn't reach here, but default to 30s)
 }
 
 function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatus {
@@ -149,6 +151,41 @@ export async function recordFailedAttempt(email: string): Promise<LoginAttemptSt
 }
 
 /**
+ * TASK 2: Escalate to OTP directly when failed attempts reach 5
+ * Replaces the 4-hop chain: throw REQUIRES_OTP_NEW → catch → triggerOtpFlow → sendLoginOtp
+ * 
+ * This function:
+ * - Sets requiresOtp = true in login_attempts (already done by record_failed_login at 5 attempts)
+ * - Sends the OTP email directly via Supabase Auth
+ * - Refreshes OTP expiry window server-side
+ * - Returns with no thrown errors
+ * 
+ * Used when failedAttempts reaches 5 in recordFailedAttempt.
+ */
+export async function escalateToOtp(email: string): Promise<{ error?: string }> {
+  try {
+    // Send OTP email via Supabase Auth
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    // Refresh OTP expiry window via RPC (no session needed)
+    // This also resets verification attempts and updates last_otp_request_at
+    await rpc.rpc('refresh_otp_expiry', { p_email: email });
+
+    return {};
+  } catch (_err: unknown) {
+    const message = _err instanceof Error ? _err.message : 'Unknown error';
+    return { error: message };
+  }
+}
+
+/**
  * Send an OTP email and refresh the expiry window in the DB.
  * Validates cooldown (60 seconds) before sending.
  */
@@ -216,9 +253,21 @@ export async function verifyLoginOtp(
 }
 
 /**
- * Reset the counter after a successful login or OTP verification.
- * Called post-auth, so the user has a session (but the RPC also accepts anon).
- * This also clears any progressive delay that was set.
+ * TASK 5: Reset login counters with proper scope isolation
+ * 
+ * This function resets login attempt counters after successful auth.
+ * Called post-auth (user has a session), but the RPC also accepts anon.
+ * 
+ * Counter reset scope:
+ * - Password login success: resets failed_attempts and requires_otp only (password counters)
+ *   - Does NOT reset: otp_attempts, last_otp_request_at
+ * - OTP verification success: resets ALL counters (both password + OTP)
+ *   - Resets: failed_attempts, requires_otp, otp_attempts, last_otp_request_at
+ *   - Also clears any progressive delay that was set
+ * 
+ * This ensures a successful password login doesn't erase OTP attempt history
+ * if the user later needs to escalate to OTP. Only a successful OTP verification
+ * fully clears all counters.
  */
 export async function resetLoginAttempts(userId: string): Promise<void> {
   const { error } = await rpc.rpc('reset_login_attempts_rpc', {

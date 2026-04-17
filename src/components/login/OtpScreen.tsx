@@ -11,6 +11,7 @@ interface OtpScreenProps {
   sendOtp: (email: string) => Promise<{ error?: string }>;
   getCooldown: (email: string) => Promise<number>;
   onSuccess: () => void;
+  onLockout?: () => void;
 }
 
 export default function OtpScreen({
@@ -20,6 +21,7 @@ export default function OtpScreen({
   sendOtp,
   getCooldown,
   onSuccess,
+  onLockout,
 }: OtpScreenProps) {
   const { showNotification } = useNotification();
   const { t, i18n } = useTranslation();
@@ -33,6 +35,7 @@ export default function OtpScreen({
     countdown,
     cooldownRemaining,
     showCooldown,
+    isLockedOut,
     isVerifyDisabled,
     isResendDisabled,
     verify,
@@ -44,7 +47,30 @@ export default function OtpScreen({
     sendOtp,
     getCooldown,
     onSuccess,
+    onLockout,
   });
+
+  // TASK 4: If locked out, show lockout screen instead
+  if (isLockedOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+          <div className="text-red-600 text-4xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {t('auth.tooManyAttempts', { defaultValue: 'Too Many Attempts' })}
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {t('auth.otpLockedMessage', {
+              defaultValue: 'You have entered an incorrect code too many times. Request a new code to continue.',
+            })}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            {t('auth.redirectingToLockout', { defaultValue: 'Redirecting to new code request...' })}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

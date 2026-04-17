@@ -19,6 +19,7 @@ export function getDirectionClass(isRTL: boolean, normal: string, rtl: string): 
 
 /**
  * OTP authentication hook with cooldown and attempt tracking
+ * TASK 4: Tracks OTP verification attempts and returns locked-out state
  */
 interface UseOtpProps {
   email: string;
@@ -27,6 +28,7 @@ interface UseOtpProps {
   sendOtp: (email: string) => Promise<{ error?: string }>;
   getCooldown: (email: string) => Promise<number>;
   onSuccess: () => void;
+  onLockout?: () => void;
   maxAttempts?: number;
 }
 
@@ -37,6 +39,7 @@ export function useOtp({
   sendOtp,
   getCooldown,
   onSuccess,
+  onLockout,
   maxAttempts = 5,
 }: UseOtpProps) {
   const [code, setCode] = useState('');
@@ -47,6 +50,7 @@ export function useOtp({
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [showCooldown, setShowCooldown] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [isLockedOut, setIsLockedOut] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Main countdown timer
@@ -106,9 +110,13 @@ export function useOtp({
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
+      // TASK 4: When attempts reach 5, mark as locked out
+      // The parent component (OtpScreen) will use this to navigate to OtpLockoutScreen
       if (newAttempts >= maxAttempts) {
+        setIsLockedOut(true);
         setError('Too many verification attempts. Request a new code to continue.');
         setLoading(false);
+        if (onLockout) onLockout();
         return false;
       }
 
@@ -138,9 +146,12 @@ export function useOtp({
       return false;
     }
 
+    // TASK 4: On successful resend, reset lockout state and attempt counter
+    // The OTP attempt counter is reset server-side on successful send
     setExpiresAt(Date.now() + 10 * 60 * 1000);
     setCode('');
     setAttempts(0);
+    setIsLockedOut(false);
     setCooldownRemaining(60); // Standard 60-second cooldown
     setShowCooldown(true);
     setLoading(false);
@@ -156,6 +167,7 @@ export function useOtp({
     cooldownRemaining,
     showCooldown,
     attempts,
+    isLockedOut,
     isVerifyDisabled: loading || code.length < 8 || attempts >= maxAttempts,
     isResendDisabled: loading || cooldownRemaining > 0,
     verify,

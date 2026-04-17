@@ -40,7 +40,7 @@ export type EmployeeWithNumber = Pick<Employee, 'id' | 'first_name' | 'last_name
 export type EmployeeSummary = Pick<Employee, 'id' | 'first_name' | 'last_name' | 'employee_number' | 'email' | 'position' | 'department_id'> & {
   departments?: { name: string };
 };
-export type EmployeeListItem = Pick<Employee, 'id' | 'employee_number' | 'first_name' | 'last_name' | 'email' | 'position' | 'department_id' | 'status' | 'employment_type' | 'hire_date'> & {
+export type EmployeeListItem = Pick<Employee, 'id' | 'employee_number' | 'first_name' | 'last_name' | 'email' | 'phone' | 'position' | 'department_id' | 'status' | 'employment_type' | 'hire_date'> & {
   departments?: { name: string };
 };
 

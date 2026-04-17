@@ -98,10 +98,12 @@ export interface WidgetAnnouncement {
 
 /** Fetches active announcements for the dashboard widget, ordered by priority then date. */
 export async function getActiveAnnouncementsForWidget(limit = 6): Promise<WidgetAnnouncement[]> {
+  const now = new Date().toISOString();
   const { data, error } = await db
     .from('announcements')
     .select('id, title, content, priority, created_at')
     .eq('is_active', true)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('priority', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);

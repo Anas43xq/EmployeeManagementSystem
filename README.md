@@ -162,6 +162,18 @@ Makes sense, right? Staff get what they need, HR gets operational control, admin
 
 ---
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** v18.0.0 or higher
+- **npm** v9.0.0 or higher (comes with Node.js)
+- **Git** for version control
+- **Supabase Account** — Free tier is sufficient for development (sign up at [supabase.com](https://supabase.com))
+- **Environment** — macOS, Linux, or Windows
+
+---
+
 ## Setup
 
 You'll need Node.js 18+ and a Supabase account. That's it.
@@ -183,9 +195,21 @@ cp .env.example .env
 Fill in your Supabase details:
 
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=https://yourproject.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
+
+# Optional: Email Service (for notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 ```
+
+Get your Supabase keys from:
+1. Log in to [supabase.com](https://supabase.com)
+2. Select your project
+3. Go to Settings → API → Project URL and Anon Key
 
 ### Database setup
 
@@ -216,6 +240,14 @@ npm run dev
 ```
 
 Should open on `localhost:5173`. The demo data includes 3 test accounts you can use right away.
+
+### Verify Installation
+
+After startup, you should see:
+- React app loaded at `http://localhost:5173`
+- Login page with email/password and passkey options
+- Browser console shows Supabase connection status
+- No TypeScript errors in the terminal
 
 ---
 
@@ -333,20 +365,89 @@ The database is managed through migrations. Edge functions get deployed via the 
 
 ---
 
-## Test Logins
+## Quick Start
 
-Pre-configured accounts for testing:
+After installation, here's the fastest way to see the system in action:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | anas.essam.work@gmail.com | admin123 |
-| HR | essamanas86@gmail.com | Hr1234 |  
-| Staff | tvissam96@gmail.com | emp123 |
-
-Each account has different permissions so you can test the full role-based access system.
+1. **Login with test account** — Email: anas.essam.work@gmail.com, Password: admin123
+2. **Explore the Dashboard** — See KPIs, employee count, and this week's performer
+3. **Try Employee Management** — View employees, add a new one, upload a photo
+4. **Process Attendance** — Clock in/out or add records for team members
+5. **Create a Task** — Assign a priority-based task and watch performance scores update
 
 ---
 
-MIT License — Built for IT teams who deserve better HR tools.
+## Test Logins
+
+Pre-configured accounts for testing all three roles:
+
+| Role | Email | Password | Access Level |
+|------|-------|----------|------------------|
+| **Admin** | anas.essam.work@gmail.com | admin123 | Full system control, user management, all reports |
+| **HR** | essamanas86@gmail.com | Hr1234 | Employee CRUD, leave approvals, payroll view |
+| **Staff** | tvissam96@gmail.com | emp123 | Own profile, task completion, leave requests |
+
+Each account has different permissions so you can test the full role-based access system. Try logging in with each role to see how the interface changes.
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**"Failed to load module" error in browser**
+- Clear browser cache (Ctrl+Shift+Delete)
+- Hard refresh (Ctrl+F5)
+- The `vercel.json` cache headers prevent this in production
+
+**Supabase connection fails**
+- Verify `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`
+- Check Supabase project is active in console
+- Ensure your IP isn't blocked by project's security rules
+
+**Database migrations fail**
+- Make sure linked project is set: `supabase link --project-ref YOUR_PROJECT_REF`
+- Run `npx supabase db reset --linked` to create all tables
+- Check migration logs: `supabase migration list`
+
+**Email notifications not sending**
+- Verify SMTP credentials in Supabase project settings
+- Check that `send-notification-email` function is deployed
+- Review function logs in Supabase dashboard → Functions
+
+**Passkey registration fails**
+- Ensure you're on HTTPS in production (required by WebAuthn spec)
+- On localhost, HTTP is allowed by browsers
+- Check that `webauthn-register` function is deployed
+
+### Getting Help
+
+If issues persist:
+1. Check browser console (F12) for error messages
+2. Review Supabase project logs → Functions
+3. Verify TypeScript types: `npm run lint`
+4. Try `npm install` and `npm run dev` again
+
+---
+
+## Project Info
+
+- **Version:** 1.0.0
+- **Status:** Production Ready
+- **Last Updated:** April 2026
+- **Node Version Required:** 18.0.0+
+- **Package Manager:** npm
+
+---
+
+## License
+
+MIT License © 2026 DevTeam Hub Contributors
+
+Free to use for personal and commercial projects.
+
+---
+
+**Built for IT teams who deserve better HR tools.**
 
 *DevTeam Hub — React + TypeScript + Supabase*
