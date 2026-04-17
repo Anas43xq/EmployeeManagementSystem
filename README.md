@@ -66,7 +66,7 @@ Built with React and TypeScript on the frontend, Supabase handling the backend. 
 
 ## Point System 
 
-I implemented this automated weekly scoring system that picks "Employee of the Week" based on actual metrics instead of who brought donuts.
+I implemented this automated weekly scoring system that picks "Employee of the Week" based on actual metrics instead of who brought this item or that.
 
 **The math:**
 ```
@@ -118,7 +118,7 @@ Staff can see their running total in the navbar. It's gamified without being stu
 ```
 Frontend (React SPA on Vercel)
 ├── Auth Context (JWT tokens)  
-├── 18 page modules
+├── 24 page modules
 ├── i18n support (EN/AR)
 └── Notification system
           │
