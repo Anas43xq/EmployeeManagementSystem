@@ -1,22 +1,8 @@
 -- Migration File 01: Core Tables
 -- Purpose: Create core tables (departments, employees, users, preferences, faqs)
 -- Dependencies: File 00 (uses generate_employee_number function)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP (Run this first to ensure idempotency)
--- ============================================================
-
-DO $$
-BEGIN
-  -- Drop tables in reverse order of creation (reverse FK dependency)
-  DROP TABLE IF EXISTS public.faqs CASCADE;
-  DROP TABLE IF EXISTS public.user_preferences CASCADE;
-  DROP TABLE IF EXISTS public.users CASCADE;
-  DROP TABLE IF EXISTS public.employees CASCADE;
-  DROP TABLE IF EXISTS public.departments CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

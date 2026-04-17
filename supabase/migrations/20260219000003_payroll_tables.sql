@@ -1,19 +1,8 @@
 -- Migration File 03: Payroll Tables
 -- Purpose: Create payroll, bonuses, and deductions tables
 -- Dependencies: File 01 (employees, users must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TABLE IF EXISTS public.deductions CASCADE;
-  DROP TABLE IF EXISTS public.bonuses CASCADE;
-  DROP TABLE IF EXISTS public.payrolls CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

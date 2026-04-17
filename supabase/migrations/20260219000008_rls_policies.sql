@@ -1,29 +1,8 @@
 -- Migration File 08: RLS Policies
 -- Purpose: Enable RLS on all tables and create security policies
 -- Dependencies: Files 01-05 (all tables must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$ 
-DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
-    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', r.policyname, r.tablename);
-  END LOOP;
-END $$;
-
-DO $$
-BEGIN
-  DROP FUNCTION IF EXISTS public.log_activity(UUID, TEXT, TEXT, UUID, JSONB) CASCADE;
-  DROP FUNCTION IF EXISTS get_user_email() CASCADE;
-  DROP FUNCTION IF EXISTS get_user_employee_id() CASCADE;
-  DROP FUNCTION IF EXISTS get_user_role() CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

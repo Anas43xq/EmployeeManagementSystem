@@ -1,27 +1,8 @@
 -- Migration File 05: Authentication & Security Tables
 -- Purpose: Create passkeys, login attempts, and auth security functions
 -- Dependencies: File 00 (uses get_progressive_delay_seconds, get_seconds_until_retry)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TABLE IF EXISTS public.login_attempt_limits CASCADE;
-  DROP TABLE IF EXISTS public.login_attempts CASCADE;
-  DROP TABLE IF EXISTS public.passkeys CASCADE;
-  DROP FUNCTION IF EXISTS public.validate_otp_request_cooldown(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
-  DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.pre_auth_login_check(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.cleanup_old_login_attempts() CASCADE;
-  DROP FUNCTION IF EXISTS public.cleanup_expired_login_limits() CASCADE;
-  DROP FUNCTION IF EXISTS public.refresh_otp_expiry(TEXT) CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

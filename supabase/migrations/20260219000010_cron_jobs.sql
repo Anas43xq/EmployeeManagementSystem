@@ -1,23 +1,8 @@
 -- Migration File 10: Cron Jobs
 -- Purpose: Schedule recurring jobs for performance calculation and employee of week selection
 -- Dependencies: File 00 (pg_cron extension) + File 09 (functions must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP (Unschedule existing jobs)
--- ============================================================
-
-DO $$
-BEGIN
-  PERFORM cron.unschedule('weekly-performance-calculation');
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
-
-DO $$
-BEGIN
-  PERFORM cron.unschedule('weekly-employee-of-week');
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

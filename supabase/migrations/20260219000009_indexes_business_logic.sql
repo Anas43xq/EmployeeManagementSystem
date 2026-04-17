@@ -1,25 +1,8 @@
 -- Migration File 09: Indexes & Business Logic
 -- Purpose: Create indexes and business logic functions for performance and data integrity
 -- Dependencies: File 02 (leaves, attendance tables must exist for check_leave_overlap)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TRIGGER IF EXISTS check_leave_overlap_trigger ON public.leaves;
-  DROP FUNCTION IF EXISTS public.get_last_performance_calculation_time() CASCADE;
-  DROP FUNCTION IF EXISTS public.check_week_data_availability(DATE) CASCADE;
-  DROP FUNCTION IF EXISTS public.select_employee_of_week(DATE, BOOLEAN) CASCADE;
-  DROP FUNCTION IF EXISTS public.calculate_weekly_performance(DATE) CASCADE;
-  DROP FUNCTION IF EXISTS public.calculate_leave_deductions(UUID, INTEGER, INTEGER) CASCADE;
-  DROP FUNCTION IF EXISTS public.calculate_attendance_deductions(UUID, INTEGER, INTEGER) CASCADE;
-  DROP FUNCTION IF EXISTS public.check_leave_overlap() CASCADE;
-  DROP FUNCTION IF EXISTS public.calculate_working_days(DATE, DATE) CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

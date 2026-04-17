@@ -1,22 +1,8 @@
 -- Migration File 07: Email Sync & Auth Triggers
 -- Purpose: Create triggers and functions for email synchronization between employees and auth.users
 -- Dependencies: File 01 (employees, users tables must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TRIGGER IF EXISTS on_auth_user_email_changed ON auth.users;
-  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-  DROP TRIGGER IF EXISTS sync_auth_email_on_employee_update ON public.employees;
-  DROP FUNCTION IF EXISTS handle_auth_user_email_change() CASCADE;
-  DROP FUNCTION IF EXISTS handle_new_auth_user() CASCADE;
-  DROP FUNCTION IF EXISTS sync_auth_email_from_employee() CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

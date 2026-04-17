@@ -1,24 +1,8 @@
 -- Migration File 04: Performance & Engagement Tables
 -- Purpose: Create performance tracking, tasks, warnings, complaints, and notification tables
 -- Dependencies: File 01 (employees, users must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TABLE IF EXISTS public.employee_of_week CASCADE;
-  DROP TABLE IF EXISTS public.employee_performance CASCADE;
-  DROP TABLE IF EXISTS public.employee_complaints CASCADE;
-  DROP TABLE IF EXISTS public.employee_warnings CASCADE;
-  DROP TABLE IF EXISTS public.employee_tasks CASCADE;
-  DROP TABLE IF EXISTS public.activity_logs CASCADE;
-  DROP TABLE IF EXISTS public.notifications CASCADE;
-  DROP TABLE IF EXISTS public.announcements CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

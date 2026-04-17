@@ -1,19 +1,8 @@
 -- Migration File 02: Leave & Attendance Tables
 -- Purpose: Create leave and attendance management tables
 -- Dependencies: File 01 (employees must exist)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP
--- ============================================================
-
-DO $$
-BEGIN
-  DROP TABLE IF EXISTS public.leave_balances CASCADE;
-  DROP TABLE IF EXISTS public.leaves CASCADE;
-  DROP TABLE IF EXISTS public.attendance CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================

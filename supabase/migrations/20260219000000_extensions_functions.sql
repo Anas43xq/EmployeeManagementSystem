@@ -1,38 +1,8 @@
 -- Migration File 00: Extensions & Utility Functions
 -- Purpose: Create extensions, sequences, and utility functions that other files depend on
 -- Dependencies: None (independent)
+-- Note: Cleanup is handled by 20260218999999_cleanup_all.sql
 -- Created by: Migration Split Plan
-
--- ============================================================
--- CLEANUP (Run this first to ensure idempotency)
--- ============================================================
-
-DO $$
-BEGIN
-  -- Drop functions in reverse dependency order
-  DROP FUNCTION IF EXISTS public.update_faqs_updated_at() CASCADE;
-  DROP FUNCTION IF EXISTS public.validate_otp_request_cooldown(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.reset_login_attempts_rpc(UUID) CASCADE;
-  DROP FUNCTION IF EXISTS public.check_ip_mac_limits(TEXT, TEXT, TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.record_failed_login(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.pre_auth_login_check(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.cleanup_old_login_attempts() CASCADE;
-  DROP FUNCTION IF EXISTS public.cleanup_expired_login_limits() CASCADE;
-  DROP FUNCTION IF EXISTS public.refresh_otp_expiry(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.get_seconds_until_retry(TIMESTAMPTZ) CASCADE;
-  DROP FUNCTION IF EXISTS public.get_progressive_delay_seconds(INT) CASCADE;
-  DROP FUNCTION IF EXISTS public.get_role_user_emails(TEXT[], UUID) CASCADE;
-  DROP FUNCTION IF EXISTS public.get_role_user_emails(TEXT[]) CASCADE;
-  DROP FUNCTION IF EXISTS public.notify_role_users(TEXT, TEXT, TEXT, TEXT[], UUID) CASCADE;
-  DROP FUNCTION IF EXISTS public.notify_role_users(TEXT, TEXT, TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.clear_own_session_token() CASCADE;
-  DROP FUNCTION IF EXISTS public.set_own_session_token(TEXT) CASCADE;
-  DROP FUNCTION IF EXISTS public.get_own_session_token() CASCADE;
-  DROP FUNCTION IF EXISTS generate_employee_number() CASCADE;
-  DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
-  DROP SEQUENCE IF EXISTS employee_number_seq CASCADE;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 
 -- ============================================================
