@@ -91,8 +91,7 @@ CREATE TABLE public.user_preferences (
 
 CREATE TABLE public.faqs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  question TEXT NOT NULL,
-  answer TEXT NOT NULL,
+  content JSONB NOT NULL DEFAULT '{"en": {"question": "", "answer": ""}, "ar": {"question": "", "answer": ""}}',
   category TEXT NOT NULL,
   visible_to TEXT[] NOT NULL DEFAULT ARRAY['staff', 'hr', 'admin'],
   faq_order INT NOT NULL DEFAULT 0,
@@ -100,5 +99,19 @@ CREATE TABLE public.faqs (
   created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  CONSTRAINT check_content_structure CHECK (
+    content ? 'en' AND
+    content ? 'ar' AND
+    content->'en' ? 'question' AND
+    content->'en' ? 'answer' AND
+    content->'ar' ? 'question' AND
+    content->'ar' ? 'answer'
+  )
 );
+
+-- FAQ content indexes for bilingual search performance
+CREATE INDEX idx_faqs_content_en_question ON public.faqs USING GIN (((content -> 'en' -> 'question')));
+CREATE INDEX idx_faqs_content_en_answer ON public.faqs USING GIN (((content -> 'en' -> 'answer')));
+CREATE INDEX idx_faqs_content_ar_question ON public.faqs USING GIN (((content -> 'ar' -> 'question')));
+CREATE INDEX idx_faqs_content_ar_answer ON public.faqs USING GIN (((content -> 'ar' -> 'answer')));
