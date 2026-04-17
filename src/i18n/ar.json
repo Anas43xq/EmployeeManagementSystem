@@ -87,7 +87,7 @@
     "passkeyAccountBanned": "تم حظر حسابك.",
     "passkeyFallback": "فشلت مصادقة مفتاح المرور. يرجى استخدام كلمة المرور.",
     "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صحيح.",
-    "emailRequired": "البريد الإلكتروني مطلوب لمصادقة مفتاح المرور.",
+    "emailRequired": "البريد الإلكتروني مطلوب.",
     "emailConfirmTitle": "تأكيد بريدك الإلكتروني",
     "emailConfirmMessage": "هل عنوان البريد الإلكتروني صحيح؟",
     "emailConfirmEmail": "البريد الإلكتروني: {{email}}",

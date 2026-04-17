@@ -89,7 +89,7 @@
     "passkeyAccountBanned": "Your account has been banned.",
     "passkeyFallback": "Passkey authentication failed. Please use password login.",
     "emailInvalid": "Please enter a valid email address.",
-    "emailRequired": "Email is required for passkey authentication.",
+    "emailRequired": "Email is required.",
     "emailConfirmTitle": "Confirm Your Email",
     "emailConfirmMessage": "Is this email address correct?",
     "emailConfirmEmail": "Email: {{email}}",
