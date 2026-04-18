@@ -64,29 +64,11 @@ export function useFAQ() {
   }, [user?.role, currentLanguage]);
 
   // Filter by category
-  const handleFilterCategory = useCallback(async (category: string | null) => {
+  const handleFilterCategory = useCallback((category: string | null) => {
     setSelectedCategory(category);
     setSearchQuery(''); // Clear search when filtering by category
-
-    if (!user?.role) return;
-
-    try {
-      if (category) {
-        const filtered = faqs.filter(faq => faq.category === category);
-        console.log('[handleFilterCategory] Filtering:', { category, totalFAQs: faqs.length, matchedFAQs: filtered.length, faqCategories: faqs.map(f => f.category) });
-        setFAQs(filtered);
-      } else {
-        // Reload all FAQs
-        const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.log('[handleFilterCategory] Reset to all FAQs:', data.length);
-        setFAQs(data);
-      }
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Filter failed');
-      console.error('[handleFilterCategory] Error:', err);
-    }
-  }, [faqs, user?.role, currentLanguage]);
+    setError(null);
+  }, []);
 
   return {
     faqs,
