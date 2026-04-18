@@ -43,7 +43,7 @@ export default function QualificationsSection({ formData, onAdd, onUpdate, onRem
                   type="text"
                   value={qual.degree}
                   onChange={e => onUpdate(index, 'degree', e.target.value)}
-                  placeholder="e.g. B.Sc. Computer Science"
+                  placeholder={t('forms.exampleDegree', 'e.g. B.Sc. Computer Science')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -55,7 +55,7 @@ export default function QualificationsSection({ formData, onAdd, onUpdate, onRem
                   type="text"
                   value={qual.institution}
                   onChange={e => onUpdate(index, 'institution', e.target.value)}
-                  placeholder="e.g. MIT"
+                  placeholder={t('forms.exampleInstitution', 'e.g. MIT')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -68,7 +68,7 @@ export default function QualificationsSection({ formData, onAdd, onUpdate, onRem
                     type="text"
                     value={qual.year || ''}
                     onChange={e => onUpdate(index, 'year', e.target.value)}
-                    placeholder="e.g. 2020"
+                    placeholder={t('forms.exampleYear', 'e.g. 2020')}
                     maxLength={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />

@@ -960,5 +960,57 @@
     "confirmDeleteFaq": "Are you sure you want to delete this FAQ?",
     "supportLineBreaks": "Line breaks are preserved",
     "allCategories": "All Categories"
+  },
+  "activityLogs": {
+    "subtitle": "System-wide audit trail — Admin only",
+    "noLogs": "No activity logs found",
+    "action": "Action",
+    "entityType": "Entity",
+    "details": "Details"
+  },
+  "errorBoundary": {
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred. This might be due to a session issue.",
+    "tryAgain": "Try Again",
+    "reloadPage": "Reload Page",
+    "clearSessionReload": "Clear Session & Reload",
+    "errorDetails": "Error Details",
+    "failedToLoadSection": "Failed to load this section",
+    "retry": "Retry"
+  },
+  "language": {
+    "switchToEnglish": "Switch to English",
+    "switchToArabic": "التبديل للعربية",
+    "en": "EN",
+    "ar": "ع"
+  },
+  "otp": {
+    "tooManyAttempts": "Too Many Attempts",
+    "otpLockedMessage": "You have entered an incorrect code too many times. Request a new code to continue.",
+    "requestNewCodeIn": "Request new code in",
+    "sending": "Sending...",
+    "requestNewOtp": "Request a New Code",
+    "backToLogin": "Back to Login",
+    "rateLimitExceeded": "Too many OTP attempts. Please try again later.",
+    "verificationFailed": "OTP verification failed",
+    "seconds": "seconds"
+  },
+  "errors": {
+    "defaultError": "An unexpected error occurred",
+    "unknownError": "An unknown error occurred",
+    "contactSupport": "Please contact support if the problem persists"
+  },
+  "forms": {
+    "exampleDegree": "e.g. B.Sc. Computer Science",
+    "exampleInstitution": "e.g. MIT",
+    "exampleYear": "e.g. 2020"
+  },
+  "accessibility": {
+    "closeModal": "Close modal",
+    "closeButton": "Close",
+    "menuButton": "Menu",
+    "searchButton": "Search",
+    "filterButton": "Filter",
+    "sortButton": "Sort"
   }
 }

@@ -1,9 +1,11 @@
 import { Component, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  t?: (key: string) => string;
 }
 
 interface State {
@@ -69,11 +71,11 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Something went wrong
+              {this.props.t?.('errorBoundary.somethingWentWrong') || 'Something went wrong'}
             </h2>
             
             <p className="text-gray-600 mb-6">
-              An unexpected error occurred. This might be due to a session issue.
+              {this.props.t?.('errorBoundary.unexpectedError') || 'An unexpected error occurred. This might be due to a session issue.'}
             </p>
             
             <div className="space-y-3">
@@ -81,28 +83,28 @@ export class ErrorBoundary extends Component<Props, State> {
                 onClick={this.handleReset}
                 className="w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
               >
-                Try Again
+                {this.props.t?.('errorBoundary.tryAgain') || 'Try Again'}
               </button>
               
               <button
                 onClick={this.handleReload}
                 className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
               >
-                Reload Page
+                {this.props.t?.('errorBoundary.reloadPage') || 'Reload Page'}
               </button>
               
               <button
                 onClick={this.handleClearAndReload}
                 className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm transition-colors"
               >
-                Clear Session & Reload
+                {this.props.t?.('errorBoundary.clearSessionReload') || 'Clear Session & Reload'}
               </button>
             </div>
             
             {this.state.error && (
               <details className="mt-4 text-left">
                 <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
-                  Error Details
+                  {this.props.t?.('errorBoundary.errorDetails') || 'Error Details'}
                 </summary>
                 <pre className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600 overflow-auto max-h-32">
                   {this.state.error.message}
@@ -171,12 +173,12 @@ export class RouteErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex items-center justify-center p-8">
           <div className="text-center">
-            <p className="text-gray-600 mb-4">Failed to load this section</p>
+            <p className="text-gray-600 mb-4">{this.props.t?.('errorBoundary.failedToLoadSection') || 'Failed to load this section'}</p>
             <button
               onClick={this.handleRetry}
               className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm"
             >
-              Retry
+              {this.props.t?.('errorBoundary.retry') || 'Retry'}
             </button>
           </div>
         </div>
@@ -187,4 +189,16 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary;
+// Wrapper component to provide translations to ErrorBoundary
+export function ErrorBoundaryWithTranslation({ children, fallback, onError }: Omit<Props, 't'>) {
+  const { t } = useTranslation();
+  return <ErrorBoundary t={t} onError={onError} fallback={fallback}>{children}</ErrorBoundary>;
+}
+
+// Wrapper component to provide translations to RouteErrorBoundary
+export function RouteErrorBoundaryWithTranslation({ children, fallback, onError }: Omit<Props, 't'>) {
+  const { t } = useTranslation();
+  return <RouteErrorBoundary t={t} onError={onError} fallback={fallback}>{children}</RouteErrorBoundary>;
+}
+
+export default ErrorBoundaryWithTranslation;

@@ -69,7 +69,7 @@ function useNavCategories(): NavCategory[] {
 
 export default function Navbar({ onSignOut, totalPoints }: { onSignOut: () => void; totalPoints: number | null }) {
   const { user } = useAuth();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const navRef = useRef<HTMLElement>(null);
   const lastScrollY = useRef(0);
@@ -145,10 +145,10 @@ export default function Navbar({ onSignOut, totalPoints }: { onSignOut: () => vo
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-1 px-2.5 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            title={isRTL ? 'Switch to English' : 'التبديل للعربية'}
+            title={t(isRTL ? 'language.switchToEnglish' : 'language.switchToArabic')}
           >
             <Globe className="w-4 h-4" />
-            <span className="text-xs">{isRTL ? 'EN' : 'ع'}</span>
+            <span className="text-xs">{t(isRTL ? 'language.en' : 'language.ar')}</span>
           </button>
           <NotificationCenter />
           <UserMenu onSignOut={onSignOut} isRTL={isRTL} />

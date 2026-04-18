@@ -36,7 +36,7 @@ export default function DataAvailabilityModal({
         <button
           onClick={onCancel}
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600"
-          aria-label="Close modal"
+          aria-label={t('accessibility.closeModal', 'Close modal')}
         >
           <X className="w-5 h-5" />
         </button>

@@ -958,5 +958,57 @@
     "confirmDeleteFaq": "هل أنت متأكد من أنك تريد حذف هذا السؤال الشائع؟",
     "supportLineBreaks": "يتم الحفاظ على فواصل الأسطر",
     "allCategories": "جميع الفئات"
+  },
+  "activityLogs": {
+    "subtitle": "سجل التدقيق على مستوى النظام — للمسؤولين فقط",
+    "noLogs": "لم يتم العثور على سجلات النشاط",
+    "action": "الإجراء",
+    "entityType": "نوع البيان",
+    "details": "التفاصيل"
+  },
+  "errorBoundary": {
+    "somethingWentWrong": "حدث خطأ ما",
+    "unexpectedError": "حدث خطأ غير متوقع. قد يكون السبب مشكلة في الجلسة.",
+    "tryAgain": "حاول مرة أخرى",
+    "reloadPage": "إعادة تحميل الصفحة",
+    "clearSessionReload": "مسح الجلسة وإعادة التحميل",
+    "errorDetails": "تفاصيل الخطأ",
+    "failedToLoadSection": "فشل تحميل هذا القسم",
+    "retry": "إعادة محاولة"
+  },
+  "language": {
+    "switchToEnglish": "التبديل إلى الإنجليزية",
+    "switchToArabic": "التبديل إلى العربية",
+    "en": "الإنجليزية",
+    "ar": "العربية"
+  },
+  "otp": {
+    "tooManyAttempts": "محاولات كثيرة جداً",
+    "otpLockedMessage": "لقد أدخلت رمزاً غير صحيح عدة مرات. اطلب رمزاً جديداً للمتابعة.",
+    "requestNewCodeIn": "اطلب رمزاً جديداً في",
+    "sending": "جاري الإرسال...",
+    "requestNewOtp": "اطلب رمز جديد",
+    "backToLogin": "العودة إلى تسجيل الدخول",
+    "rateLimitExceeded": "عدد كبير جداً من محاولات OTP. يرجى المحاولة لاحقاً.",
+    "verificationFailed": "فشل التحقق من OTP",
+    "seconds": "ثانية"
+  },
+  "errors": {
+    "defaultError": "حدث خطأ غير متوقع",
+    "unknownError": "حدث خطأ غير معروف",
+    "contactSupport": "يرجى التواصل مع الدعم إذا استمرت المشكلة"
+  },
+  "forms": {
+    "exampleDegree": "على سبيل المثال: درجة البكالوريوس في علوم الكمبيوتر",
+    "exampleInstitution": "على سبيل المثال: معهد ماساتشوستس",
+    "exampleYear": "على سبيل المثال: 2020"
+  },
+  "accessibility": {
+    "closeModal": "إغلاق النافذة",
+    "closeButton": "إغلاق",
+    "menuButton": "القائمة",
+    "searchButton": "البحث",
+    "filterButton": "تصفية",
+    "sortButton": "ترتيب"
   }
 }

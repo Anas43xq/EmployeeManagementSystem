@@ -120,7 +120,7 @@ export default function EmailScreen({
           <button
             onClick={toggleLanguage}
             className="flex items-center space-x-1 text-gray-500 hover:text-gray-900 transition-colors"
-            title={isRTL ? 'Switch to English' : 'التبديل للعربية'}
+            title={t(isRTL ? 'language.switchToEnglish' : 'language.switchToArabic')}
           >
             <Globe className="w-5 h-5" />
             <span className="text-sm">{languageLabel}</span>
