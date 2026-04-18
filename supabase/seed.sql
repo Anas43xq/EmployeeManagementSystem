@@ -541,18 +541,18 @@ BEGIN
     -- ACTIVITY LOGS - Diverse entity types
     -- ============================================================================
     INSERT INTO public.activity_logs (user_id, action, entity_type, details) VALUES
-      (v_admin_id, 'System initialized with comprehensive seed data', 'system', '{"version": "3.0", "date": "2026-02-19"}'::jsonb),
-      (v_admin_id, 'Generated January 2026 payroll for all employees', 'payroll', '{"month": 1, "year": 2026, "count": 21}'::jsonb),
-      (v_admin_id, 'Approved and paid January 2026 payroll', 'payroll', '{"month": 1, "year": 2026, "status": "paid"}'::jsonb),
-      (v_admin_id, 'Generated February 2026 payroll draft', 'payroll', '{"month": 2, "year": 2026, "count": 21}'::jsonb),
-      (v_admin_id, 'Issued warning to Karen Walker - Major severity', 'warning', '{"employee": "Karen Walker", "severity": "major"}'::jsonb);
+      (v_admin_id, 'System initialized', 'system', '{"version": "3.0", "date": "2026-02-19"}'::jsonb),
+      (v_admin_id, 'Generated payroll', 'payroll', '{"month": 1, "year": 2026, "count": 21}'::jsonb),
+      (v_admin_id, 'Approved and paid payroll', 'payroll', '{"month": 1, "year": 2026, "status": "paid"}'::jsonb),
+      (v_admin_id, 'Generated payroll draft', 'payroll', '{"month": 2, "year": 2026, "count": 21}'::jsonb),
+      (v_admin_id, 'Issued warning', 'warning', '{"employee": "Karen Walker", "severity": "major"}'::jsonb);
 
     IF v_hr_id IS NOT NULL THEN
       INSERT INTO public.activity_logs (user_id, action, entity_type, details) VALUES
-        (v_hr_id, 'Approved leave request for Emily Wilson - Sick leave', 'leave', '{"employee": "Emily Wilson", "type": "sick", "days": 2}'::jsonb),
-        (v_hr_id, 'Approved leave request for David Brown - Casual leave', 'leave', '{"employee": "David Brown", "type": "casual", "days": 1}'::jsonb),
-        (v_hr_id, 'Rejected leave request for Linda Rodriguez - Sick leave', 'leave', '{"employee": "Linda Rodriguez", "type": "sick"}'::jsonb),
-        (v_hr_id, 'Reviewed complaint - Office Temperature Issues', 'complaint', '{"status": "under_review", "category": "workplace"}'::jsonb);
+        (v_hr_id, 'Approved leave request', 'leave', '{"employee": "Emily Wilson", "type": "sick", "days": 2}'::jsonb),
+        (v_hr_id, 'Approved leave request', 'leave', '{"employee": "David Brown", "type": "casual", "days": 1}'::jsonb),
+        (v_hr_id, 'Rejected leave request', 'leave', '{"employee": "Linda Rodriguez", "type": "sick"}'::jsonb),
+        (v_hr_id, 'Reviewed complaint', 'complaint', '{"status": "under_review", "category": "workplace"}'::jsonb);
     END IF;
   END IF;
 END $$;

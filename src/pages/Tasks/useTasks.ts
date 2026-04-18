@@ -186,9 +186,16 @@ export function useTasks() {
     if (processingTasks.has(taskId)) return;
     setProcessingTasks(prev => new Set(prev).add(taskId));
     try {
+      const task = tasks.find(t => t.id === taskId);
       await deleteTask(taskId);
       if (user) {
-        logActivity(user.id, 'task_deleted', 'task', taskId);
+        logActivity(user.id, 'task_deleted', 'task', taskId, {
+          task_id: taskId,
+          title: task?.title,
+          priority: task?.priority,
+          employee_id: task?.employee_id,
+          status: task?.status,
+        });
       }
       showNotification('success', t('tasks.deleteSuccess'));
       loadTasks();

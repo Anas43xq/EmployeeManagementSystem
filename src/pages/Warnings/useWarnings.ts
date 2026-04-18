@@ -128,9 +128,15 @@ export function useWarnings() {
 
   const handleAcknowledge = async (warningId: string) => {
     try {
+      const warning = warnings.find(w => w.id === warningId);
       await acknowledgeWarning(warningId);
       if (user) {
-        logActivity(user.id, 'warning_acknowledged', 'warning', warningId);
+        logActivity(user.id, 'warning_acknowledged', 'warning', warningId, {
+          warning_id: warningId,
+          severity: warning?.severity,
+          employee_id: warning?.employee_id,
+          acknowledged_timestamp: new Date().toISOString(),
+        });
       }
       showNotification('success', t('warnings.acknowledged'));
       loadWarnings();
@@ -170,9 +176,15 @@ export function useWarnings() {
 
   const handleDelete = async (warningId: string) => {
     try {
+      const warning = warnings.find(w => w.id === warningId);
       await deleteWarning(warningId);
       if (user) {
-        logActivity(user.id, 'warning_deleted', 'warning', warningId);
+        logActivity(user.id, 'warning_deleted', 'warning', warningId, {
+          warning_id: warningId,
+          severity: warning?.severity,
+          employee_id: warning?.employee_id,
+          reason: warning?.reason,
+        });
       }
       showNotification('success', t('warnings.deleteSuccess'));
       loadWarnings();

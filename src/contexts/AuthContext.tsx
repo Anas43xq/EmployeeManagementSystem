@@ -257,7 +257,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     if (user) {
-      logActivity(user.id, 'user_logout', 'user', user.id);
+      const logoutTime = new Date().toISOString();
+      logActivity(user.id, 'user_logout', 'user', user.id, {
+        logout_reason: 'user_initiated',
+        logout_timestamp: logoutTime,
+        email: user.email,
+      });
       await supabase.rpc('clear_own_session_token'); // SECURITY DEFINER � bypasses RLS
     }
     localStorage.removeItem('ems_session_token');

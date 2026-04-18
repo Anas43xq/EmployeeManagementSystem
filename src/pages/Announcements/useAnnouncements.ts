@@ -134,9 +134,15 @@ export function useAnnouncements() {
 
   const confirmDeleteHandler = async (id: string) => {
     try {
+      const announcement = announcements.find(a => a.id === id);
       await deleteAnnouncement(id);
       if (user) {
-        logActivity(user.id, 'announcement_deleted', 'announcement', id);
+        logActivity(user.id, 'announcement_deleted', 'announcement', id, {
+          announcement_id: id,
+          title: announcement?.title,
+          priority: announcement?.priority,
+          was_active: announcement?.is_active,
+        });
       }
       loadAnnouncements();
     } catch (err) {

@@ -114,10 +114,17 @@ export function useComplaints() {
     if (!user) return;
 
     try {
+      const complaint = complaints.find(c => c.id === complaintId);
       await updateComplaintStatus(complaintId, 'under_review', {
         assignedTo: user.id,
       });
-      logActivity(user.id, 'complaint_reviewed', 'complaint', complaintId);
+      logActivity(user.id, 'complaint_reviewed', 'complaint', complaintId, {
+        complaint_id: complaintId,
+        old_status: complaint?.status,
+        new_status: 'under_review',
+        category: complaint?.category,
+        subject: complaint?.subject,
+      });
       showNotification('success', t('complaints.underReview'));
       loadComplaints();
     } catch (_error: unknown) {
@@ -170,9 +177,15 @@ export function useComplaints() {
 
   const handleDelete = async (complaintId: string) => {
     try {
+      const complaint = complaints.find(c => c.id === complaintId);
       await deleteComplaint(complaintId);
       if (user) {
-        logActivity(user.id, 'complaint_deleted', 'complaint', complaintId);
+        logActivity(user.id, 'complaint_deleted', 'complaint', complaintId, {
+          complaint_id: complaintId,
+          subject: complaint?.subject,
+          category: complaint?.category,
+          status: complaint?.status,
+        });
       }
       showNotification('success', t('complaints.deleteSuccess'));
       loadComplaints();
