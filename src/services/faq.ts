@@ -423,8 +423,6 @@ export async function getFAQCategories(role: UserRole): Promise<string[]> {
         .filter(cat => cat && typeof cat === 'string' && cat.trim().length > 0)
     )
   ];
-  
-  console.log('[getFAQCategories] Retrieved categories:', categories, 'from', data?.length, 'rows');
   return categories;
 }
 

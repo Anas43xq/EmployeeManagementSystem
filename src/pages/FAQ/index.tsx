@@ -71,10 +71,10 @@ export const FAQPage = () => {
         <div className="flex flex-wrap gap-2 justify-start">
           <button
             onClick={() => handleFilterCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border-2 ${
               !selectedCategory
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+                ? 'bg-primary text-white shadow-lg border-primary'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 border-transparent hover:border-gray-400'
             }`}
           >
             {t('faq.allCategories')}
@@ -83,10 +83,10 @@ export const FAQPage = () => {
             <button
               key={category}
               onClick={() => handleFilterCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border-2 ${
                 selectedCategory === category
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? 'bg-primary text-white shadow-lg border-primary scale-105'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 border-transparent hover:border-gray-400'
               }`}
             >
               {category}

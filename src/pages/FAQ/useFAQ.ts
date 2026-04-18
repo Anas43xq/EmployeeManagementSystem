@@ -32,11 +32,9 @@ export function useFAQ() {
       try {
         setLoading(true);
         const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.log('[useFAQ] Loaded FAQs:', data?.length || 0, 'FAQs');
         setFAQs(data);
 
         const cats = await getFAQCategories(user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.log('[useFAQ] Loaded categories:', cats);
         setCategories(cats);
         setError(null);
       } catch (err) {
@@ -75,17 +73,20 @@ export function useFAQ() {
     try {
       if (category) {
         const filtered = faqs.filter(faq => faq.category === category);
+        console.log('[handleFilterCategory] Filtering:', { category, totalFAQs: faqs.length, matchedFAQs: filtered.length, faqCategories: faqs.map(f => f.category) });
         setFAQs(filtered);
       } else {
         // Reload all FAQs
         const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.log('[handleFilterCategory] Reset to all FAQs:', data.length);
         setFAQs(data);
       }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Filter failed');
+      console.error('[handleFilterCategory] Error:', err);
     }
-  }, [user?.role, currentLanguage]);
+  }, [faqs, user?.role, currentLanguage]);
 
   return {
     faqs,
