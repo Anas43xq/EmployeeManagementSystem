@@ -405,9 +405,9 @@ export async function searchFAQs(searchQuery: string, role: UserRole, language?:
 export async function getFAQCategories(role: UserRole): Promise<string[]> {
   const { data, error } = await db
     .from('faqs')
-    .select('category')
-    .contains('visible_to', [role])
+    .select('category, visible_to, is_active')
     .eq('is_active', true)
+    .contains('visible_to', [role])
     .order('category', { ascending: true });
 
   if (error) {
@@ -415,8 +415,16 @@ export async function getFAQCategories(role: UserRole): Promise<string[]> {
     return [];
   }
 
-  // Extract unique categories
-  const categories = [...new Set((data || []).map(item => item.category))];
+  // Extract unique categories, filtering out null/empty values
+  const categories = [
+    ...new Set(
+      (data || [])
+        .map(item => item.category)
+        .filter(cat => cat && typeof cat === 'string' && cat.trim().length > 0)
+    )
+  ];
+  
+  console.log('[getFAQCategories] Retrieved categories:', categories, 'from', data?.length, 'rows');
   return categories;
 }
 

@@ -32,9 +32,11 @@ export function useFAQ() {
       try {
         setLoading(true);
         const data = await getFAQsByRole(user.role as any, currentLanguage); // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.log('[useFAQ] Loaded FAQs:', data?.length || 0, 'FAQs');
         setFAQs(data);
 
         const cats = await getFAQCategories(user.role as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.log('[useFAQ] Loaded categories:', cats);
         setCategories(cats);
         setError(null);
       } catch (err) {
