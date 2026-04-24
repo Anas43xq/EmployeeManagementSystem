@@ -214,11 +214,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const status = await getLoginAttemptStatus(email);
     if (!status.userId) throw new Error('EMAIL_NOT_FOUND');
     
-    // TASK 1: Mask user enumeration risk
-    // Both REQUIRES_OTP_ACTIVE (existing OTP) and a fresh OTP (at 5 attempts)
-    // are presented with the same generic message "Check your email for a verification code"
-    // to prevent attackers from enumerating which accounts have active OTPs.
-    // The distinct state is only handled internally.
     if (status.requiresOtp && status.otpSecondsLeft > 0) {
       throw new Error('REQUIRES_OTP_GENERIC');
     }
