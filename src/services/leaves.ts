@@ -1,15 +1,8 @@
-
-
-// File: leaveQueries.ts
-
 import { supabase } from './supabase';
 import { db } from '../lib/db';
 import type { Leave, LeaveBalance, LeaveConflict } from '../types/pages';
 
-/**
- * Fetches all leaves, optionally filtered by employee_id.
- * Includes employee details (first_name, last_name, employee_number, email).
- */
+
 export async function getLeaves(employeeId?: string): Promise<Leave[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = db
