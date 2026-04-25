@@ -52,9 +52,7 @@ for (const file of files) {
 
   if (changed) {
     // Clean up empty lines that consist only of whitespace (like where comments used to be)
-    // but don't aggressively remove all newlines.
-    const cleanedContent = newContent.replace(/^\s*\n/gm, '');
-    fs.writeFileSync(file, cleanedContent, 'utf8');
+    fs.writeFileSync(file, newContent, 'utf8');
     modifiedFiles++;
   }
 }
