@@ -73,8 +73,6 @@ export default function ActivityLogs() {
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.date', 'Date')}</th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('activityLogs.action', 'Action')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('activityLogs.entityType', 'Entity')}</th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('activityLogs.details', 'Details')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
