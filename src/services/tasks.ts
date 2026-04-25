@@ -39,7 +39,7 @@ export async function getTasks(filters?: {
     .from('employee_tasks')
     .select(`
       *,
-      employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_tasks_employee_id_fkey (id, first_name, last_name),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
       )
@@ -60,7 +60,7 @@ export async function getTaskById(id: string) {
     .from('employee_tasks')
     .select(`
       *,
-      employees!employee_tasks_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_tasks_employee_id_fkey (id, first_name, last_name),
       assigned_by_user:users!employee_tasks_assigned_by_fkey (
         employees (id, first_name, last_name)
       )

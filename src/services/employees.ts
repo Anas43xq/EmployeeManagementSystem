@@ -4,6 +4,7 @@
 
 import { db } from '../lib/db';
 import type { EmployeeFormData } from '../types/pages';
+import { extractCore, extractProfile } from '../utils/employeeMappers';
 
 type EmployeeWritePayload = Omit<EmployeeFormData, 'employee_number' | 'date_of_birth' | 'salary'> & {
   date_of_birth: string | null;
@@ -46,8 +47,9 @@ export async function getNextEmployeeNumber(): Promise<string> {
  * Fetches a specific employee by ID.
  */
 export async function getEmployeeById(employeeId: string): Promise<Record<string, unknown> | null> {
-  const { data, error } = await db
-    .from('employees')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (db as any)
+    .from('employee_full')
     .select('*')
     .eq('id', employeeId)
     .maybeSingle();
@@ -64,13 +66,25 @@ export async function getEmployeeById(employeeId: string): Promise<Record<string
 export async function createEmployee(
   data: EmployeeWritePayload
 ): Promise<{ id: string; employee_number: string }> {
+  const coreData = extractCore(data);
+  const profileData = extractProfile(data);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: newEmployee, error } = await (db.from('employees') as any)
-    .insert([data])
+    .insert([coreData])
     .select('id, employee_number')
     .single();
 
   if (error) throw error;
+
+  if (Object.keys(profileData).length > 0) {
+    profileData.employee_id = newEmployee.id;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileError } = await (db as any).from('employee_profiles')
+      .insert([profileData]);
+    if (profileError) throw profileError;
+  }
+
   return newEmployee;
 }
 
@@ -81,12 +95,25 @@ export async function updateEmployee(
   employeeId: string,
   data: EmployeeUpdatePayload
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (db.from('employees') as any)
-    .update(data)
-    .eq('id', employeeId);
+  const coreData = extractCore(data);
+  const profileData = extractProfile(data);
 
-  if (error) throw error;
+  if (Object.keys(coreData).length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (db.from('employees') as any)
+      .update(coreData)
+      .eq('id', employeeId);
+    if (error) throw error;
+  }
+
+  if (Object.keys(profileData).length > 0) {
+    profileData.employee_id = employeeId;
+    if (data.updated_at) profileData.updated_at = data.updated_at;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (db as any).from('employee_profiles')
+      .upsert(profileData, { onConflict: 'employee_id' });
+    if (error) throw error;
+  }
 }
 
 export async function terminateEmployeeRecord(employeeId: string): Promise<void> {
@@ -138,8 +165,8 @@ export async function fetchActiveEmployees(
   _dbClient: DatabaseClient,
   includeNumber?: boolean,
 ): Promise<EmployeeBasic[] | EmployeeWithNumber[]> {
-  const { data, error } = await supabase
-    .from('employees')
+  const { data, error } = await (supabase as any)
+    .from('employee_full')
     .select('*')
     .order('first_name', { ascending: true });
 
@@ -194,7 +221,7 @@ export async function getEmployeeIdForUser(userId: string): Promise<string | nul
 export async function getEmployeeProfileById(employeeId: string) {
   const { data, error } = await dbClient.raw(async (client: unknown) => {
     const queryClient = client as {
-      from(table: 'employees'): {
+      from(table: string): {
         select(columns: string): {
           eq(column: string, value: string): {
             maybeSingle(): Promise<{ data: unknown; error: unknown }>;
@@ -204,8 +231,8 @@ export async function getEmployeeProfileById(employeeId: string) {
     };
 
     const response = await queryClient
-      .from('employees')
-      .select('*, departments!department_id (name)')
+      .from('employee_full')
+      .select('*, departments (name)')
       .eq('id', employeeId)
       .maybeSingle();
 
@@ -224,7 +251,7 @@ export async function getEmployeeProfileById(employeeId: string) {
 
 export async function getEmployeeNameById(employeeId: string): Promise<string | null> {
   const { data, error } = await dbClient.select({
-    from: 'employees',
+    from: 'employee_full',
     columns: 'first_name, last_name',
     filters: [{ column: 'id', operator: 'eq', value: employeeId }],
     limit: 1,
@@ -257,7 +284,7 @@ export async function getUserAccountIdForEmployee(employeeId: string): Promise<s
 export async function getEmployeesWithDepartments(): Promise<EmployeeListItem[]> {
   const { data, error } = await dbClient.raw(async (client: unknown) => {
     const queryClient = client as {
-      from(table: 'employees'): {
+      from(table: string): {
         select(columns: string): {
           order(column: string, options: { ascending: boolean }): Promise<{ data: unknown; error: unknown }>;
         };
@@ -265,10 +292,10 @@ export async function getEmployeesWithDepartments(): Promise<EmployeeListItem[]>
     };
 
     const response = await queryClient
-      .from('employees')
+      .from('employee_full')
       .select(`
         *,
-        departments!employees_department_id_fkey (
+        departments (
           name
         )
       `)

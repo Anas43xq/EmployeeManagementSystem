@@ -25,11 +25,11 @@ export async function getWarnings(filters?: {
   status?: WarningStatus;
   issuedBy?: string;
 }) {
-  let query = db
+  let query = (db as any)
     .from('employee_warnings')
     .select(`
       *,
-      employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_warnings_employee_id_fkey (id, first_name, last_name),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
       )
@@ -50,7 +50,7 @@ export async function getWarningById(id: string) {
     .from('employee_warnings')
     .select(`
       *,
-      employees!employee_warnings_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_warnings_employee_id_fkey (id, first_name, last_name),
       issued_by_user:users!employee_warnings_issued_by_fkey (
         employees (id, first_name, last_name)
       )

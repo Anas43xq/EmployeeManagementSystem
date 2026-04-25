@@ -135,6 +135,13 @@ export type Database = {
             foreignKeyName: "attendance_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -186,6 +193,13 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonuses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee_full"
             referencedColumns: ["id"]
           },
           {
@@ -256,6 +270,13 @@ export type Database = {
             foreignKeyName: "deductions_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deductions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -297,6 +318,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_department_head"
+            columns: ["head_id"]
+            isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_department_head"
             columns: ["head_id"]
@@ -364,6 +392,13 @@ export type Database = {
             foreignKeyName: "employee_complaints_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_complaints_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -411,6 +446,13 @@ export type Database = {
           week_start?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "employee_of_week_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "employee_of_week_employee_id_fkey"
             columns: ["employee_id"]
@@ -490,6 +532,79 @@ export type Database = {
             foreignKeyName: "employee_performance_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_performance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_profiles: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_id: string
+          gender: string | null
+          phone: string | null
+          photo_url: string | null
+          postal_code: string | null
+          qualifications: Json | null
+          state: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id: string
+          gender?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          postal_code?: string | null
+          qualifications?: Json | null
+          state?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_id?: string
+          gender?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          postal_code?: string | null
+          qualifications?: Json | null
+          state?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_profiles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_profiles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -553,6 +668,13 @@ export type Database = {
             foreignKeyName: "employee_tasks_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_tasks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -606,6 +728,13 @@ export type Database = {
             foreignKeyName: "employee_warnings_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_warnings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -620,82 +749,49 @@ export type Database = {
       }
       employees: {
         Row: {
-          address: string | null
-          city: string | null
           created_at: string | null
-          date_of_birth: string | null
           department_id: string | null
           email: string
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
           employee_number: string
           employment_type: string
           first_name: string
-          gender: string | null
           hire_date: string
           id: string
           last_name: string
-          phone: string | null
-          photo_url: string | null
           position: string
-          postal_code: string | null
-          qualifications: Json | null
           salary: number | null
-          state: string | null
           status: string
           termination_date: string | null
           updated_at: string | null
         }
         Insert: {
-          address?: string | null
-          city?: string | null
           created_at?: string | null
-          date_of_birth?: string | null
           department_id?: string | null
           email: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           employee_number?: string
           employment_type?: string
           first_name: string
-          gender?: string | null
           hire_date: string
           id?: string
           last_name: string
-          phone?: string | null
-          photo_url?: string | null
           position: string
-          postal_code?: string | null
-          qualifications?: Json | null
           salary?: number | null
-          state?: string | null
           status?: string
           termination_date?: string | null
           updated_at?: string | null
         }
         Update: {
-          address?: string | null
-          city?: string | null
           created_at?: string | null
-          date_of_birth?: string | null
           department_id?: string | null
           email?: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
           employee_number?: string
           employment_type?: string
           first_name?: string
-          gender?: string | null
           hire_date?: string
           id?: string
           last_name?: string
-          phone?: string | null
-          photo_url?: string | null
           position?: string
-          postal_code?: string | null
-          qualifications?: Json | null
           salary?: number | null
-          state?: string | null
           status?: string
           termination_date?: string | null
           updated_at?: string | null
@@ -794,6 +890,13 @@ export type Database = {
             foreignKeyName: "leave_balances_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -851,6 +954,13 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leaves_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employee_full"
             referencedColumns: ["id"]
           },
           {
@@ -1083,6 +1193,13 @@ export type Database = {
             foreignKeyName: "payrolls_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payrolls_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1174,6 +1291,13 @@ export type Database = {
             foreignKeyName: "users_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
+            referencedRelation: "employee_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1181,7 +1305,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employee_full: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          department_id: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_number: string | null
+          employment_type: string | null
+          first_name: string | null
+          gender: string | null
+          hire_date: string | null
+          id: string | null
+          last_name: string | null
+          last_updated: string | null
+          phone: string | null
+          photo_url: string | null
+          position: string | null
+          postal_code: string | null
+          profile_updated_at: string | null
+          qualifications: Json | null
+          salary: number | null
+          state: string | null
+          status: string | null
+          termination_date: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       bytea_to_text: { Args: { data: string }; Returns: string }

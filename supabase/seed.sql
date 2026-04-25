@@ -20,39 +20,61 @@ BEGIN
     (dept_hr, 'Human Resources', 'administrative', 'Human Resources and Recruitment'),
     (dept_admin, 'Administration', 'administrative', 'General Administration and Support');
 
-  -- Admin employee
-  INSERT INTO public.employees (first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES ('John', 'Smith', 'anas.essam.work@gmail.com', '555-0101', '1975-03-15', 'male', '123 Admin St', 'Boston', 'MA', '02101', dept_admin, 'System Administrator', 'full-time', 'active', '2010-01-15', 95000, '[{"degree": "MBA", "institution": "Harvard University"}]', 'Jane Smith', '555-0102');
-
-  -- HR employee
-  INSERT INTO public.employees (first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES ('Sarah', 'Johnson', 'essamanas86@gmail.com', '555-0103', '1982-07-22', 'female', '456 HR Ave', 'Boston', 'MA', '02102', dept_admin, 'HR Manager', 'full-time', 'active', '2015-03-20', 75000, '[{"degree": "MS Human Resources", "institution": "Boston College"}]', 'Mike Johnson', '555-0104');
-
-  -- Staff employee
-  INSERT INTO public.employees (first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone)
-  VALUES ('Michael', 'Davis', 'tvissam96@gmail.com', '555-0105', '1988-11-10', 'male', '789 Faculty Rd', 'Boston', 'MA', '02103', dept_tech, 'Senior Analyst', 'full-time', 'active', '2018-09-01', 68000, '[{"degree": "PhD Computer Science", "institution": "MIT"}]', 'Emily Davis', '555-0106');
-
-  -- Additional employees
-  INSERT INTO public.employees (first_name, last_name, email, phone, date_of_birth, gender, address, city, state, postal_code, department_id, position, employment_type, status, hire_date, salary, qualifications, emergency_contact_name, emergency_contact_phone) VALUES
-    ('Emily', 'Wilson', 'e.wilson@DevTeamHub.com', '555-0107', '1985-05-18', 'female', '321 Academic Ln', 'Boston', 'MA', '02104', dept_tech, 'Director', 'full-time', 'active', '2012-08-15', 85000, '[{"degree": "PhD Computer Science", "institution": "Stanford University"}]', 'Robert Wilson', '555-0108'),
-    ('David', 'Brown', 'd.brown@DevTeamHub.com', '555-0109', '1990-02-28', 'male', '654 Tech Blvd', 'Boston', 'MA', '02105', dept_tech, 'Lecturer', 'full-time', 'active', '2019-01-10', 62000, '[{"degree": "MS Computer Science", "institution": "Boston University"}]', 'Lisa Brown', '555-0110'),
-    ('Jennifer', 'Martinez', 'j.martinez@DevTeamHub.com', '555-0111', '1987-09-05', 'female', '987 Business Dr', 'Boston', 'MA', '02106', dept_business, 'Team Lead', 'full-time', 'active', '2014-07-01', 78000, '[{"degree": "PhD Business Administration", "institution": "Wharton"}]', 'Carlos Martinez', '555-0112'),
-    ('Robert', 'Garcia', 'r.garcia@DevTeamHub.com', '555-0113', '1983-12-20', 'male', '147 Commerce St', 'Boston', 'MA', '02107', dept_business, 'Director', 'full-time', 'active', '2011-09-15', 88000, '[{"degree": "PhD Economics", "institution": "Yale University"}]', 'Maria Garcia', '555-0114'),
-    ('Linda', 'Rodriguez', 'l.rodriguez@DevTeamHub.com', '555-0115', '1992-04-12', 'female', '258 Finance Way', 'Boston', 'MA', '02108', dept_business, 'Senior Analyst', 'full-time', 'active', '2020-01-15', 65000, '[{"degree": "PhD Finance", "institution": "NYU"}]', 'Jose Rodriguez', '555-0116'),
-    ('James', 'Lee', 'j.lee@DevTeamHub.com', '555-0117', '1986-08-30', 'male', '369 Engineering Ct', 'Boston', 'MA', '02109', dept_eng, 'Director', 'full-time', 'active', '2013-06-01', 90000, '[{"degree": "PhD Mechanical Engineering", "institution": "MIT"}]', 'Susan Lee', '555-0118'),
-    ('Mary', 'Anderson', 'm.anderson@DevTeamHub.com', '555-0119', '1989-01-25', 'female', '741 Tech Plaza', 'Boston', 'MA', '02110', dept_eng, 'Team Lead', 'full-time', 'active', '2016-03-10', 76000, '[{"degree": "PhD Electrical Engineering", "institution": "Caltech"}]', 'Tom Anderson', '555-0120'),
-    ('William', 'Taylor', 'w.taylor@DevTeamHub.com', '555-0121', '1991-06-14', 'male', '852 Innovation Dr', 'Boston', 'MA', '02111', dept_eng, 'Lecturer', 'part-time', 'active', '2021-09-01', 45000, '[{"degree": "MS Civil Engineering", "institution": "Georgia Tech"}]', 'Ann Taylor', '555-0122'),
-    ('Patricia', 'Thomas', 'p.thomas@DevTeamHub.com', '555-0123', '1984-10-08', 'female', '963 Liberal Arts Ave', 'Boston', 'MA', '02112', dept_hr, 'Director', 'full-time', 'active', '2012-08-20', 82000, '[{"degree": "PhD English Literature", "institution": "Columbia"}]', 'George Thomas', '555-0124'),
-    ('Richard', 'Jackson', 'r.jackson@DevTeamHub.com', '555-0125', '1987-03-17', 'male', '159 History Ln', 'Boston', 'MA', '02113', dept_hr, 'Team Lead', 'full-time', 'active', '2015-01-12', 74000, '[{"degree": "PhD History", "institution": "Princeton"}]', 'Barbara Jackson', '555-0126'),
-    ('Charles', 'Harris', 'c.harris@DevTeamHub.com', '555-0129', '1988-11-03', 'male', '468 Support St', 'Boston', 'MA', '02115', dept_admin, 'IT Manager', 'full-time', 'active', '2016-05-15', 72000, '[{"degree": "BS Information Systems", "institution": "Northeastern"}]', 'Nancy Harris', '555-0130'),
-    ('Joseph', 'Lewis', 'j.lewis@DevTeamHub.com', '555-0133', '1986-12-07', 'male', '680 Data Science Blvd', 'Boston', 'MA', '02117', dept_tech, 'Senior Analyst', 'full-time', 'active', '2017-08-01', 70000, '[{"degree": "PhD Data Science", "institution": "Carnegie Mellon"}]', 'Karen Lewis', '555-0134'),
-    ('Karen', 'Walker', 'k.walker@DevTeamHub.com', '555-0135', '1991-05-23', 'female', '791 AI Research Ct', 'Boston', 'MA', '02118', dept_tech, 'Research Associate', 'contract', 'active', '2022-01-10', 58000, '[{"degree": "MS Artificial Intelligence", "institution": "Stanford"}]', 'Mark Walker', '555-0136'),
-    ('Nancy', 'Hall', 'n.hall@DevTeamHub.com', '555-0137', '1985-09-16', 'female', '892 Marketing Plaza', 'Boston', 'MA', '02119', dept_business, 'Lecturer', 'part-time', 'active', '2020-09-01', 42000, '[{"degree": "MBA Marketing", "institution": "Babson College"}]', 'Daniel Hall', '555-0138'),
-    ('Betty', 'Young', 'b.young@DevTeamHub.com', '555-0141', '1992-08-26', 'female', '124 Robotics Way', 'Boston', 'MA', '02121', dept_eng, 'Senior Analyst', 'full-time', 'active', '2020-08-15', 69000, '[{"degree": "PhD Robotics", "institution": "CMU"}]', 'Frank Young', '555-0142'),
-    ('Brian', 'Scott', 'b.scott@DevTeamHub.com', '555-0151', '1986-05-27', 'male', '679 Facilities Dr', 'Boston', 'MA', '02126', dept_admin, 'Facilities Manager', 'full-time', 'active', '2015-03-15', 60000, '[{"degree": "BS Facilities Management", "institution": "UMass"}]', 'Carol Scott', '555-0152'),
-    ('Carol', 'Green', 'c.green@DevTeamHub.com', '555-0153', '1993-01-08', 'female', '780 Finance Office St', 'Boston', 'MA', '02127', dept_admin, 'Financial Analyst', 'full-time', 'active', '2020-06-01', 58000, '[{"degree": "MS Finance", "institution": "Boston College"}]', 'Eric Green', '555-0154'),
-    ('Ryan', 'Nelson', 'r.nelson@DevTeamHub.com', '555-0159', '1987-04-04', 'male', '113 people Services Rd', 'Boston', 'MA', '02130', dept_admin, 'Student Services Advisor', 'full-time', 'inactive', '2017-09-01', 56000, '[{"degree": "MS Counseling", "institution": "Lesley"}]', 'Jessica Nelson', '555-0160'),
-    ('Sandra', 'Wright', 's.wright@DevTeamHub.com', '555-0161', '1990-07-19', 'female', '225 Research Park', 'Boston', 'MA', '02131', dept_tech, 'Research Associate', 'contract', 'on-leave', '2019-11-01', 55000, '[{"degree": "MS Biochemistry", "institution": "Tufts"}]', 'Kevin Wright', '555-0162');
+  -- Employees Seed (Core + Profiles)
+  WITH ins_emp AS (
+    INSERT INTO public.employees (first_name, last_name, email, department_id, position, employment_type, status, hire_date, salary) VALUES
+    ('John', 'Smith', 'anas.essam.work@gmail.com', dept_admin, 'System Administrator', 'full-time', 'active', '2010-01-15', 95000),
+    ('Sarah', 'Johnson', 'essamanas86@gmail.com', dept_admin, 'HR Manager', 'full-time', 'active', '2015-03-20', 75000),
+    ('Michael', 'Davis', 'tvissam96@gmail.com', dept_tech, 'Senior Analyst', 'full-time', 'active', '2018-09-01', 68000),
+    ('Emily', 'Wilson', 'e.wilson@DevTeamHub.com', dept_tech, 'Director', 'full-time', 'active', '2012-08-15', 85000),
+    ('David', 'Brown', 'd.brown@DevTeamHub.com', dept_tech, 'Lecturer', 'full-time', 'active', '2019-01-10', 62000),
+    ('Jennifer', 'Martinez', 'j.martinez@DevTeamHub.com', dept_business, 'Team Lead', 'full-time', 'active', '2014-07-01', 78000),
+    ('Robert', 'Garcia', 'r.garcia@DevTeamHub.com', dept_business, 'Director', 'full-time', 'active', '2011-09-15', 88000),
+    ('Linda', 'Rodriguez', 'l.rodriguez@DevTeamHub.com', dept_business, 'Senior Analyst', 'full-time', 'active', '2020-01-15', 65000),
+    ('James', 'Lee', 'j.lee@DevTeamHub.com', dept_eng, 'Director', 'full-time', 'active', '2013-06-01', 90000),
+    ('Mary', 'Anderson', 'm.anderson@DevTeamHub.com', dept_eng, 'Team Lead', 'full-time', 'active', '2016-03-10', 76000),
+    ('William', 'Taylor', 'w.taylor@DevTeamHub.com', dept_eng, 'Lecturer', 'part-time', 'active', '2021-09-01', 45000),
+    ('Patricia', 'Thomas', 'p.thomas@DevTeamHub.com', dept_hr, 'Director', 'full-time', 'active', '2012-08-20', 82000),
+    ('Richard', 'Jackson', 'r.jackson@DevTeamHub.com', dept_hr, 'Team Lead', 'full-time', 'active', '2015-01-12', 74000),
+    ('Charles', 'Harris', 'c.harris@DevTeamHub.com', dept_admin, 'IT Manager', 'full-time', 'active', '2016-05-15', 72000),
+    ('Joseph', 'Lewis', 'j.lewis@DevTeamHub.com', dept_tech, 'Senior Analyst', 'full-time', 'active', '2017-08-01', 70000),
+    ('Karen', 'Walker', 'k.walker@DevTeamHub.com', dept_tech, 'Research Associate', 'contract', 'active', '2022-01-10', 58000),
+    ('Nancy', 'Hall', 'n.hall@DevTeamHub.com', dept_business, 'Lecturer', 'part-time', 'active', '2020-09-01', 42000),
+    ('Betty', 'Young', 'b.young@DevTeamHub.com', dept_eng, 'Senior Analyst', 'full-time', 'active', '2020-08-15', 69000),
+    ('Brian', 'Scott', 'b.scott@DevTeamHub.com', dept_admin, 'Facilities Manager', 'full-time', 'active', '2015-03-15', 60000),
+    ('Carol', 'Green', 'c.green@DevTeamHub.com', dept_admin, 'Financial Analyst', 'full-time', 'active', '2020-06-01', 58000),
+    ('Ryan', 'Nelson', 'r.nelson@DevTeamHub.com', dept_admin, 'Student Services Advisor', 'full-time', 'inactive', '2017-09-01', 56000),
+    ('Sandra', 'Wright', 's.wright@DevTeamHub.com', dept_tech, 'Research Associate', 'contract', 'on-leave', '2019-11-01', 55000)
+    RETURNING id, email
+  )
+  INSERT INTO public.employee_profiles (employee_id, phone, date_of_birth, gender, address, city, state, postal_code, qualifications, emergency_contact_name, emergency_contact_phone)
+  SELECT e.id, p.phone, p.date_of_birth::date, p.gender, p.address, p.city, p.state, p.postal_code, p.qualifications::jsonb, p.emergency_contact_name, p.emergency_contact_phone
+  FROM ins_emp e
+  JOIN (VALUES
+    ('anas.essam.work@gmail.com', '555-0101', '1975-03-15', 'male', '123 Admin St', 'Boston', 'MA', '02101', '[{"degree": "MBA", "institution": "Harvard University"}]', 'Jane Smith', '555-0102'),
+    ('essamanas86@gmail.com', '555-0103', '1982-07-22', 'female', '456 HR Ave', 'Boston', 'MA', '02102', '[{"degree": "MS Human Resources", "institution": "Boston College"}]', 'Mike Johnson', '555-0104'),
+    ('tvissam96@gmail.com', '555-0105', '1988-11-10', 'male', '789 Faculty Rd', 'Boston', 'MA', '02103', '[{"degree": "PhD Computer Science", "institution": "MIT"}]', 'Emily Davis', '555-0106'),
+    ('e.wilson@DevTeamHub.com', '555-0107', '1985-05-18', 'female', '321 Academic Ln', 'Boston', 'MA', '02104', '[{"degree": "PhD Computer Science", "institution": "Stanford University"}]', 'Robert Wilson', '555-0108'),
+    ('d.brown@DevTeamHub.com', '555-0109', '1990-02-28', 'male', '654 Tech Blvd', 'Boston', 'MA', '02105', '[{"degree": "MS Computer Science", "institution": "Boston University"}]', 'Lisa Brown', '555-0110'),
+    ('j.martinez@DevTeamHub.com', '555-0111', '1987-09-05', 'female', '987 Business Dr', 'Boston', 'MA', '02106', '[{"degree": "PhD Business Administration", "institution": "Wharton"}]', 'Carlos Martinez', '555-0112'),
+    ('r.garcia@DevTeamHub.com', '555-0113', '1983-12-20', 'male', '147 Commerce St', 'Boston', 'MA', '02107', '[{"degree": "PhD Economics", "institution": "Yale University"}]', 'Maria Garcia', '555-0114'),
+    ('l.rodriguez@DevTeamHub.com', '555-0115', '1992-04-12', 'female', '258 Finance Way', 'Boston', 'MA', '02108', '[{"degree": "PhD Finance", "institution": "NYU"}]', 'Jose Rodriguez', '555-0116'),
+    ('j.lee@DevTeamHub.com', '555-0117', '1986-08-30', 'male', '369 Engineering Ct', 'Boston', 'MA', '02109', '[{"degree": "PhD Mechanical Engineering", "institution": "MIT"}]', 'Susan Lee', '555-0118'),
+    ('m.anderson@DevTeamHub.com', '555-0119', '1989-01-25', 'female', '741 Tech Plaza', 'Boston', 'MA', '02110', '[{"degree": "PhD Electrical Engineering", "institution": "Caltech"}]', 'Tom Anderson', '555-0120'),
+    ('w.taylor@DevTeamHub.com', '555-0121', '1991-06-14', 'male', '852 Innovation Dr', 'Boston', 'MA', '02111', '[{"degree": "MS Civil Engineering", "institution": "Georgia Tech"}]', 'Ann Taylor', '555-0122'),
+    ('p.thomas@DevTeamHub.com', '555-0123', '1984-10-08', 'female', '963 Liberal Arts Ave', 'Boston', 'MA', '02112', '[{"degree": "PhD English Literature", "institution": "Columbia"}]', 'George Thomas', '555-0124'),
+    ('r.jackson@DevTeamHub.com', '555-0125', '1987-03-17', 'male', '159 History Ln', 'Boston', 'MA', '02113', '[{"degree": "PhD History", "institution": "Princeton"}]', 'Barbara Jackson', '555-0126'),
+    ('c.harris@DevTeamHub.com', '555-0129', '1988-11-03', 'male', '468 Support St', 'Boston', 'MA', '02115', '[{"degree": "BS Information Systems", "institution": "Northeastern"}]', 'Nancy Harris', '555-0130'),
+    ('j.lewis@DevTeamHub.com', '555-0133', '1986-12-07', 'male', '680 Data Science Blvd', 'Boston', 'MA', '02117', '[{"degree": "PhD Data Science", "institution": "Carnegie Mellon"}]', 'Karen Lewis', '555-0134'),
+    ('k.walker@DevTeamHub.com', '555-0135', '1991-05-23', 'female', '791 AI Research Ct', 'Boston', 'MA', '02118', '[{"degree": "MS Artificial Intelligence", "institution": "Stanford"}]', 'Mark Walker', '555-0136'),
+    ('n.hall@DevTeamHub.com', '555-0137', '1985-09-16', 'female', '892 Marketing Plaza', 'Boston', 'MA', '02119', '[{"degree": "MBA Marketing", "institution": "Babson College"}]', 'Daniel Hall', '555-0138'),
+    ('b.young@DevTeamHub.com', '555-0141', '1992-08-26', 'female', '124 Robotics Way', 'Boston', 'MA', '02121', '[{"degree": "PhD Robotics", "institution": "CMU"}]', 'Frank Young', '555-0142'),
+    ('b.scott@DevTeamHub.com', '555-0151', '1986-05-27', 'male', '679 Facilities Dr', 'Boston', 'MA', '02126', '[{"degree": "BS Facilities Management", "institution": "UMass"}]', 'Carol Scott', '555-0152'),
+    ('c.green@DevTeamHub.com', '555-0153', '1993-01-08', 'female', '780 Finance Office St', 'Boston', 'MA', '02127', '[{"degree": "MS Finance", "institution": "Boston College"}]', 'Eric Green', '555-0154'),
+    ('r.nelson@DevTeamHub.com', '555-0159', '1987-04-04', 'male', '113 people Services Rd', 'Boston', 'MA', '02130', '[{"degree": "MS Counseling", "institution": "Lesley"}]', 'Jessica Nelson', '555-0160'),
+    ('s.wright@DevTeamHub.com', '555-0161', '1990-07-19', 'female', '225 Research Park', 'Boston', 'MA', '02131', '[{"degree": "MS Biochemistry", "institution": "Tufts"}]', 'Kevin Wright', '555-0162')
+  ) AS p(email, phone, date_of_birth, gender, address, city, state, postal_code, qualifications, emergency_contact_name, emergency_contact_phone)
+  ON e.email = p.email;
 
   -- Update department heads
   UPDATE public.departments SET head_id = (SELECT id FROM public.employees WHERE email = 'e.wilson@DevTeamHub.com') WHERE id = dept_tech;

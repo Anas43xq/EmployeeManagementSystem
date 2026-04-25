@@ -33,7 +33,7 @@ export async function getComplaints(filters?: {
     .from('employee_complaints')
     .select(`
       *,
-      employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_complaints_employee_id_fkey (id, first_name, last_name),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
       )
@@ -54,7 +54,7 @@ export async function getComplaintById(id: string) {
     .from('employee_complaints')
     .select(`
       *,
-      employees!employee_complaints_employee_id_fkey (id, first_name, last_name, photo_url),
+      employees!employee_complaints_employee_id_fkey (id, first_name, last_name),
       assigned_user:users!employee_complaints_assigned_to_fkey (
         employees (id, first_name, last_name)
       )

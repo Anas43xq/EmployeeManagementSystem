@@ -63,7 +63,7 @@ export async function getPerformanceRecords(filters?: {
     .from('employee_performance')
     .select(`
       *,
-      employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
+      employees!employee_performance_employee_id_fkey (id, first_name, last_name, position)
     `)
     .order('period_start', { ascending: false });
 
@@ -87,7 +87,7 @@ export async function getLatestPerformance(limit: number = 10) {
     .from('employee_performance')
     .select(`
       *,
-      employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position)
+      employees!employee_performance_employee_id_fkey (id, first_name, last_name, position)
     `)
     .order('period_start', { ascending: false })
     .order('total_score', { ascending: false })
@@ -102,7 +102,7 @@ export async function getTopPerformers(weekStart?: string) {
     .from('employee_performance')
     .select(`
       *,
-      employees!employee_performance_employee_id_fkey (id, first_name, last_name, photo_url, position, hire_date)
+      employees!employee_performance_employee_id_fkey (id, first_name, last_name, position, hire_date)
     `);
 
   if (weekStart) {

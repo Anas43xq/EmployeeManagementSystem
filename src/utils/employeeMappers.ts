@@ -79,3 +79,34 @@ export function mapEmployeeOfWeekRecord(record: EmployeeOfWeekRecord): EmployeeO
     employees: record.employees ? mapEmployeeRecord(record.employees) : undefined,
   };
 }
+
+const PROFILE_KEYS = [
+  'phone', 'date_of_birth', 'gender', 'address', 'city', 'state', 'postal_code',
+  'photo_url', 'qualifications', 'emergency_contact_name', 'emergency_contact_phone'
+];
+
+/** Extracts core employee fields from a unified data object */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractCore(data: Record<string, any>): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const coreData: Record<string, any> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (!PROFILE_KEYS.includes(key)) {
+      coreData[key] = value;
+    }
+  }
+  return coreData;
+}
+
+/** Extracts profile-specific fields from a unified data object */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractProfile(data: Record<string, any>): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileData: Record<string, any> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (PROFILE_KEYS.includes(key)) {
+      profileData[key] = value;
+    }
+  }
+  return profileData;
+}

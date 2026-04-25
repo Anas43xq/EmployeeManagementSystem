@@ -83,6 +83,7 @@ export default function EmailScreen({
       }
     } else if (pendingAction === 'password') {
       setShowEmailConfirm(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onSubmit(new Event('submit') as any);
     }
     setPendingAction(null);

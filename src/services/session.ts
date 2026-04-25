@@ -1,14 +1,6 @@
 
 
-// File: loginAttempts.ts
-
 /**
- * loginAttempts.ts
- * Server-side login attempt tracking with OTP trigger + progressive delays.
- *
- * All pre-auth operations go through SECURITY DEFINER RPCs so they bypass RLS
- * (the user has no session yet when these run).
- *
  * Flow:
  *   1. pre_auth_login_check      — resolve email → status + delay info
  *   2. record_failed_login       — increment counter, set progressive delay, auto-set OTP window at 5
@@ -195,8 +187,8 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
     const cooldownStatus = await validateOtpRequestCooldown(email);
     if (!cooldownStatus.allowed) {
       const minutes = Math.ceil(cooldownStatus.secondsRemaining / 60) || 1;
-      return { 
-        error: `Please wait ${minutes} minute(s) before requesting a new code.` 
+      return {
+        error: `Please wait ${minutes} minute(s) before requesting a new code.`
       };
     }
 
@@ -423,18 +415,18 @@ export function resetSessionHealth(): void {
 export function recordAuthFailure(): boolean {
   const health = getSessionHealth();
   const now = Date.now();
-  
+
   health.failedAttempts++;
   health.lastAttempt = now;
   setSessionHealth(health);
-  
+
   if (health.failedAttempts >= MAX_FAILED_ATTEMPTS) {
     const timeSinceLastRecovery = now - health.lastRecovery;
     if (timeSinceLastRecovery > RECOVERY_COOLDOWN_MS) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -447,12 +439,12 @@ export async function clearAuthState(): Promise<void> {
   health.lastRecovery = Date.now();
   health.failedAttempts = 0;
   setSessionHealth(health);
-  
+
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && (
-      key.startsWith('sb-') || 
+      key.startsWith('sb-') ||
       key.startsWith('ems-') ||
       key.includes('supabase') ||
       key.includes('auth-token')
@@ -460,14 +452,14 @@ export async function clearAuthState(): Promise<void> {
       keysToRemove.push(key);
     }
   }
-  
+
   keysToRemove.forEach(key => {
     try {
       localStorage.removeItem(key);
     } catch {
     }
   });
-  
+
   try {
     for (let i = sessionStorage.length - 1; i >= 0; i--) {
       const key = sessionStorage.key(i);
@@ -520,15 +512,15 @@ export function subscribeToSessionEnforcement(
 export async function getValidAccessToken(): Promise<string | null> {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
-    
+
     if (error || !session) {
       return null;
     }
-    
+
     const expiresAt = session.expires_at;
     if (expiresAt) {
       const expiresIn = expiresAt - Math.floor(Date.now() / 1000);
-      
+
       if (expiresIn < 300) {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         if (!refreshError && refreshData.session) {
@@ -540,7 +532,7 @@ export async function getValidAccessToken(): Promise<string | null> {
         return null;
       }
     }
-    
+
     return session.access_token;
   } catch {
     return null;
@@ -582,7 +574,7 @@ export function clearLastActivity(): void {
 export async function getFreshAccessToken(): Promise<string | null> {
   try {
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-    
+
     if (refreshError) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
@@ -594,11 +586,11 @@ export async function getFreshAccessToken(): Promise<string | null> {
       }
       return null;
     }
-    
+
     if (refreshData && refreshData.session) {
       return refreshData.session.access_token;
     }
-    
+
     return null;
   } catch {
     return null;
@@ -616,7 +608,7 @@ export async function updateServerActivityTimestamp(userId: string): Promise<boo
       .from('users')
       .update({ last_activity_at: new Date().toISOString() })
       .eq('id', userId);
-    
+
     return !error;
   } catch {
     return false;
@@ -635,18 +627,18 @@ export async function validateSessionActivity(userId: string): Promise<boolean> 
       .select('last_activity_at')
       .eq('id', userId)
       .single();
-    
+
     if (error || !data || !data.last_activity_at) {
       // If no last_activity_at, consider session valid (new account)
       return true;
     }
-    
+
     const lastActivity = new Date(data.last_activity_at).getTime();
     const now = Date.now();
     const inactiveMinutes = (now - lastActivity) / 60000;
-    
+
     // 8 hours = 480 minutes
-    const isValid = inactiveMinutes <= 480;
+    const isValid = inactiveMinutes <= 120;
     return isValid;
   } catch {
     return false;

@@ -25,13 +25,6 @@ CREATE TABLE public.employees (
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
-  phone TEXT DEFAULT '',
-  date_of_birth DATE,
-  gender TEXT CHECK (gender IN ('male', 'female')),
-  address TEXT DEFAULT '',
-  city TEXT DEFAULT '',
-  state TEXT DEFAULT '',
-  postal_code TEXT DEFAULT '',
   department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL,
   position TEXT NOT NULL,
   employment_type TEXT NOT NULL DEFAULT 'full-time' CHECK (employment_type IN ('full-time', 'part-time', 'contract')),
@@ -39,6 +32,19 @@ CREATE TABLE public.employees (
   hire_date DATE NOT NULL,
   termination_date DATE,
   salary NUMERIC(12,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE public.employee_profiles (
+  employee_id UUID PRIMARY KEY REFERENCES public.employees(id) ON DELETE CASCADE,
+  phone TEXT DEFAULT '',
+  date_of_birth DATE,
+  gender TEXT CHECK (gender IN ('male', 'female')),
+  address TEXT DEFAULT '',
+  city TEXT DEFAULT '',
+  state TEXT DEFAULT '',
+  postal_code TEXT DEFAULT '',
   photo_url TEXT,
   qualifications JSONB DEFAULT '[]'::jsonb,
   emergency_contact_name TEXT DEFAULT '',
@@ -46,6 +52,54 @@ CREATE TABLE public.employees (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE OR REPLACE VIEW public.employee_full WITH (security_invoker = true) AS
+SELECT 
+  e.id,
+  e.employee_number,
+  e.first_name,
+  e.last_name,
+  e.email,
+  e.department_id,
+  e.position,
+  e.employment_type,
+  e.status,
+  e.hire_date,
+  e.termination_date,
+  e.salary,
+  e.created_at,
+  e.updated_at,
+  p.phone,
+  p.date_of_birth,
+  p.gender,
+  p.address,
+  p.city,
+  p.state,
+  p.postal_code,
+  p.photo_url,
+  p.qualifications,
+  p.emergency_contact_name,
+  p.emergency_contact_phone,
+  p.updated_at AS profile_updated_at,
+  GREATEST(e.updated_at, p.updated_at) AS last_updated
+FROM public.employees e
+LEFT JOIN public.employee_profiles p ON e.id = p.employee_id;
+
+CREATE OR REPLACE FUNCTION public.sync_employee_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.employees
+  SET updated_at = now()
+  WHERE id = COALESCE(NEW.employee_id, OLD.employee_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_sync_employee_updated_at
+AFTER INSERT OR UPDATE OR DELETE
+ON public.employee_profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_employee_updated_at();
 
 ALTER TABLE public.departments ADD CONSTRAINT fk_department_head 
   FOREIGN KEY (head_id) REFERENCES public.employees(id) ON DELETE SET NULL;

@@ -21,8 +21,9 @@ export async function getReportDepartments(): Promise<Department[]> {
 }
 
 export async function getEmployeeReportData(selectedDepartment?: string): Promise<ReportEmployee[]> {
-  let query = db
-    .from('employees')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
+    .from('employee_full')
     .select(`
       id,
       first_name,
@@ -48,7 +49,8 @@ export async function getEmployeeReportData(selectedDepartment?: string): Promis
 }
 
 export async function getLeaveReportData(dateFilter: string | null, selectedDepartment?: string): Promise<Leave[]> {
-  let query = db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
     .from('leaves')
     .select(`
       id,
@@ -80,7 +82,8 @@ export async function getLeaveReportData(dateFilter: string | null, selectedDepa
 }
 
 export async function getAttendanceReportData(dateFilter: string | null, selectedDepartment?: string): Promise<Attendance[]> {
-  let query = db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
     .from('attendance')
     .select(`
       id,
@@ -110,7 +113,8 @@ export async function getAttendanceReportData(dateFilter: string | null, selecte
 }
 
 export async function getDepartmentReportData(selectedDepartment?: string): Promise<DepartmentReport[]> {
-  let query = db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
     .from('departments')
     .select(`
       id,
@@ -131,7 +135,8 @@ export async function getDepartmentReportData(selectedDepartment?: string): Prom
 }
 
 export async function getPayrollReportData(dateFilter: string | null, selectedDepartment?: string): Promise<PayrollReport[]> {
-  let query = db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
     .from('payrolls')
     .select(`
       id,
