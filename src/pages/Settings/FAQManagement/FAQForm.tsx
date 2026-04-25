@@ -1,9 +1,3 @@
-/**
- * pages/Settings/FAQManagement/FAQForm.tsx
- * Form component for creating and editing FAQs with bilingual support
- * Side-by-side English and Arabic input fields
- */
-
 import { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +14,7 @@ const CATEGORIES = [
   'General',
 ];
 
-const ROLES = ['admin', 'hr','staff'];
+const ROLES = ['admin', 'hr', 'staff'];
 
 interface FAQFormProps {
   faq?: FAQ | null;
@@ -37,7 +31,7 @@ interface FormState {
 
 export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
   const { t } = useTranslation();
-  
+
   // Initialize form with bilingual content
   const [formData, setFormData] = useState<FormState>({
     content: faq?.content || {
@@ -225,7 +219,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                 <textarea
                   value={formData.content.ar.answer}
                   onChange={(e) => handleContentChange('ar', 'answer', e.target.value)}
-                  placeholder={t('faq.enterAnswerArabic') || 'أدخل الإجابة المفصلة...'} 
+                  placeholder={t('faq.enterAnswerArabic') || 'أدخل الإجابة المفصلة...'}
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none text-right"
                   dir="rtl"

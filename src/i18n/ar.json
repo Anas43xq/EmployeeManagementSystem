@@ -957,7 +957,15 @@
     "faqDeleted": "تم حذف السؤال الشائع بنجاح",
     "confirmDeleteFaq": "هل أنت متأكد من أنك تريد حذف هذا السؤال الشائع؟",
     "supportLineBreaks": "يتم الحفاظ على فواصل الأسطر",
-    "allCategories": "جميع الفئات"
+    "allCategories": "جميع الفئات",
+    "categories": {
+      "attendance": "الحضور",
+      "employees": "الموظفين",
+      "general": "عام",
+      "leaves": "الإجازات",
+      "settings": "الإعدادات",
+      "system": "النظام"
+    }
   },
   "activityLogs": {
     "subtitle": "سجل التدقيق على مستوى النظام — للمسؤولين فقط",

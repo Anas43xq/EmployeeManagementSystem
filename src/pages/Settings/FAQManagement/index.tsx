@@ -176,11 +176,11 @@ export const FAQManagement = () => {
             <table className="w-full">
               <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.question') || 'Question'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.category') || 'Category'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.languages') || 'Languages'}</th>
-                  <th className="text-left px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.visibleTo') || 'Visible To'}</th>
-                  <th className="text-right px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('common.actions') || 'Actions'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.question') || 'Question'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.category') || 'Category'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.languages') || 'Languages'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.visibleTo') || 'Visible To'}</th>
+                  <th className="text-end px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('common.actions') || 'Actions'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -228,7 +228,7 @@ export const FAQManagement = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setEditingFAQ(faq)}

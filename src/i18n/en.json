@@ -959,7 +959,15 @@
     "faqDeleted": "FAQ deleted successfully",
     "confirmDeleteFaq": "Are you sure you want to delete this FAQ?",
     "supportLineBreaks": "Line breaks are preserved",
-    "allCategories": "All Categories"
+    "allCategories": "All Categories",
+    "categories": {
+      "attendance": "Attendance",
+      "employees": "Employees",
+      "general": "General",
+      "leaves": "Leaves",
+      "settings": "Settings",
+      "system": "System"
+    }
   },
   "activityLogs": {
     "subtitle": "System-wide audit trail — Admin only",
