@@ -15,7 +15,7 @@ import { PasswordChangeForm } from './PasswordChangeForm';
 
 type VerifyMethod = 'password' | 'passkey';
 
-/** Lets the current user change their password with password or passkey verification. */
+
 export default function ChangePasswordCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();

@@ -7,7 +7,7 @@ interface Props {
   onMenuOpen: () => void;
 }
 
-/** Renders the mobile header with menu, language switcher, and notifications. */
+
 export function MobileHeader({ totalPoints, onMenuOpen }: Props) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';

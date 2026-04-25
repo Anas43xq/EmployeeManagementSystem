@@ -18,9 +18,9 @@ function normalizeUserRole(value: unknown, fallback: UserRole = 'staff'): UserRo
     : fallback;
 }
 
-// -- User data cache -----------------------------------------------------------
+
 const userDataCache = new Map<string, { data: AuthUser; timestamp: number }>();
-const USER_CACHE_TTL = 60000; // 1 minute
+const USER_CACHE_TTL = 60000; 
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const visibilityCheckRef = useRef(false);
   const lastVisibilityCheckRef = useRef(0);
 
-  // -- Load user data from DB (with in-memory cache) -------------------------
+  
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
     const cached = userDataCache.get(authUser.id);
     if (cached && Date.now() - cached.timestamp < USER_CACHE_TTL) return cached.data;
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         return { id: authUser.id, email: authUser.email || '', role, employeeId: null, isActive: false };
       }
-      // Banned users are signed out; deactivated users stay to see the Deactivated screen.
+      
       if (data?.banned_at !== null && data?.banned_at !== undefined) {
         userDataCache.delete(authUser.id);
         await supabase.auth.signOut();
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearCache = useCallback(() => { userDataCache.clear(); }, []);
 
-  // -- Session init, auth state listener, visibility token refresh -----------
+  
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        // Validate session activity: if user was inactive > 8 hours, invalidate session
+        
         const isSessionValid = await validateSessionActivity(session.user.id);
         if (!isSessionValid) {
           await clearAuthState();
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session && !error) {
           const expiresIn = (session.expires_at || 0) - Math.floor(Date.now() / 1000);
           if (expiresIn < 120 && expiresIn > 0) {
-            try { await supabase.auth.refreshSession(); } catch { /* non-critical */ }
+            try { await supabase.auth.refreshSession(); } catch {  }
           }
           return;
         }
@@ -175,9 +175,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [loadUserData, clearCache]);
 
-  // -- Single-session enforcement + ban/deactivation -------------------------
-  // JWT expiry is handled automatically by Supabase's autoRefreshToken.
-  // This hook only enforces real-time ban/deactivation checks.
+  
+  
+  
   const handleForceLogout = useCallback(async () => {
     clearCache(); clearAllCache();
     localStorage.removeItem('ems_session_token');
@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useSessionEnforcement({ userId: user?.id, onForceLogout: handleForceLogout, onDeactivate: handleDeactivate });
 
-  // -- Actions ---------------------------------------------------------------
+  
   const resetSession = useCallback(async () => {
     setLoading(true);
     try {
@@ -222,15 +222,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       const updated = await recordFailedAttempt(email);
       
-      // TASK 2: Collapse the 4-hop OTP escalation chain
-      // Previously: throw REQUIRES_OTP_NEW → catch in errorHandler → triggerOtpFlow → sendLoginOtp
-      // Now: call escalateToOtp directly when failedAttempts reaches 5
+      
+      
+      
       if (updated.failedAttempts >= 5) {
         const { error: otpError } = await escalateToOtp(email);
         if (otpError) {
           throw new Error(`OTP_ESCALATION_FAILED: ${otpError}`);
         }
-        // Success: user will be prompted to check email on login page with countdown check
+        
         throw new Error('REQUIRES_OTP_GENERIC');
       }
       
@@ -244,7 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionToken = crypto.randomUUID();
       localStorage.setItem('ems_session_token', sessionToken);
       await supabase.rpc('set_own_session_token', { p_token: sessionToken });
-      // Update server-side activity timestamp on successful login
+      
       await updateServerActivityTimestamp(data.user.id).catch(() => {});
       logActivity(data.user.id, 'user_login', 'user', data.user.id, { email: data.user.email });
     }
@@ -258,7 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout_timestamp: logoutTime,
         email: user.email,
       });
-      await supabase.rpc('clear_own_session_token'); // SECURITY DEFINER � bypasses RLS
+      await supabase.rpc('clear_own_session_token'); 
     }
     localStorage.removeItem('ems_session_token');
     clearCache(); clearAllCache(); resetSessionHealth();

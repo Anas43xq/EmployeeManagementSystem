@@ -52,7 +52,7 @@ export default function Warnings() {
       />
 
       <Card>
-        {/* Status Filter */}
+        {}
         <div className="flex flex-wrap gap-2 mb-6">
           {statusFilters.map(status => (
             <button
@@ -69,7 +69,7 @@ export default function Warnings() {
           ))}
         </div>
 
-        {/* Warning List */}
+        {}
         <div className="space-y-4">
           {warnings.map(warning => (
             <WarningCard
@@ -91,7 +91,7 @@ export default function Warnings() {
         )}
       </Card>
 
-      {/* Issue Warning Modal */}
+      {}
       {!isStaff && (
         <WarningFormModal
           show={activeModal === 'create'}
@@ -104,7 +104,7 @@ export default function Warnings() {
         />
       )}
 
-      {/* Resolve Warning Modal */}
+      {}
       <Modal
         show={activeModal === 'resolve'}
         onClose={closeModal}

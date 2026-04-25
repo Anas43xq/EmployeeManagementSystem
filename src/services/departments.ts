@@ -1,6 +1,6 @@
 
 
-// File: departmentQueries.ts
+
 
 import { db } from '../lib/db';
 import type { Department } from '../types';
@@ -12,7 +12,7 @@ interface DepartmentPayload {
   head_id: string | null;
 }
 
-/** Fetches all departments with employee count, ordered by name. */
+
 export async function getDepartments(): Promise<Department[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (db.from('departments') as any)
@@ -23,7 +23,7 @@ export async function getDepartments(): Promise<Department[]> {
   return (data || []) as Department[];
 }
 
-/** Creates a new department and returns the created record. */
+
 export async function createDepartment(payload: DepartmentPayload): Promise<Department> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (db.from('departments') as any)
@@ -35,7 +35,7 @@ export async function createDepartment(payload: DepartmentPayload): Promise<Depa
   return data as Department;
 }
 
-/** Updates an existing department by ID. */
+
 export async function updateDepartment(id: string, payload: DepartmentPayload): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (db.from('departments') as any)
@@ -45,7 +45,7 @@ export async function updateDepartment(id: string, payload: DepartmentPayload): 
   if (error) throw error;
 }
 
-/** Deletes a department by ID. */
+
 export async function deleteDepartment(id: string): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (db.from('departments') as any)

@@ -33,7 +33,7 @@ const STRENGTH_WIDTHS: Record<PasswordStrength, string> = {
   strong: '100%',
 };
 
-/** Renders the password reset form UI and password strength feedback. */
+
 export function ResetPasswordForm({
   password, confirmPassword, showPassword, showConfirmPassword, loading,
   isValidToken, passwordStrength, errors,

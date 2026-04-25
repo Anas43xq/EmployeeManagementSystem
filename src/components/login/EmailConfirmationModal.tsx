@@ -28,7 +28,7 @@ export default function EmailConfirmationModal({
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-sm p-6">
-        {/* Close Button */}
+        {}
         <button
           onClick={onCancel}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
@@ -37,24 +37,24 @@ export default function EmailConfirmationModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Icon */}
+        {}
         <div className="flex justify-center mb-4">
           <div className="bg-blue-100 p-3 rounded-full">
             <Mail className="w-6 h-6 text-blue-600" />
           </div>
         </div>
 
-        {/* Title */}
+        {}
         <h2 className="text-xl font-bold text-center text-gray-900 mb-2">
           {t('auth.emailConfirmTitle')}
         </h2>
 
-        {/* Message */}
+        {}
         <p className="text-center text-gray-600 mb-4">
           {t('auth.emailConfirmMessage')}
         </p>
 
-        {/* Email Display */}
+        {}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-600 mb-1">
             {t('auth.emailConfirmEmail', { email: '' })}
@@ -62,7 +62,7 @@ export default function EmailConfirmationModal({
           <p className="text-lg font-semibold text-gray-900 break-all">{email}</p>
         </div>
 
-        {/* Buttons */}
+        {}
         <div className="flex gap-3">
           <button
             onClick={onCancel}

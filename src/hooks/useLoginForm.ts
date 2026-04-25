@@ -54,7 +54,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
   };
 
   return {
-    // State
+    
     email,
     password,
     error,
@@ -62,7 +62,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
     showPassword,
     warnMessage,
     ipMacLimitMessage,
-    // Actions
+    
     setEmail,
     setPassword,
     setError,

@@ -1,8 +1,4 @@
-/**
- * useLanguageSwitcher hook
- * Priority 3: SOLID - Extract Login.tsx complexity
- * Handles language switching logic in isolation
- */
+
 
 import { useTranslation } from 'react-i18next';
 
@@ -13,10 +9,7 @@ export interface LanguageSwitcherState {
   languageLabel: string;
 }
 
-/**
- * Encapsulates language switching logic
- * Separates i18n concerns from component rendering
- */
+
 export function useLanguageSwitcher(): LanguageSwitcherState {
   const { i18n } = useTranslation();
 

@@ -14,10 +14,10 @@ export default function Leaves() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  // Balance hook: staff viewing/managing their balance
+  
   const { leaveBalance, getAvailableBalance, calculateDays, updateLeaveBalanceField } = useLeaveBalance();
 
-  // Apply hook: any user applying for leave
+  
   const {
     showApplyModal,
     setShowApplyModal,
@@ -30,7 +30,7 @@ export default function Leaves() {
     handleApplyLeave: handleApplyLeaveBase,
   } = useLeaveApply();
 
-  // Approval hook: HR reviewing and approving/rejecting leaves
+  
   const {
     loading,
     filter,
@@ -41,17 +41,17 @@ export default function Leaves() {
     processingLeaves,
   } = useLeaveApproval();
 
-  // Wire apply handler with balance validation and reload
+  
   const handleApplyLeave = async (e: React.FormEvent) => {
     await handleApplyLeaveBase(e, calculateDays, getAvailableBalance);
   };
 
-  // Wire approve handler with balance update
+  
   const handleApprove = async (leaveId: string) => {
     await handleApproveBase(leaveId, updateLeaveBalanceField);
   };
 
-  // Wire reject handler with balance update
+  
   const handleRejectWrapper = async (leaveId: string) => {
     await handleReject(leaveId, updateLeaveBalanceField);
   };

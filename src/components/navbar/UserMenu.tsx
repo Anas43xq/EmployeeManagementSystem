@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 
-/** Renders the authenticated user's profile dropdown actions. */
+
 export function UserMenu({ onSignOut, isRTL }: { onSignOut: () => void; isRTL: boolean }) {
   const { user } = useAuth();
   const { t } = useTranslation();

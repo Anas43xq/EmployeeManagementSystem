@@ -1,8 +1,4 @@
-/**
- * useOtpFlow hook
- * Priority 3: SOLID - Extract Login.tsx complexity
- * Encapsulates OTP authentication flow logic
- */
+
 
 import { useState } from 'react';
 import { sendLoginOtp } from '../services/session';
@@ -16,10 +12,7 @@ export interface OtpFlowState {
   setIsOtpScreenActive: (active: boolean) => void;
 }
 
-/**
- * Manages OTP authentication flow
- * Handles OTP sending and screen state transitions
- */
+
 export function useOtpFlow(): OtpFlowState {
   const [otpEmail, setOtpEmail] = useState('');
   const [isOtpScreenActive, setIsOtpScreenActive] = useState(false);

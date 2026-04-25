@@ -24,15 +24,15 @@ export function useLeaves() {
   const { showNotification } = useNotification();
   const { t } = useTranslation();
 
-  // Leaves state
+  
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  // Balance state
+  
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
 
-  // Form / actions state
+  
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<LeaveFormData>({
@@ -45,7 +45,7 @@ export function useLeaves() {
   const [checkingConflicts, setCheckingConflicts] = useState(false);
   const [processingLeaves, setProcessingLeaves] = useState<Set<string>>(new Set());
 
-  // --- Leaves loading ---
+  
   const loadLeaves = useCallback(async () => {
     try {
       const data = await getLeaves(
@@ -68,7 +68,7 @@ export function useLeaves() {
     return subscribeToLeavesChanges(loadLeaves);
   }, [user, loadLeaves]);
 
-  // --- Leave balance ---
+  
   const loadLeaveBalance = useCallback(async () => {
     if (!user?.employeeId) return;
     const currentYear = new Date().getFullYear();
@@ -126,7 +126,7 @@ export function useLeaves() {
     }
   };
 
-  // --- Leave actions ---
+  
   const calculateDays = (startDate: string, endDate: string): number => {
     if (!startDate || !endDate) return 0;
     return calculateWorkingDays(startDate, endDate);

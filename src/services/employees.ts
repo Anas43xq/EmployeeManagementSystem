@@ -1,6 +1,6 @@
 
 
-// File: employeeEditQueries.ts
+
 
 import { db } from '../lib/db';
 import type { EmployeeFormData } from '../types/pages';
@@ -16,9 +16,7 @@ type EmployeeUpdatePayload = Record<string, unknown> & {
   updated_at: string;
 };
 
-/**
- * Generates the next employee number in the EMP001, EMP002 format.
- */
+
 export async function getNextEmployeeNumber(): Promise<string> {
   const { data, error } = await db
     .from('employees')
@@ -28,7 +26,7 @@ export async function getNextEmployeeNumber(): Promise<string> {
     .maybeSingle();
 
   if (error && error.code !== 'PGRST116') {
-    // PGRST116 = no rows found
+    
     throw error;
   }
 
@@ -43,9 +41,7 @@ export async function getNextEmployeeNumber(): Promise<string> {
   return preview;
 }
 
-/**
- * Fetches a specific employee by ID.
- */
+
 export async function getEmployeeById(employeeId: string): Promise<Record<string, unknown> | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (db as any)
@@ -60,9 +56,7 @@ export async function getEmployeeById(employeeId: string): Promise<Record<string
   return data || null;
 }
 
-/**
- * Creates a new employee record.
- */
+
 export async function createEmployee(
   data: EmployeeWritePayload
 ): Promise<{ id: string; employee_number: string }> {
@@ -88,9 +82,7 @@ export async function createEmployee(
   return newEmployee;
 }
 
-/**
- * Updates an existing employee record.
- */
+
 export async function updateEmployee(
   employeeId: string,
   data: EmployeeUpdatePayload
@@ -143,12 +135,9 @@ export async function updateEmployeeProfile(
 }
 
 
-// File: employeeQueries.ts
 
-/**
- * Employee query service
- * Priority 1: SOLID - Dependency Inversion (accepts dbClient parameter, no direct imports)
- */
+
+
 
 import { extractError } from '../lib/errorHandler';
 import type { DatabaseClient } from '../types/interfaces';
@@ -194,10 +183,7 @@ export async function fetchActiveEmployees(
   );
 }
 
-/**
- * Convenience export for backward compatibility
- * Uses global dbClient instance
- */
+
 export async function fetchActiveEmployeesWithDefaults(includeNumber?: boolean) {
   return fetchActiveEmployees(dbClient, includeNumber);
 }

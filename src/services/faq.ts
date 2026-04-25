@@ -13,14 +13,11 @@ export interface BilingualContent {
   };
 }
 
-/**
- * FAQ model with flattened language-specific content
- * (Language extraction happens in the service layer)
- */
+
 export interface FAQ {
   id: string;
-  question: string; // Extracted from content based on current language
-  answer: string; // Extracted from content based on current language
+  question: string; 
+  answer: string; 
   category: string;
   visible_to: string[];
   faq_order: number;
@@ -29,29 +26,23 @@ export interface FAQ {
   created_at: string;
   updated_at: string;
   updated_by?: string | null;
-  content?: BilingualContent; // Raw JSONB content (for admin)
+  content?: BilingualContent; 
 }
 
-/**
- * Input for creating a new FAQ with bilingual content
- */
+
 export interface CreateFAQInput {
-  content: BilingualContent; // {en: {question, answer}, ar: {question, answer}}
+  content: BilingualContent; 
   category: string;
-  visible_to: string[]; // Array of roles: ['staff', 'hr', 'admin']
+  visible_to: string[]; 
   faq_order?: number;
 }
 
-/**
- * Input for updating an existing FAQ with bilingual content
- */
+
 export interface UpdateFAQInput extends Partial<CreateFAQInput> {
   id: string;
 }
 
-/**
- * Get all FAQs (admin view - no filtering, returns bilingual raw content)
- */
+
 export async function getAllFAQs(): Promise<FAQ[]> {
   const { data, error } = await db
     .from('faqs')
@@ -67,11 +58,9 @@ export async function getAllFAQs(): Promise<FAQ[]> {
   return (data as unknown as FAQ[]) || [];
 }
 
-/**
- * Create a new FAQ with bilingual content (admin only)
- */
+
 export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
-  // Validate bilingual content
+  
   if (!input.content.en.question?.trim()) {
     throw new Error('English question is required');
   }
@@ -85,7 +74,7 @@ export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
     throw new Error('Arabic answer is required');
   }
 
-  // Get current user ID from auth
+  
   const { data: { user } } = await db.auth.getUser();
   if (!user) {
     throw new Error('User must be authenticated to create FAQs');
@@ -123,13 +112,11 @@ export async function createFAQ(input: CreateFAQInput): Promise<FAQ> {
   return data as unknown as FAQ;
 }
 
-/**
- * Update an existing FAQ with bilingual content (admin only)
- */
+
 export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
   const { id, ...updates } = input;
 
-  // Get current FAQ first to preserve existing content
+  
   const { data: existingFAQ, error: fetchError } = await db
     .from('faqs')
     .select('*')
@@ -140,20 +127,20 @@ export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
     throw new Error(`FAQ not found: ${fetchError?.message}`);
   }
 
-  // Get current user ID from auth
+  
   const { data: { user } } = await db.auth.getUser();
   if (!user) {
     throw new Error('User must be authenticated to update FAQs');
   }
 
-  // Prepare update data
+  
   const updateData: Record<string, unknown> = {
     updated_by: user.id,
   };
 
-  // Handle content update (bilingual)
+  
   if (updates.content) {
-    // Validate new content
+    
     if (!updates.content.en.question?.trim()) {
       throw new Error('English question is required');
     }
@@ -179,7 +166,7 @@ export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
     };
   }
 
-  // Handle other updates
+  
   if (updates.category !== undefined) updateData.category = updates.category;
   if (updates.visible_to !== undefined) updateData.visible_to = updates.visible_to;
   if (updates.faq_order !== undefined) updateData.faq_order = updates.faq_order;
@@ -199,9 +186,7 @@ export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
   return data as unknown as FAQ;
 }
 
-/**
- * Delete a FAQ permanently
- */
+
 export async function deleteFAQ(id: string): Promise<void> {
   const { error } = await db
     .from('faqs')
@@ -214,9 +199,7 @@ export async function deleteFAQ(id: string): Promise<void> {
   }
 }
 
-/**
- * Permanently delete a FAQ (hard delete - use cautiously)
- */
+
 export async function permanentlyDeleteFAQ(id: string): Promise<void> {
   const { error } = await db
     .from('faqs')
@@ -229,9 +212,7 @@ export async function permanentlyDeleteFAQ(id: string): Promise<void> {
   }
 }
 
-/**
- * Reorder FAQs within a category
- */
+
 export async function reorderFAQs(updates: Array<{ id: string; faq_order: number }>): Promise<void> {
   const errors: string[] = [];
 
@@ -251,9 +232,7 @@ export async function reorderFAQs(updates: Array<{ id: string; faq_order: number
   }
 }
 
-/**
- * Bulk update FAQ visibility
- */
+
 export async function updateFAQVisibility(faqIds: string[], visibleTo: string[]): Promise<void> {
   const { error } = await db
     .from('faqs')
@@ -269,17 +248,13 @@ export async function updateFAQVisibility(faqIds: string[], visibleTo: string[])
 
 
 
-/**
- * Get language code from i18n (en or ar)
- */
+
 function getLanguageCode(): 'en' | 'ar' {
   const lang = i18n.language || 'en';
   return lang === 'ar' ? 'ar' : 'en';
 }
 
-/**
- * Extract language-specific content from JSONB and flatten it
- */
+
 function extractLanguageContent(faq: Record<string, unknown>, language: 'en' | 'ar'): FAQ {
   const content = faq.content as BilingualContent;
   return {
@@ -298,10 +273,7 @@ function extractLanguageContent(faq: Record<string, unknown>, language: 'en' | '
   };
 }
 
-/**
- * Get all FAQs visible to a specific role, organized by category
- * Returns FAQs with language-specific content extracted
- */
+
 export async function getFAQsByRole(role: UserRole, language?: 'en' | 'ar'): Promise<FAQ[]> {
   const lang = language || getLanguageCode();
 
@@ -321,9 +293,7 @@ export async function getFAQsByRole(role: UserRole, language?: 'en' | 'ar'): Pro
   return (data || []).map(faq => extractLanguageContent(faq, lang));
 }
 
-/**
- * Get FAQs by category for a specific role
- */
+
 export async function getFAQsByCategory(category: string, role: UserRole, language?: 'en' | 'ar'): Promise<FAQ[]> {
   const lang = language || getLanguageCode();
 
@@ -343,10 +313,7 @@ export async function getFAQsByCategory(category: string, role: UserRole, langua
   return (data || []).map(faq => extractLanguageContent(faq, lang));
 }
 
-/**
- * Search FAQs by question and answer text, filtered by role
- * Searches in the specified language
- */
+
 export async function searchFAQs(searchQuery: string, role: UserRole, language?: 'en' | 'ar'): Promise<FAQ[]> {
   if (!searchQuery || searchQuery.trim().length === 0) {
     return getFAQsByRole(role, language);
@@ -355,8 +322,8 @@ export async function searchFAQs(searchQuery: string, role: UserRole, language?:
   const lang = language || getLanguageCode();
   const query = searchQuery.toLowerCase();
 
-  // Get all FAQs for the role, then filter client-side
-  // (JSONB search with ilike requires PostgREST v11+ with proper text search)
+  
+  
   const { data, error } = await db
     .from('faqs')
     .select('*')
@@ -370,7 +337,7 @@ export async function searchFAQs(searchQuery: string, role: UserRole, language?:
     return [];
   }
 
-  // Filter FAQs client-side based on language-specific content
+  
   const faqs = (data || []).map(faq => extractLanguageContent(faq, lang));
   return faqs.filter(faq =>
     faq.question.toLowerCase().includes(query) ||
@@ -378,9 +345,7 @@ export async function searchFAQs(searchQuery: string, role: UserRole, language?:
   );
 }
 
-/**
- * Get all unique categories for a specific role
- */
+
 export async function getFAQCategories(role: UserRole): Promise<string[]> {
   const { data, error } = await db
     .from('faqs')
@@ -394,7 +359,7 @@ export async function getFAQCategories(role: UserRole): Promise<string[]> {
     return [];
   }
 
-  // Extract unique categories, filtering out null/empty values
+  
   const categories = [
     ...new Set(
       (data || [])

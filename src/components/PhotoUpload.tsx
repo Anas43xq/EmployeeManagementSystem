@@ -22,8 +22,8 @@ export default function PhotoUpload({
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentPhotoUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Track the URL of the last photo uploaded THIS session so we delete it
-  // when the user uploads another photo before saving the form.
+  
+  
   const lastUploadedUrlRef = useRef<string | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +40,7 @@ export default function PhotoUpload({
       return;
     }
 
-    // Show a local preview immediately while upload happens
+    
     const reader = new FileReader();
     reader.onload = () => {
       setPreviewUrl(reader.result as string);
@@ -49,8 +49,8 @@ export default function PhotoUpload({
 
     setUploading(true);
     try {
-      // The photo to delete is either: a previously uploaded photo this session
-      // (lastUploadedUrlRef) OR the original DB photo passed via props.
+      
+      
       const urlToDelete = lastUploadedUrlRef.current ?? currentPhotoUrl ?? null;
 
       const publicUrl = await uploadEmployeePhoto(
@@ -59,7 +59,7 @@ export default function PhotoUpload({
         urlToDelete
       );
 
-      // Remember this upload so the NEXT upload will delete it
+      
       lastUploadedUrlRef.current = publicUrl;
       setPreviewUrl(publicUrl);
       onPhotoChange(publicUrl);
@@ -70,7 +70,7 @@ export default function PhotoUpload({
       } else {
         alert(t('employees.photoUploadFailed'));
       }
-      // Restore previous preview on failure
+      
       setPreviewUrl(lastUploadedUrlRef.current ?? currentPhotoUrl ?? null);
     } finally {
       setUploading(false);
@@ -78,7 +78,7 @@ export default function PhotoUpload({
   };
 
   const handleRemovePhoto = async () => {
-    // Delete whichever photo is currently showing
+    
     const urlToDelete = lastUploadedUrlRef.current ?? currentPhotoUrl ?? null;
     await deleteEmployeePhoto(urlToDelete);
     lastUploadedUrlRef.current = null;

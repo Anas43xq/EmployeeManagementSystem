@@ -18,7 +18,7 @@ import type { EmployeeWarning, WarningStatus, WarningFormData } from './types';
 import { initialWarningFormData } from './types';
 import type { EmployeeBasic } from '../../types';
 
-/** Manages warning records, employee lookups, and warning resolution workflows. */
+
 export function useWarnings() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -67,7 +67,7 @@ export function useWarnings() {
     loadEmployees();
   }, [loadWarnings, loadEmployees]);
 
-  // Real-time subscription for employee_warnings table
+  
   useEffect(() => {
     if (!user) return;
 

@@ -105,7 +105,7 @@ export default function ProfileEdit() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Contact Information */}
+        {}
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('profile.contactInfo')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,7 +122,7 @@ export default function ProfileEdit() {
           </div>
         </Card>
 
-        {/* Address */}
+        {}
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('profile.addressInfo')}</h2>
           <div className="grid grid-cols-1 gap-4">
@@ -168,7 +168,7 @@ export default function ProfileEdit() {
           </div>
         </Card>
 
-        {/* Emergency Contact */}
+        {}
         <Card>
           <h2 className="text-xl font-bold text-gray-900 mb-4">{t('employees.emergencyContact')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,7 +193,7 @@ export default function ProfileEdit() {
           </div>
         </Card>
 
-        {/* Actions */}
+        {}
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 sm:gap-4">
           <Link
             to="/profile"

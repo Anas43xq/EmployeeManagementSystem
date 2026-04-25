@@ -54,7 +54,7 @@ export function useEmployeeEdit() {
       setFormData((prev) => ({ ...prev, employee_number: preview }));
     } catch (err) {
       console.error('[useEmployeeEdit] loadNextEmployeeNumber failed:', err);
-      // fallback — DB will assign the real number on save
+      
     } finally {
       setLoading(false);
     }

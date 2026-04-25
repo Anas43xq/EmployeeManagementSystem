@@ -1,8 +1,4 @@
-/**
- * useProgressiveCountdown hook
- * Priority 3: SOLID - Extract Login.tsx complexity
- * Handles countdown timer logic for progressive delays
- */
+
 
 import { useState, useEffect, useRef } from 'react';
 
@@ -13,10 +9,7 @@ export interface CountdownState {
   stop: () => void;
 }
 
-/**
- * Manages countdown timer for progressive login delays
- * Encapsulates timer logic and cleanup
- */
+
 export function useProgressiveCountdown(): CountdownState {
   const [countdown, setCountdown] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);

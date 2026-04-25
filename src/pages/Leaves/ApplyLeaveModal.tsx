@@ -35,7 +35,7 @@ export default function ApplyLeaveModal({
 }: ApplyLeaveModalProps) {
   const { t } = useTranslation();
 
-  // Check for conflicts when dates change
+  
   useEffect(() => {
     if (show && formData.start_date && formData.end_date) {
       checkLeaveConflicts(formData.start_date, formData.end_date);

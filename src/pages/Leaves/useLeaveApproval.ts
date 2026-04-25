@@ -12,10 +12,7 @@ import { createNotification } from '../../services/notifications';
 import { logActivity } from '../../services/activityLog';
 import type { Leave } from './types';
 
-/**
- * Hook: HR leave approval workflow
- * Owns: leaves list, approval/rejection actions, filtering and loading state
- */
+
 export function useLeaveApproval() {
   const { user } = useAuth();
   const { showNotification } = useNotification();

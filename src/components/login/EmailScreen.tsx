@@ -19,7 +19,7 @@ interface EmailScreenProps {
   onSuccessfulLogin?: () => void;
 }
 
-/** Renders the main email-and-password login screen with integrated passkey option. */
+
 export default function EmailScreen({
   form,
   delayCountdown,
@@ -37,14 +37,14 @@ export default function EmailScreen({
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState<'passkey' | 'password' | null>(null);
 
-  // Validate email format
+  
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
   const handlePasskeyClick = async () => {
-    // Clear any previous form errors
+    
     form.clearErrors?.();
     
     if (!form.email || !form.email.trim()) {
@@ -55,21 +55,21 @@ export default function EmailScreen({
       form.setError(t('auth.emailInvalid'));
       return;
     }
-    // Show email confirmation before passkey
+    
     setPendingAction('passkey');
     setShowEmailConfirm(true);
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Clear any previous passkey errors
+    
     passkey.clearError();
     
     if (!isValidEmail(form.email)) {
       form.setError(t('auth.emailInvalid'));
       return;
     }
-    // Show email confirmation before password
+    
     setPendingAction('password');
     setShowEmailConfirm(true);
   };
@@ -90,10 +90,10 @@ export default function EmailScreen({
   };
 
   const handleForgotPassword = () => {
-    // Clear any previous passkey errors
+    
     passkey.clearError();
     
-    // Validate email before switching to forgot password screen
+    
     if (!form.email || !form.email.trim()) {
       form.setError(t('auth.emailRequired', 'Email is required'));
       return;
@@ -102,14 +102,14 @@ export default function EmailScreen({
       form.setError(t('auth.emailInvalid'));
       return;
     }
-    // Email is valid, proceed to forgot password screen
+    
     onForgotPassword();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Header with logo and language toggle */}
+        {}
         <div className="flex items-center justify-between mb-6">
           <div />
           <div className="flex flex-col items-center">
@@ -128,11 +128,11 @@ export default function EmailScreen({
           </button>
         </div>
 
-        {/* Title */}
+        {}
         <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">{t('auth.employeeManagementSystem')}</h1>
         <p className="text-center text-gray-600 mb-8">{t('auth.signInToContinue')}</p>
 
-        {/* Success Message */}
+        {}
         {successMessage && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center space-x-2">
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
@@ -140,10 +140,10 @@ export default function EmailScreen({
           </div>
         )}
 
-        {/* Error Message */}
+        {}
         {form.error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-2">{form.error}</div>}
 
-        {/* Passkey Error Message */}
+        {}
         {passkey.error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-2 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -160,7 +160,7 @@ export default function EmailScreen({
           </div>
         )}
 
-        {/* Warning Message */}
+        {}
         {form.warnMessage && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -168,7 +168,7 @@ export default function EmailScreen({
           </div>
         )}
 
-        {/* IP/MAC Limit Message */}
+        {}
         {form.ipMacLimitMessage && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
             <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -176,9 +176,9 @@ export default function EmailScreen({
           </div>
         )}
 
-        {/* Login Form */}
+        {}
         <form onSubmit={handlePasswordSubmit} className="space-y-6">
-          {/* Email Input */}
+          {}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               {t('auth.emailAddress')}
@@ -193,7 +193,7 @@ export default function EmailScreen({
             />
           </div>
 
-          {/* Password Input */}
+          {}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -226,7 +226,7 @@ export default function EmailScreen({
             </div>
           </div>
 
-          {/* Submit Button */}
+          {}
           <button
             type="submit"
             disabled={form.loading || delayCountdown > 0}
@@ -245,7 +245,7 @@ export default function EmailScreen({
           </button>
         </form>
 
-        {/* Authentication Options */}
+        {}
         <div className="mt-8 space-y-3">
           {passkeySupported && (
             <button
@@ -270,7 +270,7 @@ export default function EmailScreen({
         </div>
       </div>
 
-      {/* Email Confirmation Modal */}
+      {}
       <EmailConfirmationModal
         email={form.email}
         isOpen={showEmailConfirm}

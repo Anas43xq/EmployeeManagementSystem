@@ -1,6 +1,6 @@
 
 
-// File: announcementQueries.ts
+
 
 import { db } from '../lib/db';
 import type { Announcement } from '../types/pages';
@@ -14,7 +14,7 @@ interface AnnouncementPayload {
   createdBy: string | undefined;
 }
 
-/** Fetches all announcements ordered by creation date. */
+
 export async function getAnnouncements(): Promise<Announcement[]> {
   const { data, error } = await (db
     .from('announcements')
@@ -28,7 +28,7 @@ export async function getAnnouncements(): Promise<Announcement[]> {
   return data || [];
 }
 
-/** Creates a new announcement and returns the created record. */
+
 export async function createAnnouncement(payload: AnnouncementPayload): Promise<Announcement> {
   if (!payload.createdBy) {
     throw new Error('Missing announcement creator');
@@ -51,7 +51,7 @@ export async function createAnnouncement(payload: AnnouncementPayload): Promise<
   return data as Announcement;
 }
 
-/** Updates an existing announcement by ID. */
+
 export async function updateAnnouncement(
   id: string,
   payload: Partial<AnnouncementPayload>,
@@ -69,7 +69,7 @@ export async function updateAnnouncement(
   if (error) throw error;
 }
 
-/** Deletes an announcement by ID. */
+
 export async function deleteAnnouncement(id: string): Promise<void> {
   const { error } = await db
     .from('announcements')
@@ -79,7 +79,7 @@ export async function deleteAnnouncement(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Toggles the active status of an announcement. */
+
 export async function toggleAnnouncementActive(id: string, isActive: boolean): Promise<void> {
   const { error } = await db.from('announcements')
     .update({ is_active: isActive })
@@ -96,7 +96,7 @@ export interface WidgetAnnouncement {
   createdAt: string;
 }
 
-/** Fetches active announcements for the dashboard widget, ordered by priority then date. */
+
 export async function getActiveAnnouncementsForWidget(limit = 6): Promise<WidgetAnnouncement[]> {
   const now = new Date().toISOString();
   const { data, error } = await db

@@ -34,7 +34,7 @@ function toQualifications(value: unknown): Qualification[] {
   }));
 }
 
-/** Maps a raw employee row into the frontend Employee shape. */
+
 export function mapEmployeeRecord(record: EmployeeRecord): Employee {
   return {
     id: record.id ?? '',
@@ -64,7 +64,7 @@ export function mapEmployeeRecord(record: EmployeeRecord): Employee {
   };
 }
 
-/** Maps a raw employee-of-the-week row into the frontend EmployeeOfWeek shape. */
+
 export function mapEmployeeOfWeekRecord(record: EmployeeOfWeekRecord): EmployeeOfWeek {
   return {
     id: record.id ?? '',
@@ -85,7 +85,7 @@ const PROFILE_KEYS = [
   'photo_url', 'qualifications', 'emergency_contact_name', 'emergency_contact_phone'
 ];
 
-/** Extracts core employee fields from a unified data object */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractCore(data: Record<string, any>): Record<string, any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,7 +98,7 @@ export function extractCore(data: Record<string, any>): Record<string, any> {
   return coreData;
 }
 
-/** Extracts profile-specific fields from a unified data object */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractProfile(data: Record<string, any>): Record<string, any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -11,7 +11,7 @@ interface Props {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-/** Displays the passkey registration form inside a modal. */
+
 export function RegisterPasskeyModal({ show, deviceName, registerLoading, onClose, onDeviceNameChange, onSubmit }: Props) {
   const { t } = useTranslation();
 

@@ -10,7 +10,7 @@ import { ResetPasswordForm } from './ResetPasswordForm';
 const INVALID_LINK_REDIRECT_DELAY_MS = 3000;
 const SESSION_EXPIRED_REDIRECT_DELAY_MS = 2000;
 
-/** Validates recovery links and lets the user set a new password. */
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const { showNotification } = useNotification();

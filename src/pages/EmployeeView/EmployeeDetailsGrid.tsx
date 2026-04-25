@@ -8,7 +8,7 @@ interface Props {
   employee: Employee;
 }
 
-/** Renders the employee detail sections shown on the employee view page. */
+
 export function EmployeeDetailsGrid({ employee }: Props) {
   const { t } = useTranslation();
 

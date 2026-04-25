@@ -1,7 +1,4 @@
-/**
- * pages/FAQ/index.tsx
- * Public FAQ page with search and category filter
- */
+
 
 import { useState } from 'react';
 import { useFAQ } from './useFAQ';
@@ -38,7 +35,7 @@ export const FAQPage = () => {
 
   return (
     <div className="space-y-8" dir={isArabic ? 'rtl' : 'ltr'}>
-      {/* Header */}
+      {}
       <div>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-50">{t('faq.title')}</h1>
         <p className="text-gray-700 dark:text-gray-300 mt-2">
@@ -46,7 +43,7 @@ export const FAQPage = () => {
         </p>
       </div>
 
-      {/* Error Alert */}
+      {}
       {error && (
         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 rounded-lg">
           <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -54,7 +51,7 @@ export const FAQPage = () => {
         </div>
       )}
 
-      {/* Search Bar */}
+      {}
       <div className="relative">
         <Search className={`absolute ${isArabic ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400`} />
         <input
@@ -66,7 +63,7 @@ export const FAQPage = () => {
         />
       </div>
 
-      {/* Category Filter */}
+      {}
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 justify-start">
           <button
@@ -94,7 +91,7 @@ export const FAQPage = () => {
         </div>
       )}
 
-      {/* FAQ Accordion */}
+      {}
       <div className="space-y-3">
         {filteredFAQs.length === 0 ? (
           <div className="text-center py-12">
@@ -136,7 +133,7 @@ export const FAQPage = () => {
         )}
       </div>
 
-      {/* Results Count */}
+      {}
       {filteredFAQs.length > 0 && (
         <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
           {t('faq.showing')} {filteredFAQs.length} {t('faq.of')} {faqs.length} {t('faq.faqs')}

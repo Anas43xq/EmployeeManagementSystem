@@ -1,9 +1,6 @@
-/**
- * Page-specific types used by services
- * Consolidated here to avoid module resolution issues with cross-folder imports
- */
 
-// ─── Announcements ───────────────────────────────────────────────────────────
+
+
 export interface Announcement {
   id: string;
   title: string;
@@ -16,7 +13,7 @@ export interface Announcement {
   updated_at: string;
 }
 
-// ─── Attendance ──────────────────────────────────────────────────────────────
+
 export interface AttendanceRecord {
   id: string;
   employee_id: string;
@@ -32,7 +29,7 @@ export interface AttendanceRecord {
   };
 }
 
-// ─── Leaves ─────────────────────────────────────────────────────────────────
+
 export interface Leave {
   id: string;
   employee_id: string;
@@ -78,7 +75,7 @@ export interface LeaveConflict {
   status: string;
 }
 
-// ─── Employee Edit ──────────────────────────────────────────────────────────
+
 export interface EmployeeFormData {
   employee_number: string;
   first_name: string;
@@ -100,7 +97,7 @@ export interface EmployeeFormData {
   emergency_contact_phone: string;
 }
 
-// ─── Reports ────────────────────────────────────────────────────────────────
+
 export interface ReportEmployee {
   id: string;
   first_name: string;

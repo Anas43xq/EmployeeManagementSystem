@@ -61,7 +61,7 @@ export interface EditUserFormData {
 }
 
 export interface BanUserFormData {
-  banDuration: 'permanent' | '24' | '168' | '720' | '8760'; // hours: 1 day, 1 week, 30 days, 1 year
+  banDuration: 'permanent' | '24' | '168' | '720' | '8760'; 
   reason: string;
 }
 

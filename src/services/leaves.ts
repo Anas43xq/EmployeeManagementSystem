@@ -19,9 +19,7 @@ export async function getLeaves(employeeId?: string): Promise<Leave[]> {
   return data || [];
 }
 
-/**
- * Fetches leave balance for a specific employee and year.
- */
+
 export async function getLeaveBalance(employeeId: string, year: number): Promise<LeaveBalance | null> {
   const { data, error } = await db
     .from('leave_balances')
@@ -31,17 +29,14 @@ export async function getLeaveBalance(employeeId: string, year: number): Promise
     .single();
 
   if (error && error.code === 'PGRST116') {
-    // Record not found - return null instead of throwing
+    
     return null;
   }
   if (error) throw error;
   return data || null;
 }
 
-/**
- * Creates a new leave balance record for an employee and year.
- * Default values: annual: 20, sick: 10, casual: 10
- */
+
 export async function createLeaveBalance(
   employeeId: string,
   year: number
@@ -65,9 +60,7 @@ export async function createLeaveBalance(
   return data;
 }
 
-/**
- * Gets or creates a leave balance for an employee and year.
- */
+
 export async function getOrCreateLeaveBalance(
   employeeId: string,
   year: number
@@ -77,9 +70,7 @@ export async function getOrCreateLeaveBalance(
   return createLeaveBalance(employeeId, year);
 }
 
-/**
- * Updates a specific field in the leave balance.
- */
+
 export async function updateLeaveBalance(
   employeeId: string,
   year: number,
@@ -95,10 +86,7 @@ export async function updateLeaveBalance(
   if (error) throw error;
 }
 
-/**
- * Checks for leave conflicts within a date range.
- * Returns only approved or pending leaves that overlap with the given dates.
- */
+
 export async function checkLeaveConflicts(
   employeeId: string,
   startDate: string,
@@ -129,9 +117,7 @@ export async function checkLeaveConflicts(
   );
 }
 
-/**
- * Creates a new leave request.
- */
+
 export async function createLeave(leaveData: {
   employee_id: string;
   leave_type: string;
@@ -149,9 +135,7 @@ export async function createLeave(leaveData: {
   if (error) throw error;
 }
 
-/**
- * Updates the status of a leave request (approve/reject).
- */
+
 export async function updateLeaveStatus(
   leaveId: string,
   status: 'approved' | 'rejected',
@@ -170,9 +154,7 @@ export async function updateLeaveStatus(
   if (error) throw error;
 }
 
-/**
- * Fetches employee details needed for leave notifications.
- */
+
 export async function getEmployeeForLeave(employeeId: string): Promise<{
   first_name: string;
   last_name: string;
@@ -190,9 +172,7 @@ export async function getEmployeeForLeave(employeeId: string): Promise<{
   return data;
 }
 
-/**
- * Looks up the user ID for an employee to send notifications.
- */
+
 export async function getUserIdForEmployee(employeeId: string): Promise<string | null> {
   const { data, error } = await db
     .from('users')

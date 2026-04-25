@@ -39,7 +39,7 @@ export default function PayslipModal({
       <Modal.Body>
         {payroll && (
           <div className="space-y-6">
-            {/* Employee Info */}
+            {}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <h3 className="font-semibold text-gray-900">
@@ -60,7 +60,7 @@ export default function PayslipModal({
               </div>
             ) : (
               <>
-                {/* Salary Summary */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-600">{t('payslip.baseSalary', 'Base Salary')}</p>
@@ -80,7 +80,7 @@ export default function PayslipModal({
                   </div>
                 </div>
 
-                {/* Bonuses Section */}
+                {}
                 {bonuses.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-900 flex items-center mb-3">
@@ -101,7 +101,7 @@ export default function PayslipModal({
                   </div>
                 )}
 
-                {/* Deductions Section */}
+                {}
                 {deductions.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-900 flex items-center mb-3">
@@ -124,7 +124,7 @@ export default function PayslipModal({
               </>
             )}
 
-            {/* Actions */}
+            {}
             <div className="flex space-x-3 pt-4 border-t border-gray-200">
               <Button
                 type="button"

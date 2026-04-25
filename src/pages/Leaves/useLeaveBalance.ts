@@ -4,10 +4,7 @@ import { getOrCreateLeaveBalance, updateLeaveBalance, subscribeToLeaveBalanceCha
 import { calculateWorkingDays } from '../../utils/dateUtils';
 import type { LeaveBalance } from './types';
 
-/**
- * Hook: Staff leave balance display and calculation
- * Owns: leaveBalance state, balance calculations, balance updates
- */
+
 export function useLeaveBalance() {
   const { user } = useAuth();
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);

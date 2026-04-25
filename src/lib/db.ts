@@ -1,22 +1,16 @@
-/**
- * Database utilities - merged from services/shared/dbClient.ts and queryUtils.ts
- * Priority 2: SOLID - Open/Closed Principle (via adapter pattern)
- *
- * Wraps Supabase behind a clean abstraction
- * Allows swapping Supabase for another database without changing service code
- */
+
 
 // eslint-disable-next-line no-restricted-imports
 import { supabase } from '../services/supabase';
 import type { DatabaseClient } from '../types/interfaces';
 import { extractError, type AppError } from './errorHandler';
 
-// ─── Supabase Re-export ─────────────────────────────────────────────────────────
 
-// Re-export supabase as typed for use across all services
+
+
 export const db = supabase;
 
-// ─── Type Definitions ──────────────────────────────────────────────────────────
+
 
 interface QueryResult<TData = unknown> {
   data: TData;
@@ -51,26 +45,24 @@ interface DynamicSupabaseClient {
   rpc(functionName: string, params?: Record<string, unknown>): Promise<QueryResult<unknown>>;
 }
 
-// Keep the dynamic client cast isolated here so the rest of the service layer stays strongly typed.
+
 const runtimeClient = supabase as unknown as DynamicSupabaseClient;
 
-// ─── Query Utilities ──────────────────────────────────────────────────────────
 
-/** Applies an optional `.eq()` filter to a Supabase query builder.
- * Returns the query unchanged when value is undefined.
- */
+
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applyFilter(query: any, column: string, value: string | undefined): any {
   return value ? query.eq(column, value) : query;
 }
 
-// ─── Data Transformations ───────────────────────────────────────────────────────
 
-/** Converts a single snake_case key to camelCase. */
+
+
 const snakeToCamel = (key: string): string =>
   key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 
-/** Recursively maps a Supabase snake_case response object to camelCase keys. */
+
 export function toCamel<T>(value: unknown): T {
   if (Array.isArray(value)) return value.map((item) => toCamel(item)) as T;
   if (value !== null && typeof value === 'object') {
@@ -84,12 +76,9 @@ export function toCamel<T>(value: unknown): T {
   return value as T;
 }
 
-// ─── Database Client Adapter ────────────────────────────────────────────────────
 
-/**
- * Supabase adapter - implements DatabaseClient interface
- * Translates abstract DB operations to Supabase API calls
- */
+
+
 export class SupabaseDatabaseClient implements DatabaseClient {
   async select(query: {
     from: string;
@@ -242,8 +231,5 @@ export class SupabaseDatabaseClient implements DatabaseClient {
   }
 }
 
-/**
- * Global database client instance
- * Inject this into services instead of importing supabase directly
- */
+
 export const dbClient = new SupabaseDatabaseClient();

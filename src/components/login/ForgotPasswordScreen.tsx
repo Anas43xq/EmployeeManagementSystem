@@ -11,10 +11,10 @@ interface ForgotPasswordScreenProps {
   initialEmail?: string;
 }
 
-const AUTO_SUBMIT_DELAY = 3; // 3 seconds before auto-submit
-const PAGE_LOAD_WAIT = 1000; // Wait 1 second for page to fully load
+const AUTO_SUBMIT_DELAY = 3; 
+const PAGE_LOAD_WAIT = 1000; 
 
-// Email validation function
+
 const isValidEmail = (emailStr: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(emailStr);
@@ -35,7 +35,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
     resetPassword,
   });
 
-  // Wait for page to load before starting auto-submit
+  
   useEffect(() => {
     setShowLoading(true);
     const timer = setTimeout(() => {
@@ -45,24 +45,24 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-fill email on mount if initialEmail provided
+  
   useEffect(() => {
     if (initialEmail && !email && pageLoaded) {
       setEmail(initialEmail);
       
-      // Validate email format
+      
       if (!isValidEmail(initialEmail)) {
         setValidationError(t('auth.emailInvalid'));
         return;
       }
       
-      // Email is valid, start countdown
+      
       setValidationError('');
       setCountdown(AUTO_SUBMIT_DELAY);
     }
   }, [initialEmail, email, setEmail, pageLoaded, t]);
 
-  // Countdown timer for auto-submit
+  
   useEffect(() => {
     if (countdown > 0 && !loading && !hasAutoSubmitted && !validationError) {
       const timer = setTimeout(() => {
@@ -71,7 +71,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
       return () => clearTimeout(timer);
     }
 
-    // Auto-submit when countdown reaches 0 and email is valid
+    
     if (countdown === 0 && email && initialEmail && !loading && !hasAutoSubmitted && !validationError) {
       setHasAutoSubmitted(true);
       handleAutoSubmit();
@@ -81,7 +81,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
   const handleAutoSubmit = async () => {
     const success = await submit(email);
     if (!success && error) {
-      // Route error through registry
+      
       await handleError(error, {
         form: { setError: () => {} },
         t,
@@ -95,7 +95,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate email format before submitting
+    
     if (!email.trim()) {
       setValidationError(t('auth.emailRequired', 'Email is required'));
       return;
@@ -106,12 +106,12 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
       return;
     }
     
-    setValidationError(''); // Clear error if validation passes
+    setValidationError(''); 
     setCountdown(0);
     setHasAutoSubmitted(true);
     const success = await submit(email);
     if (!success && error) {
-      // Route error through registry
+      
       await handleError(error, {
         form: { setError: () => {} },
         t,
@@ -155,7 +155,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
           </div>
         )}
 
-        {/* Email validation error */}
+        {}
         {validationError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -163,7 +163,7 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
           </div>
         )}
 
-        {/* Auto-submit countdown */}
+        {}
         {countdown > 0 && initialEmail && !hasAutoSubmitted && !validationError && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4 flex-shrink-0" />
@@ -182,9 +182,9 @@ export default function ForgotPasswordScreen({ onBack, resetPassword, initialEma
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setCountdown(0); // Reset countdown if user edits email
+                setCountdown(0); 
                 setHasAutoSubmitted(false);
-                setValidationError(''); // Clear validation error when user edits
+                setValidationError(''); 
               }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required

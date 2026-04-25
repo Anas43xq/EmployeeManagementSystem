@@ -9,7 +9,7 @@ export default function Deactivated() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // If the user somehow becomes active again, send them home
+  
   useEffect(() => {
     if (user && user.isActive !== false) {
       navigate('/dashboard', { replace: true });
@@ -31,24 +31,24 @@ export default function Deactivated() {
           <div className="h-2 bg-gradient-to-r from-red-500 to-rose-600" />
 
           <div className="p-8 flex flex-col items-center text-center">
-            {/* Icon */}
+            {}
             <div className="w-20 h-20 bg-red-50 border-2 border-red-100 rounded-full flex items-center justify-center mb-6">
               <AlertTriangle className="w-10 h-10 text-red-500" />
             </div>
 
-            {/* Heading */}
+            {}
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Account Deactivated
             </h1>
 
-            {/* Body copy */}
+            {}
             <p className="text-gray-500 text-sm leading-relaxed mb-4">
               Your account has been deactivated and you no longer have access
               to the system. If you believe this is a mistake, please reach
               out to your HR department or system administrator.
             </p>
 
-            {/* Contact box */}
+            {}
             <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-left space-y-2">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 Need help? Contact

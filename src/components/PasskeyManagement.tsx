@@ -15,7 +15,7 @@ import { Fingerprint, Shield, Plus } from 'lucide-react';
 import { PasskeyList } from './PasskeyList';
 import { RegisterPasskeyModal } from './RegisterPasskeyModal';
 
-/** Displays the user's registered passkeys and provides passkey registration and deletion actions. */
+
 export default function PasskeyManagement() {
   const { t } = useTranslation();
   const { showNotification } = useNotification();

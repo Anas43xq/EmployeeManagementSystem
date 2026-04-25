@@ -1,12 +1,10 @@
 
 
-// File: performanceNotifications.ts
+
 
 import { createNotification } from './notifications';
 
-/**
- * Performance-related notifications
- */
+
 export async function createPerformanceNotification(
   userId: string,
   type: 'warning_updated' | 'employee_of_week',
@@ -30,7 +28,7 @@ export async function createPerformanceNotification(
 }
 
 
-// File: performanceQueries.ts
+
 
 import { db } from '../lib/db';
 import { supabase } from './supabase';
@@ -40,17 +38,14 @@ import { mapEmployeeOfWeekRecord } from '../utils/employeeMappers';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = supabase as any;
 
-/**
- * Trigger performance calculation for a specific week.
- * Safe to call even if calculation already exists (uses ON CONFLICT DO UPDATE).
- */
+
 async function triggerWeeklyPerformanceCalculation(weekStart?: string): Promise<void> {
   try {
     await rpc.rpc('calculate_weekly_performance', {
       p_week_start: weekStart,
     });
   } catch (_err: unknown) {
-    // Non-critical: calculation may already exist or fail silently
+    
   }
 }
 
@@ -117,10 +112,10 @@ export async function getTopPerformers(weekStart?: string) {
     const latestPeriod = periodData?.[0] ?? null;
 
     if (!latestPeriod?.period_start) {
-      // Table empty — trigger calculation and WAIT for it
+      
       await triggerWeeklyPerformanceCalculation();
       
-      // Re-fetch after calculation
+      
       const { data: newPeriodData } = await db
         .from('employee_performance')
         .select('period_start')
@@ -128,7 +123,7 @@ export async function getTopPerformers(weekStart?: string) {
         .limit(1);
 
       const newLatestPeriod = newPeriodData?.[0] ?? null;
-      if (!newLatestPeriod?.period_start) return []; // still empty, give up
+      if (!newLatestPeriod?.period_start) return []; 
       
       query = query.eq('period_start', newLatestPeriod.period_start);
     } else {
@@ -171,14 +166,14 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   if (error) return null;
 
   if (!data?.[0]) {
-    // Empty — trigger selection and wait
+    
     await triggerWeeklyPerformanceCalculation();
     
     try {
       await rpc.rpc('select_employee_of_week', {});
-    } catch (_err) { /* silent */ }
+    } catch (_err) {  }
 
-    // Re-fetch after selection
+    
     const { data: newData } = await db
       .from('employee_of_week')
       .select(`*, employees (*)`)
@@ -271,7 +266,7 @@ export async function getWeeklyDataAvailability(weekStart: string) {
       has_sufficient_data: boolean;
     };
   } catch (_error) {
-    // Return default insufficient data on error
+    
     return {
       days_with_data: 0,
       total_days: 7,

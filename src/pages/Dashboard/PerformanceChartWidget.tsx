@@ -46,7 +46,7 @@ export default function PerformanceChartWidget({ topPerformers, loading }: Perfo
             
             return (
               <div key={performer.id} className="flex items-center gap-3">
-                {/* Rank */}
+                {}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                   index === 0 ? 'bg-yellow-100 text-yellow-700' :
                   index === 1 ? 'bg-gray-100 text-gray-700' :
@@ -56,7 +56,7 @@ export default function PerformanceChartWidget({ topPerformers, loading }: Perfo
                   {index === 0 ? <Award className="w-4 h-4" /> : index + 1}
                 </div>
 
-                {/* Employee Info */}
+                {}
                 <div className="flex items-center gap-2 min-w-[140px]">
                   {employee?.photo_url ? (
                     <img
@@ -79,7 +79,7 @@ export default function PerformanceChartWidget({ topPerformers, loading }: Perfo
                   </div>
                 </div>
 
-                {/* Progress Bar */}
+                {}
                 <div className="flex-1">
                   <div className="h-6 bg-gray-100 rounded-full overflow-hidden relative">
                     <div
@@ -97,7 +97,7 @@ export default function PerformanceChartWidget({ topPerformers, loading }: Perfo
                   </div>
                 </div>
 
-                {/* Stats */}
+                {}
                 <div className="text-right text-xs text-gray-500 min-w-[80px]">
                   <div className="flex items-center justify-end gap-1">
                     <span className="text-blue-600">✓{performer.tasks_completed}</span>
@@ -114,7 +114,7 @@ export default function PerformanceChartWidget({ topPerformers, loading }: Perfo
         </div>
       )}
 
-      {/* Legend */}
+      {}
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex flex-wrap justify-center gap-6 text-xs text-gray-600">
           <div className="flex items-center gap-1">

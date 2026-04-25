@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { ITEMS_BY_ROLE, type NavCategory } from './navConfig';
 
-/** Renders a top-nav dropdown filtered to the current user's allowed routes. */
+
 export function NavDropdown({ category, role, isRTL }: { category: NavCategory; role: string; isRTL: boolean }) {
   const location = useLocation();
   const [open, setOpen] = useState(false);

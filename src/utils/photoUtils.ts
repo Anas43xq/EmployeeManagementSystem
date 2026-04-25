@@ -22,7 +22,7 @@ export async function deleteEmployeePhoto(photoUrl: string | null | undefined): 
   try {
     await deletePhotoByFilename(filename);
   } catch {
-    // ignore
+    
   }
 }
 
@@ -37,7 +37,7 @@ export async function uploadEmployeePhoto(
   const ext = file.name.split('.').pop() || 'jpg';
   const filename = `${employeeId}_${Date.now()}.${ext}`;
 
-  // Delete previous photo before uploading the new one
+  
   await deleteEmployeePhoto(oldPhotoUrl);
 
   const uploadError = await uploadPhotoFile(filename, file);

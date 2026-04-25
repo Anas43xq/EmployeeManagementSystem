@@ -120,10 +120,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Detects the "Failed to fetch dynamically imported module" / MIME-type error
-// that happens when the browser has a stale index.html cached after a new Vercel
-// deployment (old chunk hashes no longer exist → Vercel serves index.html as fallback
-// → browser receives text/html where it expected JavaScript).
+
+
+
+
 function isStaleChunkError(error: Error): boolean {
   const msg = error?.message?.toLowerCase() ?? '';
   return (
@@ -150,9 +150,9 @@ export class RouteErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
 
-    // Auto-reload once when a stale deployment chunk error is detected.
-    // sessionStorage flag prevents an infinite reload loop if the chunk is
-    // genuinely broken (not just stale).
+    
+    
+    
     if (isStaleChunkError(error)) {
       const alreadyReloaded = sessionStorage.getItem(STALE_RELOAD_KEY);
       if (!alreadyReloaded) {
@@ -163,7 +163,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    // Clear the reload guard so a manual retry can attempt another reload if needed.
+    
     sessionStorage.removeItem(STALE_RELOAD_KEY);
     this.setState({ hasError: false, error: null });
   };
@@ -189,13 +189,13 @@ export class RouteErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Wrapper component to provide translations to ErrorBoundary
+
 export function ErrorBoundaryWithTranslation({ children, fallback, onError }: Omit<Props, 't'>) {
   const { t } = useTranslation();
   return <ErrorBoundary t={t} onError={onError} fallback={fallback}>{children}</ErrorBoundary>;
 }
 
-// Wrapper component to provide translations to RouteErrorBoundary
+
 export function RouteErrorBoundaryWithTranslation({ children, fallback, onError }: Omit<Props, 't'>) {
   const { t } = useTranslation();
   return <RouteErrorBoundary t={t} onError={onError} fallback={fallback}>{children}</RouteErrorBoundary>;

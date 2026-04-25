@@ -29,7 +29,7 @@ interface Props {
   onChangePassword: () => void;
 }
 
-/** Renders the change-password form for both password and passkey verification flows. */
+
 export function PasswordChangeForm({
   verifyMethod, passkeyVerified, verifyingPasskey, loadingPasskeys, showPasskeyOption,
   webAuthnSupported, hasPasskeys, loading,

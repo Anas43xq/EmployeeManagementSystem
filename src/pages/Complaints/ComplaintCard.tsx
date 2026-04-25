@@ -83,7 +83,7 @@ export default function ComplaintCard({
           )}
         </div>
 
-        {/* Admin/HR actions */}
+        {}
         {!isStaff && (
           <div className="flex items-center gap-1 shrink-0">
             {complaint.status === 'pending' && onTakeReview && (

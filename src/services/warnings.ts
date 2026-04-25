@@ -1,6 +1,6 @@
 
 
-// File: warningNotifications.ts
+
 
 import { createNotification } from './notifications';
 
@@ -14,7 +14,7 @@ export async function createWarningNotification(userId: string, severity: string
 }
 
 
-// File: warningQueries.ts
+
 
 import { db, supabase } from './supabase';
 import { applyFilter } from '../lib/db';

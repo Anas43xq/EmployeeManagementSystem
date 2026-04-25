@@ -81,7 +81,7 @@ export default function WarningCard({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {/* Employee actions */}
+          {}
           {isStaff && warning.status === 'active' && onAcknowledge && (
             <button
               onClick={() => onAcknowledge(warning.id)}
@@ -92,7 +92,7 @@ export default function WarningCard({
             </button>
           )}
 
-          {/* Admin/HR actions */}
+          {}
           {!isStaff && (
             <>
               {warning.status !== 'resolved' && onResolve && (

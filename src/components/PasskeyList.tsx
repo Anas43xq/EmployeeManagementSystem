@@ -21,7 +21,7 @@ function getDeviceIcon(deviceName: string) {
   return <Globe className="w-5 h-5" />;
 }
 
-/** Renders the current passkey list and its empty/loading states. */
+
 export function PasskeyList({ passkeys, loading, onDelete, onRegisterClick }: Props) {
   const { t } = useTranslation();
 

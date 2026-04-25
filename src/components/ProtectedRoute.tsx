@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
   roles?: string[];
 }
 
-const LOADING_TIMEOUT_MS = 8000; // Show reset button after 8 seconds
+const LOADING_TIMEOUT_MS = 8000; 
 
 export default function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user, loading, resetSession } = useAuth();
@@ -35,18 +35,18 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     try {
       await resetSession();
     } catch (_) {
-      // silently fail
+      
     } finally {
       setIsResetting(false);
     }
   };
 
-  // Redirect to login only if NOT loading (session check finished and no user)
+  
   if (!user && !loading) {
     return <Navigate to="/login" replace />;
   }
 
-  // Show loading spinner ONLY if user is authenticated but their data is still loading
+  
   if (loading && user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -77,7 +77,7 @@ export default function ProtectedRoute({ children, roles }: ProtectedRouteProps)
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Render children (allows Navigate to work during session check, shows page after auth)
+  
   return <>{children}</>;
 }
 

@@ -15,14 +15,14 @@ export function calculateWorkingDays(
   endNorm.setHours(0, 0, 0, 0);
 
   while (current <= endNorm) {
-    const day = current.getDay(); // 0 = Sunday, 6 = Saturday
+    const day = current.getDay(); 
     if (day !== 0 && day !== 6) {
       workingDays++;
     }
     current.setDate(current.getDate() + 1);
   }
 
-  return Math.max(1, workingDays); // minimum 1 working day
+  return Math.max(1, workingDays); 
 }
 
 export function formatDateForDB(date: Date | string): string {

@@ -1,9 +1,6 @@
 import { useState, useCallback } from 'react';
 
-/**
- * Reusable hook for managing delete confirmation workflows.
- * Handles: pending delete ID, delete confirmation UI, error states
- */
+
 export function useDeleteConfirmation() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);

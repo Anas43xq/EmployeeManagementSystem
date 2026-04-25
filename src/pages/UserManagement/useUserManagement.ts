@@ -41,14 +41,14 @@ export function useUserManagement() {
     loadEmployeesWithoutAccess();
   }, [loadUsers, loadEmployeesWithoutAccess]);
 
-  // --- Actions hook ---
+  
   const actions = useUserActions({
     employeesWithoutAccess,
     loadUsers,
     loadEmployeesWithoutAccess,
   });
 
-  // --- Filtered users ---
+  
   const filteredUsers = users.filter(user => {
     const userEmail = getUserEmail(user);
     const matchesSearch =

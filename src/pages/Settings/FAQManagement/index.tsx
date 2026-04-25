@@ -1,7 +1,4 @@
-/**
- * pages/Settings/FAQManagement/index.tsx
- * Admin panel for managing FAQs (CRUD operations)
- */
+
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, AlertCircle, Check, X } from 'lucide-react';
@@ -19,7 +16,7 @@ export const FAQManagement = () => {
   const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load FAQs
+  
   const loadFAQs = async () => {
     try {
       setLoading(true);
@@ -38,7 +35,7 @@ export const FAQManagement = () => {
     loadFAQs();
   }, []);
 
-  // Create FAQ
+  
   const handleCreate = async (input: CreateFAQInput) => {
     try {
       await createFAQ(input);
@@ -53,7 +50,7 @@ export const FAQManagement = () => {
     }
   };
 
-  // Update FAQ
+  
   const handleUpdate = async (id: string, input: Partial<CreateFAQInput>) => {
     try {
       await updateFAQ({ id, ...input } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -68,7 +65,7 @@ export const FAQManagement = () => {
     }
   };
 
-  // Delete FAQ
+  
   const handleDelete = async (id: string) => {
     if (!window.confirm(t('faq.confirmDeleteFaq') || 'Are you sure you want to delete this FAQ?')) return;
     try {
@@ -83,7 +80,7 @@ export const FAQManagement = () => {
     }
   };
 
-  // Filter FAQs
+  
   const filteredFAQs = faqs.filter(faq => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -100,7 +97,7 @@ export const FAQManagement = () => {
     );
   }
 
-  // Show form when creating or editing
+  
   if (showForm || editingFAQ) {
     return (
       <FAQForm
@@ -116,7 +113,7 @@ export const FAQManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('faq.manageFaqs') || 'Manage FAQs'}</h1>
@@ -133,7 +130,7 @@ export const FAQManagement = () => {
         </button>
       </div>
 
-      {/* Success Alert */}
+      {}
       {success && (
         <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <Check className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
@@ -141,7 +138,7 @@ export const FAQManagement = () => {
         </div>
       )}
 
-      {/* Error Alert */}
+      {}
       {error && (
         <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
@@ -152,7 +149,7 @@ export const FAQManagement = () => {
         </div>
       )}
 
-      {/* Search */}
+      {}
       <div className="relative">
         <input
           type="text"
@@ -163,7 +160,7 @@ export const FAQManagement = () => {
         />
       </div>
 
-      {/* FAQs Table */}
+      {}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {filteredFAQs.length === 0 ? (
           <div className="text-center py-12">
@@ -185,7 +182,7 @@ export const FAQManagement = () => {
               </thead>
               <tbody>
                 {filteredFAQs.map((faq) => {
-                  // Check which languages have content
+                  
                   const hasEnglish = faq.content && faq.content.en && faq.content.en.question?.trim().length > 0;
                   const hasArabic = faq.content && faq.content.ar && faq.content.ar.question?.trim().length > 0;
 
@@ -255,7 +252,7 @@ export const FAQManagement = () => {
         )}
       </div>
 
-      {/* Results Count */}
+      {}
       {filteredFAQs.length > 0 && (
         <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
           {t('faq.showing') || 'Showing'} {filteredFAQs.length} {t('faq.of') || 'of'} {faqs.length} {t('faq.faqs') || 'FAQs'}

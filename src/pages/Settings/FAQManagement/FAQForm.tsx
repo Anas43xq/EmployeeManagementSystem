@@ -32,7 +32,7 @@ interface FormState {
 export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
   const { t } = useTranslation();
 
-  // Initialize form with bilingual content
+  
   const [formData, setFormData] = useState<FormState>({
     content: faq?.content || {
       en: { question: '', answer: '' },
@@ -79,7 +79,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation - both languages required
+    
     if (!formData.content.en.question.trim()) {
       setError(t('faq.englishQuestionRequired') || 'English question is required');
       return;
@@ -116,7 +116,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           {faq ? (t('faq.editFaq') || 'Edit FAQ') : (t('faq.createFaq') || 'Create FAQ')}
@@ -130,16 +130,16 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
         </button>
       </div>
 
-      {/* Form */}
+      {}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        {/* Error Alert */}
+        {}
         {error && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-300">
             {error}
           </div>
         )}
 
-        {/* Bilingual Content Section */}
+        {}
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {t('faq.bilingualContent') || 'Bilingual Content'}
@@ -148,16 +148,16 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
             {t('faq.faqBothLanguagesRequired') || 'Questions and answers must be provided in both English and Arabic'}
           </p>
 
-          {/* Two-column layout for languages */}
+          {}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* English Section */}
+            {}
             <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="inline-block w-3 h-3 bg-blue-500 rounded-full"></span>
                 {t('faq.english') || 'English'}
               </h3>
 
-              {/* English Question */}
+              {}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   {t('question') || 'Question'} *
@@ -172,7 +172,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                 />
               </div>
 
-              {/* English Answer */}
+              {}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   {t('answer') || 'Answer'} *
@@ -188,14 +188,14 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
               </div>
             </div>
 
-            {/* Arabic Section */}
+            {}
             <div className="space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-amber-50 dark:bg-gray-900/50">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="inline-block w-3 h-3 bg-amber-500 rounded-full"></span>
                 {t('faq.arabic') || 'العربية'}
               </h3>
 
-              {/* Arabic Question */}
+              {}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   {t('question') || 'Question'} *
@@ -211,7 +211,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
                 />
               </div>
 
-              {/* Arabic Answer */}
+              {}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                   {t('answer') || 'Answer'} *
@@ -230,7 +230,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
           </div>
         </div>
 
-        {/* Category Field */}
+        {}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
             {t('faq.category') || 'Category'} *
@@ -247,7 +247,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
           </select>
         </div>
 
-        {/* Order Field */}
+        {}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
             {t('faq.displayOrder') || 'Display Order'}
@@ -265,7 +265,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
           </p>
         </div>
 
-        {/* Visible To (Roles) */}
+        {}
         <div>
           <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
             {t('faq.visibleToRoles') || 'Visible To Roles'} *
@@ -306,7 +306,7 @@ export const FAQForm = ({ faq, onSubmit, onCancel }: FAQFormProps) => {
           </div>
         </div>
 
-        {/* Form Actions */}
+        {}
         <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"

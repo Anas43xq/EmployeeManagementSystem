@@ -1,6 +1,6 @@
 
 
-// File: dashboardConfig.ts
+
 
 import type { UserRole } from './auth';
 
@@ -86,7 +86,7 @@ export function isWidgetVisible(widgetId: string, role: UserRole): boolean {
 }
 
 
-// File: dashboardQueries.ts
+
 
 import { db } from '../lib/db';
 import type { EmployeePerformance, EmployeeOfWeek } from '../types';
@@ -118,7 +118,7 @@ interface DepartmentRecord {
   name: string;
 }
 
-/** Fetches comprehensive dashboard data for the authenticated user. */
+
 export async function getDashboardData(
   role: UserRole,
   employeeId: string | null,
@@ -166,14 +166,14 @@ export async function getDashboardData(
     pendingLeavesQuery,
     approvedLeavesQuery,
     rejectedLeavesQuery,
-    // Only admin read activity_logs
+    
     role === 'admin'
       ? db.from('activity_logs').select('id, action, created_at, entity_type').order('created_at', { ascending: false }).limit(5)
       : Promise.resolve({ data: [], error: null }),
     attendanceQuery,
     db.from('employees').select('department_id').eq('status', 'active'),
     db.from('departments').select('id, name'),
-    // Fetch employee of week (may trigger calculation if empty)
+    
     (async () => {
       try {
         return await getEmployeeOfWeek();
@@ -181,7 +181,7 @@ export async function getDashboardData(
         return null;
       }
     })(),
-    // Fetch top performers (may trigger calculation if empty)
+    
     (async () => {
       try {
         return await getTopPerformers();

@@ -65,7 +65,7 @@ export default function EmployeeView() {
 
       showNotification('success', t('employees.employeeTerminated'));
       setTerminateModal(false);
-      loadEmployee(); // Reload employee data
+      loadEmployee(); 
     } catch (_error: unknown) {
       showNotification('error', (_error as Error).message || t('employees.failedToTerminate'));
     } finally {

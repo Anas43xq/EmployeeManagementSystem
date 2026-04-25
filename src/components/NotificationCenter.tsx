@@ -32,7 +32,7 @@ export default function NotificationCenter() {
     return subscribeToUserNotifications(userId, {
       onInsert: (newNotif) => {
         setNotifications((prev) => {
-          // Guard: skip if not for this user (bulk-insert filter leak) or already exists
+          
           if (newNotif.user_id !== userId) return prev;
           if (prev.some(n => n.id === newNotif.id)) return prev;
           return [newNotif, ...prev];

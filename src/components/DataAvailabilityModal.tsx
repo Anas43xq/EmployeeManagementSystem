@@ -32,7 +32,7 @@ export default function DataAvailabilityModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md p-6 relative">
-        {/* Close Button */}
+        {}
         <button
           onClick={onCancel}
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600"
@@ -41,7 +41,7 @@ export default function DataAvailabilityModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header */}
+        {}
         <div className="flex items-center gap-3 mb-4">
           {hasSufficientData ? (
             <CheckCircle className="w-6 h-6 text-green-600" />
@@ -53,12 +53,12 @@ export default function DataAvailabilityModal({
           </h2>
         </div>
 
-        {/* Week Range */}
+        {}
         <p className="text-sm text-gray-600 mb-4">
           {t('performance.week')}: {formatDate(weekStart)} - {formatDate(weekEndStr)}
         </p>
 
-        {/* Data Summary */}
+        {}
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">{daysWithData}</div>
@@ -67,7 +67,7 @@ export default function DataAvailabilityModal({
           </div>
         </div>
 
-        {/* Message */}
+        {}
         <p className="text-sm text-gray-700 mb-4">
           {hasSufficientData ? (
             <>
@@ -84,7 +84,7 @@ export default function DataAvailabilityModal({
           )}
         </p>
 
-        {/* Buttons */}
+        {}
         <div className="flex gap-3">
           <button
             onClick={onCancel}

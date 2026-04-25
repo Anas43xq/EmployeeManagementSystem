@@ -50,7 +50,7 @@ export default function OtpScreen({
     onLockout,
   });
 
-  // TASK 4: If locked out, show lockout screen instead
+  
   if (isLockedOut) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -76,7 +76,7 @@ export default function OtpScreen({
     e.preventDefault();
     const success = await verify(code);
     if (!success && error) {
-      // Route error through registry
+      
       await handleError(error, {
         form: { setError: () => {} },
         t,
@@ -90,7 +90,7 @@ export default function OtpScreen({
   const handleResend = async () => {
     const success = await resend();
     if (!success && error) {
-      // Route error through registry
+      
       await handleError(error, {
         form: { setError: () => {} },
         t,
@@ -104,7 +104,7 @@ export default function OtpScreen({
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Header */}
+        {}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="bg-blue-100 p-4 rounded-full mb-4">
             <Mail className="w-8 h-8 text-blue-600" />
@@ -113,7 +113,7 @@ export default function OtpScreen({
           <p className="text-sm text-gray-500">{t('auth.otpSentTo', { email })}</p>
         </div>
 
-        {/* Countdown timer */}
+        {}
         {countdown > 0 && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
             <span className="text-sm font-medium text-blue-700 flex items-center gap-1.5">
@@ -126,14 +126,14 @@ export default function OtpScreen({
           </div>
         )}
 
-        {/* Error */}
+        {}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Cooldown message */}
+        {}
         {cooldownRemaining > 0 && showCooldown && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
             <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0" />
@@ -146,7 +146,7 @@ export default function OtpScreen({
           </div>
         )}
 
-        {/* OTP form */}
+        {}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
@@ -169,7 +169,7 @@ export default function OtpScreen({
           </button>
         </form>
 
-        {/* Actions */}
+        {}
         <div className="mt-5 pt-4 border-t border-gray-200 space-y-3">
           <button
             onClick={handleResend}

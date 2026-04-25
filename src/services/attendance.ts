@@ -1,14 +1,12 @@
 
 
-// File: attendanceQueries.ts
+
 
 import { db } from '../lib/db';
 import type { AttendanceRecord } from '../types/pages';
 import type { EmployeeWithNumber as Employee } from '../types';
 
-/**
- * Fetches all active employees for attendance selection.
- */
+
 export async function getAttendanceEmployees(): Promise<Employee[]> {
   const { data, error } = await db
     .from('employees')
@@ -20,10 +18,7 @@ export async function getAttendanceEmployees(): Promise<Employee[]> {
   return data || [];
 }
 
-/**
- * Fetches attendance records for a specific date,
- * optionally filtered by employee_id.
- */
+
 export async function getAttendanceRecords(
   date: string,
   employeeId?: string
@@ -53,9 +48,7 @@ export async function getAttendanceRecords(
   return data || [];
 }
 
-/**
- * Checks if an attendance record already exists for an employee on a given date.
- */
+
 export async function checkAttendanceExists(
   employeeId: string,
   date: string
@@ -71,9 +64,7 @@ export async function checkAttendanceExists(
   return data;
 }
 
-/**
- * Creates a check-in attendance record for an employee.
- */
+
 export async function markAttendance(
   employeeId: string,
   date: string,
@@ -90,9 +81,7 @@ export async function markAttendance(
   if (error) throw error;
 }
 
-/**
- * Updates the check-out time for an attendance record.
- */
+
 export async function updateCheckOut(
   recordId: string,
   employeeId: string,
@@ -107,9 +96,7 @@ export async function updateCheckOut(
   if (error) throw error;
 }
 
-/**
- * Creates a manual attendance record (usually by admin/hr).
- */
+
 export async function createAttendanceRecord(data: {
   employee_id: string;
   date: string;
@@ -131,9 +118,7 @@ export async function createAttendanceRecord(data: {
   if (error) throw error;
 }
 
-/**
- * Checks if an attendance record already exists for a given employee and date.
- */
+
 export async function attendanceRecordExists(
   employeeId: string,
   date: string

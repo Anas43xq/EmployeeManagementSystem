@@ -12,7 +12,7 @@ interface Props {
   onSelect: (payroll: PayrollData) => void;
 }
 
-/** Renders the list of payslips available for the selected year. */
+
 export function PayslipListPanel({ payrolls, loading, selectedPayroll, selectedYear, onYearChange, onSelect }: Props) {
   const { t } = useTranslation();
 

@@ -57,7 +57,7 @@ export default function PayrollDashboard() {
         }
       />
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <StatsCard label={t('payroll.totalRecords', 'Total Records')} value={stats.total} Icon={Users} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-gray-900" />
         <StatsCard label={t('payroll.draft', 'Draft')} value={stats.draft} Icon={FileText} iconClassName="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" className="p-2 sm:p-4" valueClassName="text-lg sm:text-2xl font-bold text-yellow-600" />
@@ -88,7 +88,7 @@ export default function PayrollDashboard() {
         openGenerateModal={openGenerateModal}
       />
 
-      {/* Generate Modal */}
+      {}
       <Modal show={isGenerateModalOpen} onClose={closeGenerateModal}>
         <Modal.Header onClose={closeGenerateModal}>
           {t('payroll.generatePayrollTitle', 'Generate Monthly Payroll')}
@@ -118,7 +118,7 @@ export default function PayrollDashboard() {
         </Modal.Body>
       </Modal>
 
-      {/* Payslip Modal */}
+      {}
       <PayslipModal
         show={isPayslipModalOpen}
         payroll={viewingPayroll}

@@ -49,7 +49,7 @@ export default function Tasks() {
       />
 
       <Card>
-        {/* Status Filter */}
+        {}
         <div className="flex flex-wrap gap-2 mb-6">
           {statusFilters.map(status => (
             <button
@@ -66,7 +66,7 @@ export default function Tasks() {
           ))}
         </div>
 
-        {/* Task List */}
+        {}
         <div className="space-y-4">
           {tasks.map(task => (
             <TaskCard

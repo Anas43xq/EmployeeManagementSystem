@@ -4,8 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './en.json';
 import ar from './ar.json';
 
-// Suppress i18next's promotional "maintained with support from Locize" console message.
-// This is a no-op logger plugin — all i18next internal log/warn/error calls become silent.
+
+
 const noopLogger = {
   type: 'logger' as const,
   log: () => {},

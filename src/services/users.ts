@@ -1,6 +1,6 @@
 
 
-// File: userQueries.ts
+
 
 import { db } from './supabase';
 import type { User, EmployeeWithoutAccess } from '../pages/UserManagement/types';
@@ -251,7 +251,7 @@ export async function revokeManagedUserAccess(userId: string): Promise<void> {
     throw new Error('Not authenticated');
   }
 
-  // Get Supabase URL from environment
+  
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   if (!supabaseUrl) {
     throw new Error('Supabase URL not configured');

@@ -20,7 +20,7 @@ import {
 
 const MIN_PAYROLL_YEAR = 2020;
 
-/** Manages payroll records, bulk actions, and payslip modal state for the payroll dashboard. */
+
 export function usePayroll() {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
@@ -39,7 +39,7 @@ export function usePayroll() {
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [selectedPayrolls, setSelectedPayrolls] = useState<string[]>([]);
 
-  // Payslip modal state
+  
   const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
   const [viewingPayroll, setViewingPayroll] = useState<PayrollData | null>(null);
   const [bonuses, setBonuses] = useState<BonusData[]>([]);

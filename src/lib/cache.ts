@@ -1,7 +1,4 @@
-/**
- * Cache management utilities - moved from services/shared/cacheManager.ts
- * Provides request deduplication, TTL-based caching, and batch query optimization
- */
+
 
 type CacheEntry<T> = {
   data: T;

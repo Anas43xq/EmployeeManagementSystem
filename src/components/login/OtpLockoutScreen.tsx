@@ -10,18 +10,7 @@ interface OtpLockoutScreenProps {
   onRetryAllowed: () => void;
 }
 
-/**
- * TASK 4: OTP Lockout Screen
- * 
- * Shown when OTP verification attempts hit 5 (too many attempts).
- * Displays a dedicated "Too many attempts" message with:
- * - Single CTA: "Request a new code"
- * - Disabled with countdown if cooldown is active
- * - Enabled to send a fresh code otherwise
- * 
- * The OTP attempt counter is reset server-side only after a new code
- * is successfully sent, not before.
- */
+
 export default function OtpLockoutScreen({
   email,
   onBack,
@@ -36,7 +25,7 @@ export default function OtpLockoutScreen({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Initialize cooldown on mount
+  
   useEffect(() => {
     const init = async () => {
       const remaining = await getCooldown(email);
@@ -45,7 +34,7 @@ export default function OtpLockoutScreen({
     init();
   }, [email, getCooldown]);
 
-  // Countdown timer
+  
   useEffect(() => {
     if (cooldownRemaining <= 0) return;
 
@@ -74,7 +63,7 @@ export default function OtpLockoutScreen({
       return;
     }
 
-    // OTP attempt counter is reset server-side on successful send
+    
     setLoading(false);
     onRetryAllowed();
   };
@@ -85,7 +74,7 @@ export default function OtpLockoutScreen({
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Header */}
+        {}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="bg-red-100 p-4 rounded-full mb-4">
             <AlertCircle className="w-8 h-8 text-red-600" />
@@ -103,14 +92,14 @@ export default function OtpLockoutScreen({
           </p>
         </div>
 
-        {/* Error message */}
+        {}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Cooldown countdown */}
+        {}
         {cooldownRemaining > 0 && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-center justify-between">
             <span className="text-sm font-medium text-yellow-700 flex items-center gap-1.5">
@@ -125,7 +114,7 @@ export default function OtpLockoutScreen({
           </div>
         )}
 
-        {/* Request new code button */}
+        {}
         <button
           onClick={handleRequestNewCode}
           disabled={loading || cooldownRemaining > 0}
@@ -138,7 +127,7 @@ export default function OtpLockoutScreen({
               })}
         </button>
 
-        {/* Back button */}
+        {}
         <button
           onClick={onBack}
           disabled={loading}

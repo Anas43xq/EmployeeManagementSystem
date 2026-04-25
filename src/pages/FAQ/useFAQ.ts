@@ -1,8 +1,4 @@
-/**
- * useFAQ.ts
- * Hook for fetching and managing FAQ data with search and filters
- * Supports bilingual content (English & Arabic) via i18n
- */
+
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,12 +15,12 @@ export function useFAQ() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Get current language (en or ar) - memoized to prevent unnecessary re-renders
+  
   const currentLanguage = useMemo(() => {
     return (i18n.language === 'ar' ? 'ar' : 'en') as 'en' | 'ar';
   }, [i18n.language]);
 
-  // Load initial FAQs and categories
+  
   useEffect(() => {
     if (!user?.role) return;
 
@@ -48,7 +44,7 @@ export function useFAQ() {
     loadFAQs();
   }, [user?.role, currentLanguage]);
 
-  // Search FAQs
+  
   const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query);
     if (!user?.role) return;
@@ -63,10 +59,10 @@ export function useFAQ() {
     }
   }, [user?.role, currentLanguage]);
 
-  // Filter by category
+  
   const handleFilterCategory = useCallback((category: string | null) => {
     setSelectedCategory(category);
-    setSearchQuery(''); // Clear search when filtering by category
+    setSearchQuery(''); 
     setError(null);
   }, []);
 

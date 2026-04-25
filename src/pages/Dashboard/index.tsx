@@ -35,7 +35,7 @@ export default function Dashboard() {
         <AnnouncementsWidget />
       )}
 
-      {/* Employee of the Week and Performance Chart */}
+      {}
       {(isWidgetVisible('employeeOfWeek', userRole) || isWidgetVisible('performanceChart', userRole)) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isWidgetVisible('employeeOfWeek', userRole) && (

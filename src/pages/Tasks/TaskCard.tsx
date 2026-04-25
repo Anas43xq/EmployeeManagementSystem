@@ -76,7 +76,7 @@ export default function TaskCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1 shrink-0">
-          {/* Employee actions */}
+          {}
           {isStaff && task.status === 'pending' && (
             <button
               onClick={() => onStatusChange(task.id, 'in_progress')}
@@ -116,7 +116,7 @@ export default function TaskCard({
             </button>
           )}
 
-          {/* Admin/HR actions */}
+          {}
           {!isStaff && (
             <>
               {onEdit && task.status !== 'completed' && task.status !== 'cancelled' && (

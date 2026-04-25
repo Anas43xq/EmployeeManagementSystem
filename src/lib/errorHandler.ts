@@ -1,10 +1,6 @@
-/**
- * Simplified Error Handler
- * Consolidated from services/errorHandler/ and services/errorUtils.ts
- * Provides error extraction, categorization, and handling without registry pattern
- */
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+
+
 
 export interface AppError {
   message: string;
@@ -42,13 +38,11 @@ export interface ParsedError {
 
 const DEFAULT_ERROR_MESSAGE = 'An unexpected error occurred';
 
-// ─── Error Extraction & Normalization ───────────────────────────────────────
 
-/**
- * Extract and normalize any error type into a consistent AppError format
- */
+
+
 export function extractError(err: unknown): AppError {
-  // Handle AuthError from Supabase
+  
   if (err && typeof err === 'object' && 'message' in err && 'status' in err) {
     const error = err as { message: string; status?: number; code?: string };
     return {
@@ -59,7 +53,7 @@ export function extractError(err: unknown): AppError {
     };
   }
 
-  // Handle standard Error
+  
   if (err instanceof Error) {
     return {
       message: err.message,
@@ -68,7 +62,7 @@ export function extractError(err: unknown): AppError {
     };
   }
 
-  // Handle string errors
+  
   if (typeof err === 'string') {
     return {
       message: err,
@@ -76,7 +70,7 @@ export function extractError(err: unknown): AppError {
     };
   }
 
-  // Handle object with message property
+  
   if (typeof err === 'object' && err !== null && 'message' in err) {
     return {
       message: String(err.message),
@@ -84,24 +78,20 @@ export function extractError(err: unknown): AppError {
     };
   }
 
-  // Fallback for unknown error types
+  
   return {
     message: DEFAULT_ERROR_MESSAGE,
     originalError: err,
   };
 }
 
-/**
- * Returns a normalized human-readable error message
- */
+
 export function getErrorMessage(err: unknown, fallback = DEFAULT_ERROR_MESSAGE): string {
   const message = extractError(err).message.trim();
   return message || fallback;
 }
 
-/**
- * Log error with context
- */
+
 export function logError(error: AppError | unknown, context?: string): void {
   const appError = error instanceof Object && 'message' in error ? (error as AppError) : extractError(error);
   const timestamp = new Date().toISOString();
@@ -114,9 +104,7 @@ export function logError(error: AppError | unknown, context?: string): void {
   });
 }
 
-/**
- * Determine if error is network-related (transient)
- */
+
 export function isTransientError(error: AppError | unknown): boolean {
   const appError = extractError(error);
   const message = appError.message.toLowerCase();
@@ -134,9 +122,7 @@ export function isTransientError(error: AppError | unknown): boolean {
   );
 }
 
-/**
- * Determine if error is auth-related
- */
+
 export function isAuthError(error: AppError | unknown): boolean {
   const appError = extractError(error);
   const message = appError.message.toLowerCase();
@@ -152,28 +138,26 @@ export function isAuthError(error: AppError | unknown): boolean {
   );
 }
 
-// ─── Error Categories & Parsing ──────────────────────────────────────────────
 
-/**
- * Categorize error message for routing
- */
+
+
 export function categorizeError(errorMessage: string): ErrorCategory {
   const msg = errorMessage.toLowerCase();
 
-  // OTP errors
+  
   if (msg.includes('otp') || msg.includes('verification')) return 'otp';
   
-  // Session/rate limit errors
+  
   if (msg.includes('rate limit') || msg.includes('attempts remaining') || msg.includes('cooldown')) {
     return 'session';
   }
 
-  // Network errors
+  
   if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
     return 'network';
   }
 
-  // Auth errors
+  
   if (
     msg.includes('email') ||
     msg.includes('password') ||
@@ -184,7 +168,7 @@ export function categorizeError(errorMessage: string): ErrorCategory {
     return 'auth';
   }
 
-  // Validation errors
+  
   if (msg.includes('required') || msg.includes('invalid') || msg.includes('format')) {
     return 'validation';
   }
@@ -192,9 +176,7 @@ export function categorizeError(errorMessage: string): ErrorCategory {
   return 'unknown';
 }
 
-/**
- * Parse error message for UI display
- */
+
 export function parseError(err: unknown): ParsedError {
   const appError = extractError(err);
   const message = appError.message;
@@ -207,12 +189,9 @@ export function parseError(err: unknown): ParsedError {
   };
 }
 
-// ─── Error Handling Router (Simple Version) ──────────────────────────────────
 
-/**
- * Main error handler that routes through error cases
- * Simplified from registry pattern - uses simple if/else matching
- */
+
+
 export async function handleError(
   errorMessage: string,
   context: ErrorContext
@@ -220,9 +199,9 @@ export async function handleError(
   const msg = errorMessage.trim();
   const msgLower = msg.toLowerCase();
 
-  // ───  Auth Handlers ───────────────────────────────────────────────────────
+  
 
-  // EMAIL_NOT_FOUND (exact match)
+  
   if (msg === 'EMAIL_NOT_FOUND') {
     if (context.form?.setError) {
       context.form.setError(context.t?.('auth.emailNotFound') || 'Email not found');
@@ -233,8 +212,8 @@ export async function handleError(
     return;
   }
 
-  // REQUIRES_OTP_NEW (exact match) - DEPRECATED: replaced by REQUIRES_OTP_GENERIC
-  // Kept for backwards compatibility with old code paths
+  
+  
   if (msg === 'REQUIRES_OTP_NEW') {
     if (!context.otp?.triggerOtpFlow || !context.setScreen) {
       return;
@@ -243,35 +222,35 @@ export async function handleError(
     if (error && context.form?.setError) {
       context.form.setError(error);
     }
-    // Always move to OTP page after 5 attempts - user can retry there
+    
     context.setScreen('otp');
     return;
   }
 
-  // REQUIRES_OTP_GENERIC (exact match) - TASK 1: Masked enumeration risk
-  // Used for both:
-  // 1. Existing active OTP (REQUIRES_OTP_ACTIVE state masked)
-  // 2. Fresh OTP just sent (after 5 failed password attempts)
-  // Same generic message for both prevents account enumeration attacks.
+  
+  
+  
+  
+  
   if (msg === 'REQUIRES_OTP_GENERIC') {
-    // TASK 3: Check cooldown BEFORE navigating to OTP page
-    // If cooldown is active, show countdown on login page instead
+    
+    
     if (context.form?.setWarnMessage && context.email) {
       const cooldownSeconds = context.getCooldown 
         ? await context.getCooldown(context.email) 
         : 0;
       
       if (cooldownSeconds > 0) {
-        // Cooldown active: show countdown on login page, don't navigate yet
+        
         const minutes = Math.ceil(cooldownSeconds / 60);
         context.form.setWarnMessage(
           `A code was already sent. You can request a new one in ${minutes} minute(s).`
         );
-        return; // Stay on login page with countdown
+        return; 
       }
     }
     
-    // No cooldown: safe to navigate to OTP page
+    
     if (context.otp?.setOtpEmail && context.setScreen) {
       context.otp.setOtpEmail(context.email || '');
       context.setScreen('otp');
@@ -279,8 +258,8 @@ export async function handleError(
     return;
   }
 
-  // REQUIRES_OTP_ACTIVE (exact match) - DEPRECATED: subsumed by REQUIRES_OTP_GENERIC
-  // Kept for backwards compatibility
+  
+  
   if (msg === 'REQUIRES_OTP_ACTIVE') {
     if (!context.otp?.setOtpEmail || !context.setScreen) {
       return;
@@ -290,7 +269,7 @@ export async function handleError(
     return;
   }
 
-  // ATTEMPTS_REMAINING custom format (pattern: ATTEMPTS_REMAINING:X)
+  
   if (msg.startsWith('ATTEMPTS_REMAINING:')) {
     const remaining = parseInt(msg.split(':')[1], 10) || 0;
     if (context.form?.setWarnMessage) {
@@ -311,7 +290,7 @@ export async function handleError(
     return;
   }
 
-  // Banned (pattern match)
+  
   if (msgLower.includes('banned')) {
     if (context.form?.setError) {
       context.form.setError(context.t?.('auth.accountBanned') || 'Account has been banned');
@@ -325,7 +304,7 @@ export async function handleError(
     return;
   }
 
-  // Email not confirmed (pattern match)
+  
   if (msgLower.includes('email not confirmed')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -341,9 +320,9 @@ export async function handleError(
     return;
   }
 
-  // ───  OTP Handlers ────────────────────────────────────────────────────────
+  
 
-  // Invalid OTP (pattern match)
+  
   if (msgLower.includes('invalid otp')) {
     if (context.form?.setError) {
       context.form.setError(context.t?.('auth.invalidOtp') || 'Invalid OTP code');
@@ -354,7 +333,7 @@ export async function handleError(
     return;
   }
 
-  // OTP expired (pattern match)
+  
   if (msgLower.includes('expired')) {
     if (context.form?.setError) {
       context.form.setError(context.t?.('auth.otpExpired') || 'OTP has expired');
@@ -365,7 +344,7 @@ export async function handleError(
     return;
   }
 
-  // OTP rate limit (pattern match: rate limit in OTP context)
+  
   if (msgLower.includes('rate limit') && msgLower.includes('otp')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -381,7 +360,7 @@ export async function handleError(
     return;
   }
 
-  // OTP does not match (pattern match)
+  
   if (msgLower.includes('does not match')) {
     if (context.form?.setError) {
       context.form.setError(context.t?.('auth.otpMismatch') || 'OTP does not match');
@@ -392,9 +371,9 @@ export async function handleError(
     return;
   }
 
-  // ───  Password Reset Handlers ──────────────────────────────────────────────
+  
 
-  // Password reset: email not found (pattern match)
+  
   if (msgLower.includes('not found') && msgLower.includes('reset')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -410,7 +389,7 @@ export async function handleError(
     return;
   }
 
-  // Password reset: rate limit (pattern match)
+  
   if (msgLower.includes('rate limit') && msgLower.includes('password')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -428,7 +407,7 @@ export async function handleError(
     return;
   }
 
-  // Password reset: banned (pattern match)
+  
   if (msgLower.includes('banned') && msgLower.includes('password')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -444,9 +423,9 @@ export async function handleError(
     return;
   }
 
-  // ───  Session/Rate Limit Handlers ─────────────────────────────────────────
+  
 
-  // Session: rate limit (generic)
+  
   if (msgLower.includes('rate limit')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -462,9 +441,9 @@ export async function handleError(
     return;
   }
 
-  // ───  Fallback Handlers ────────────────────────────────────────────────────
+  
 
-  // Generic OTP verification failed (for OTP flow)
+  
   if (msgLower.includes('verification failed')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -480,7 +459,7 @@ export async function handleError(
     return;
   }
 
-  // Generic password reset failed (fallback)
+  
   if (msgLower.includes('reset')) {
     if (context.form?.setError) {
       context.form.setError(
@@ -498,7 +477,7 @@ export async function handleError(
     return;
   }
 
-  // Generic invalid credentials (auth fallback)
+  
   if (context.form?.setError) {
     context.form.setError(context.t?.('auth.invalidCredentials') || 'Invalid credentials');
   }
@@ -510,10 +489,7 @@ export async function handleError(
   }
 }
 
-/**
- * Initialize error handlers (stub for compatibility)
- * In simplified version, this is a no-op since handlers are embedded
- */
+
 export function initializeErrorHandlers(): void {
   if (process.env.NODE_ENV === 'development') {
     console.debug('[ErrorHandler] Initialization complete (simplified handler in use)');

@@ -31,52 +31,49 @@ function getSuccessMessage(state: unknown): string | undefined {
   return typeof state.successMessage === 'string' ? state.successMessage : undefined;
 }
 
-/** Renders the login flow and routes between sign-in, OTP, and password reset screens. */
+
 export default function Login() {
-  // Extract form state management
+  
   const form = useLoginForm();
 
-  // Extract language switching logic
+  
   const { isRTL, toggleLanguage, languageLabel } = useLanguageSwitcher();
 
-  // Extract OTP flow logic
+  
   const otp = useOtpFlow();
 
-  // Extract countdown timer logic
+  
   const { countdown: delayCountdown, start: startCountdown } = useProgressiveCountdown();
 
-  // Core auth/nav contexts
+  
   const { user, signIn } = useAuth();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
 
-  // Component state
+  
   const [screen, setScreen] = useState<Screen>('login');
   const [passkeySupported] = useState(isWebAuthnSupported);
 
-  // Local helper: get success message from navigation state
+  
   const successMessage = getSuccessMessage(location.state as LoginLocationState);
 
-  // Route user if already logged in
+  
   useEffect(() => {
     if (user) {
       navigate(user.isActive === false ? '/deactivated' : '/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
-  /**
-   * Handle login form submission
-   * Orchestrates form validation, rate limiting, and auth flow
-   */
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     form.clearErrors();
     form.setLoading(true);
 
     try {
-      // Check IP/MAC rate limit (device-level)
+      
       const ipMacStatus = await checkIpMacLimits(form.email);
       if (!ipMacStatus.allowed) {
         const minutes = Math.ceil(ipMacStatus.secondsUntilReset / 60);
@@ -91,7 +88,7 @@ export default function Login() {
         return;
       }
 
-      // Check progressive delay window
+      
       const attemptStatus = await getLoginAttemptStatus(form.email);
       if (attemptStatus.secondsUntilRetry > 0) {
         startCountdown(attemptStatus.secondsUntilRetry);
@@ -105,7 +102,7 @@ export default function Login() {
         return;
       }
 
-      // Attempt sign in
+      
       await signIn(form.email, form.password);
       showNotification('success', t('auth.signedInSuccess'));
       navigate('/dashboard', { replace: true });
@@ -127,7 +124,7 @@ export default function Login() {
     }
   };
 
-  // Screen: OTP Lockout (TASK 4)
+  
   if (screen === 'otp-lockout') {
     return (
       <OtpLockoutScreen
@@ -136,15 +133,15 @@ export default function Login() {
         getCooldown={getOtpRequestCooldownRemaining}
         sendOtp={sendLoginOtp}
         onRetryAllowed={() => {
-          // Reset OTP attempt counter server-side happens on successful send
-          // Now allow user to proceed to regular OTP entry screen
+          
+          
           setScreen('otp');
         }}
       />
     );
   }
 
-  // Screen: OTP
+  
   if (screen === 'otp') {
     return (
       <OtpScreen
@@ -163,7 +160,7 @@ export default function Login() {
   }
 
 
-  // Screen: Forgot Password
+  
 if (screen === 'forgot') {
   const resetPasswordFn = async (email: string, redirectUrl: string) => {
     try {
@@ -183,7 +180,7 @@ if (screen === 'forgot') {
   );
 }
 
-  // Screen: Login Form (main)
+  
   return (
     <EmailScreen
       form={form}

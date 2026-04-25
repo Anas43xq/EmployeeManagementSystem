@@ -124,10 +124,10 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
   }
 
   try {
-    // NOTE: Do NOT call clearAuthState() here — it removes Supabase localStorage keys
-    // which leaves the JS client's in-memory session detached and causes internal
-    // "Cannot read properties of undefined (reading 'payload')" crashes on the next
-    // background token operation.
+    
+    
+    
+    
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -142,9 +142,9 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
     });
 
     if (!optionsResponse.ok) {
-      // Always try to read the JSON body first so we can give a precise error message.
-      // The edge function returns 404 for both "user not found" and "no passkeys registered",
-      // and the Supabase platform itself also returns 404 when the function is not deployed.
+      
+      
+      
       const errorData = await optionsResponse.json().catch(() => ({}));
 
       if (optionsResponse.status === 404) {
@@ -161,7 +161,7 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
             error: 'No account found for this email address.',
           };
         }
-        // Platform-level 404 — function not deployed
+        
         return { 
           success: false, 
           error: 'Passkey authentication service is not available. Please use email and password to sign in.' 
@@ -244,7 +244,7 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
       const message = _error.message.toLowerCase();
       const name = _error.name.toLowerCase();
       
-      // User cancelled or timed out
+      
       if (name === 'notallowederror' || message.includes('timed out') || message.includes('not allowed') || message.includes('cancelled')) {
         return {
           success: false,
@@ -252,7 +252,7 @@ export async function authenticateWithPasskey(email: string): Promise<PasskeyAut
         };
       }
       
-      // Network errors
+      
       if (name === 'typeerror' || message.includes('failed to fetch') || message.includes('network')) {
         return {
           success: false,
@@ -272,11 +272,7 @@ export interface PasskeyVerificationResult {
   error?: string;
 }
 
-/**
- * Verifies the current user's identity using a registered passkey WITHOUT
- * touching the existing session. Used in Settings to skip "current password"
- * when changing password.
- */
+
 export async function verifyPasskeyIdentity(email: string): Promise<PasskeyVerificationResult> {
   if (!isWebAuthnSupported()) {
     return { success: false, error: 'WebAuthn is not supported in this browser' };
@@ -334,8 +330,8 @@ export async function verifyPasskeyIdentity(email: string): Promise<PasskeyVerif
       throw new Error(errorData.error || `Verification failed: HTTP ${verifyResponse.status}`);
     }
 
-    // Verification succeeded — intentionally do NOT establish a new session;
-    // the caller already has an active session and only needs identity confirmation.
+    
+    
     return { success: true };
 
   } catch (_error) {

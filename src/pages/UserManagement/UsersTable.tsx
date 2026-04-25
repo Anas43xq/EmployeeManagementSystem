@@ -164,7 +164,7 @@ export default function UsersTable({
                     </button>
                     {user.id !== currentUserId && (
                       <>
-                        {/* Deactivate/Activate button */}
+                        {}
                         {!user.bannedAt && (
                           user.isActive === false ? (
                             <button
@@ -184,7 +184,7 @@ export default function UsersTable({
                             </button>
                           )
                         )}
-                        {/* Ban/Unban button */}
+                        {}
                         {user.bannedAt ? (
                           <button
                             onClick={() => onUnban(user)}

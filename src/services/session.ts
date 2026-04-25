@@ -1,16 +1,6 @@
 
 
-/**
- * Flow:
- *   1. pre_auth_login_check      — resolve email → status + delay info
- *   2. record_failed_login       — increment counter, set progressive delay, auto-set OTP window at 5
- *   3. sendLoginOtp              — send OTP email via Supabase Auth + validate cooldown
- *   4. verifyLoginOtp            — verify OTP, reset counter on success (resets delays too)
- *   5. resetLoginAttempts        — zero-out (called post-auth)
- *   6. checkIpMacLimits          — validate IP/device combo hasn't hit 5 per 5 min
- *   7. validateOtpRequestCooldown — check if 60 seconds passed since last OTP request
- *   8. getOtpRequestCooldownRemaining — thin wrapper around validateOtpRequestCooldown returning seconds only
- */
+
 
 import { supabase } from './supabase';
 import { logActivity } from './activityLog';
@@ -19,12 +9,12 @@ import { getMacProxy } from '../utils/ipMacUtils';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = supabase as any;
 
-// ─── Configuration ─────────────────────────────────────────────────────────────
+
 export const OTP_TRIGGER_THRESHOLD = 5;
 export const OTP_VERIFICATION_ATTEMPTS_MAX = 5;
 export const OTP_REQUEST_COOLDOWN_SECONDS = 120;
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+
 export interface LoginAttemptStatus {
   userId: string | null;
   failedAttempts: number;
@@ -46,19 +36,16 @@ export interface IpMacLimitStatus {
   secondsUntilReset: number;
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Calculate progressive delay in seconds based on attempt count
- * 1st attempt: 0s, 2nd: 5s, 3rd: 15s, 4th: 30s, 5th: 0s (escalate to OTP immediately)
- */
+
+
 export function getProgressiveDelaySeconds(attemptCount: number): number {
   if (attemptCount < 2) return 0;
   if (attemptCount === 2) return 5;
   if (attemptCount === 3) return 15;
   if (attemptCount === 4) return 30;
-  if (attemptCount === 5) return 0; // Escalate to OTP immediately, no delay
-  return 30; // 6th+ attempts (shouldn't reach here, but default to 30s)
+  if (attemptCount === 5) return 0; 
+  return 30; 
 }
 
 function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatus {
@@ -109,11 +96,9 @@ function parseIpMacLimitResult(data: Record<string, unknown> | null): IpMacLimit
   };
 }
 
-// ─── Public API ────────────────────────────────────────────────────────────────
 
-/**
- * Check current attempt status for an email (pre-auth, no session needed).
- */
+
+
 export async function getLoginAttemptStatus(email: string): Promise<LoginAttemptStatus> {
   const { data, error } = await rpc.rpc('pre_auth_login_check', {
     p_email: email,
@@ -126,10 +111,7 @@ export async function getLoginAttemptStatus(email: string): Promise<LoginAttempt
   return parseRpcResult(data);
 }
 
-/**
- * Record a failed login attempt (pre-auth RPC).
- * On the 5th failure the OTP expiry window is automatically set server-side.
- */
+
 export async function recordFailedAttempt(email: string): Promise<LoginAttemptStatus> {
   const { data, error } = await rpc.rpc('record_failed_login', {
     p_email: email,
@@ -142,21 +124,10 @@ export async function recordFailedAttempt(email: string): Promise<LoginAttemptSt
   return parseRpcResult(data);
 }
 
-/**
- * TASK 2: Escalate to OTP directly when failed attempts reach 5
- * Replaces the 4-hop chain: throw REQUIRES_OTP_NEW → catch → triggerOtpFlow → sendLoginOtp
- * 
- * This function:
- * - Sets requiresOtp = true in login_attempts (already done by record_failed_login at 5 attempts)
- * - Sends the OTP email directly via Supabase Auth
- * - Refreshes OTP expiry window server-side
- * - Returns with no thrown errors
- * 
- * Used when failedAttempts reaches 5 in recordFailedAttempt.
- */
+
 export async function escalateToOtp(email: string): Promise<{ error?: string }> {
   try {
-    // Send OTP email via Supabase Auth
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
@@ -166,8 +137,8 @@ export async function escalateToOtp(email: string): Promise<{ error?: string }> 
       return { error: error.message };
     }
 
-    // Refresh OTP expiry window via RPC (no session needed)
-    // This also resets verification attempts and updates last_otp_request_at
+    
+    
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
@@ -177,13 +148,10 @@ export async function escalateToOtp(email: string): Promise<{ error?: string }> 
   }
 }
 
-/**
- * Send an OTP email and refresh the expiry window in the DB.
- * Validates cooldown (60 seconds) before sending.
- */
+
 export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
   try {
-    // Validate cooldown on server side first
+    
     const cooldownStatus = await validateOtpRequestCooldown(email);
     if (!cooldownStatus.allowed) {
       const minutes = Math.ceil(cooldownStatus.secondsRemaining / 60) || 1;
@@ -201,8 +169,8 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
       return { error: error.message };
     }
 
-    // Refresh OTP expiry window via RPC (no session needed)
-    // This also resets verification attempts and updates last_otp_request_at
+    
+    
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
@@ -212,10 +180,7 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
   }
 }
 
-/**
- * Verify an OTP code.
- * On success the attempt counter is reset and a session is established.
- */
+
 export async function verifyLoginOtp(
   email: string,
   token: string
@@ -244,42 +209,23 @@ export async function verifyLoginOtp(
   }
 }
 
-/**
- * TASK 5: Reset login counters with proper scope isolation
- * 
- * This function resets login attempt counters after successful auth.
- * Called post-auth (user has a session), but the RPC also accepts anon.
- * 
- * Counter reset scope:
- * - Password login success: resets failed_attempts and requires_otp only (password counters)
- *   - Does NOT reset: otp_attempts, last_otp_request_at
- * - OTP verification success: resets ALL counters (both password + OTP)
- *   - Resets: failed_attempts, requires_otp, otp_attempts, last_otp_request_at
- *   - Also clears any progressive delay that was set
- * 
- * This ensures a successful password login doesn't erase OTP attempt history
- * if the user later needs to escalate to OTP. Only a successful OTP verification
- * fully clears all counters.
- */
+
 export async function resetLoginAttempts(userId: string): Promise<void> {
   const { error } = await rpc.rpc('reset_login_attempts_rpc', {
     p_user_id: userId,
   });
 
   if (error) {
-    // non-critical: counter reset failure should not interrupt the login flow
+    
   }
 }
 
-/**
- * Check if IP/MAC combo has exceeded rate limit (5 attempts per 5 minutes).
- * Should be called before password attempt to validate device is not spamming.
- */
+
 export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus> {
   try {
     const macProxy = await getMacProxy();
 
-    // Skip RPC if IP or user-agent detection failed (prevents 400 errors from invalid parameters)
+    
     const isInvalid = (val: string | null | undefined) =>
       !val || val === 'unknown' || (typeof val === 'string' && val.trim() === '');
 
@@ -294,7 +240,7 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
     });
 
     if (error) {
-      // On error, assume allowed (fail-open for UX, not security-critical since server validates)
+      
       console.error('[IP/MAC Rate Limit] RPC error (400 check params above):', {
         status: error?.status,
         message: error?.message,
@@ -304,15 +250,12 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
 
     return parseIpMacLimitResult(data);
   } catch (_err: unknown) {
-    // Network error or other issue, assume allowed
+    
     return parseIpMacLimitResult(null);
   }
 }
 
-/**
- * Validate OTP request cooldown (60 seconds between requests).
- * Returns allowed status and seconds remaining in cooldown window.
- */
+
 export async function validateOtpRequestCooldown(
   email: string
 ): Promise<{ allowed: boolean; secondsRemaining: number; cooldownSeconds: number }> {
@@ -322,7 +265,7 @@ export async function validateOtpRequestCooldown(
     });
 
     if (error) {
-      // On error, assume allowed (fail-open)
+      
       return { allowed: true, secondsRemaining: 0, cooldownSeconds: OTP_REQUEST_COOLDOWN_SECONDS };
     }
 
@@ -336,24 +279,21 @@ export async function validateOtpRequestCooldown(
   }
 }
 
-/**
- * Get OTP request cooldown remaining seconds.
- * Delegates to validateOtpRequestCooldown and extracts secondsRemaining.
- */
+
 export async function getOtpRequestCooldownRemaining(email: string): Promise<number> {
   const { secondsRemaining } = await validateOtpRequestCooldown(email);
   return secondsRemaining;
 }
 
 
-// File: sessionManager.ts
 
-// Session health lives in local storage so progressive recovery survives tab refreshes.
+
+
 const SESSION_HEALTH_KEY = 'ems_session_health';
 const LAST_ACTIVITY_KEY = 'ems_last_activity';
 const MAX_FAILED_ATTEMPTS = 3;
 export const RECOVERY_COOLDOWN_MS = 5000;
-const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
+const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000; 
 
 interface SessionHealth {
   failedAttempts: number;
@@ -597,11 +537,7 @@ export async function getFreshAccessToken(): Promise<string | null> {
   }
 }
 
-/**
- * Update the last_activity_at timestamp for a user in the database.
- * Call this on successful login to establish the activity baseline.
- * Note: In production, this should also be called on real API calls (not page loads).
- */
+
 export async function updateServerActivityTimestamp(userId: string): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -615,11 +551,7 @@ export async function updateServerActivityTimestamp(userId: string): Promise<boo
   }
 }
 
-/**
- * Validate if a user's session is still active based on server-side last_activity_at.
- * If last_activity_at > 8 hours ago, the session is considered expired.
- * Returns true if session is valid, false if expired.
- */
+
 export async function validateSessionActivity(userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
@@ -629,7 +561,7 @@ export async function validateSessionActivity(userId: string): Promise<boolean> 
       .single();
 
     if (error || !data || !data.last_activity_at) {
-      // If no last_activity_at, consider session valid (new account)
+      
       return true;
     }
 
@@ -637,7 +569,7 @@ export async function validateSessionActivity(userId: string): Promise<boolean> 
     const now = Date.now();
     const inactiveMinutes = (now - lastActivity) / 60000;
 
-    // 8 hours = 480 minutes
+    
     const isValid = inactiveMinutes <= 120;
     return isValid;
   } catch {

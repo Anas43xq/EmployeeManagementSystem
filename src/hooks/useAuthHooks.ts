@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-/**
- * Extract error message from unknown error type
- */
+
 export function extractErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (typeof err === 'object' && err && 'message' in err) return String(err.message);
@@ -11,17 +9,12 @@ export function extractErrorMessage(err: unknown): string {
   return 'An unexpected error occurred';
 }
 
-/**
- * Get RTL-aware className for direction
- */
+
 export function getDirectionClass(isRTL: boolean, normal: string, rtl: string): string {
   return isRTL ? rtl : normal;
 }
 
-/**
- * OTP authentication hook with cooldown and attempt tracking
- * TASK 4: Tracks OTP verification attempts and returns locked-out state
- */
+
 interface UseOtpProps {
   email: string;
   onBack: () => void;
@@ -54,7 +47,7 @@ export function useOtp({
   const [isLockedOut, setIsLockedOut] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Main countdown timer
+  
   useEffect(() => {
     const tick = () => {
       const remaining = Math.ceil((expiresAt - Date.now()) / 1000);
@@ -70,7 +63,7 @@ export function useOtp({
     return () => clearInterval(interval);
   }, [expiresAt, onBack]);
 
-  // Cooldown countdown timer
+  
   useEffect(() => {
     if (cooldownRemaining > 0 && showCooldown) {
       cooldownRef.current = setInterval(() => {
@@ -89,7 +82,7 @@ export function useOtp({
     };
   }, [cooldownRemaining, showCooldown]);
 
-  // Initialize cooldown on mount
+  
   useEffect(() => {
     const init = async () => {
       const remaining = await getCooldown(email);
@@ -111,8 +104,8 @@ export function useOtp({
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
 
-      // TASK 4: When attempts reach 5, mark as locked out
-      // The parent component (OtpScreen) will use this to navigate to OtpLockoutScreen
+      
+      
       if (newAttempts >= maxAttempts) {
         setIsLockedOut(true);
         setError('Too many verification attempts. Request a new code to continue.');
@@ -147,13 +140,13 @@ export function useOtp({
       return false;
     }
 
-    // TASK 4: On successful resend, reset lockout state and attempt counter
-    // The OTP attempt counter is reset server-side on successful send
+    
+    
     setExpiresAt(Date.now() + 10 * 60 * 1000);
     setCode('');
     setAttempts(0);
     setIsLockedOut(false);
-    setCooldownRemaining(60); // Standard 60-second cooldown
+    setCooldownRemaining(60); 
     setShowCooldown(true);
     setLoading(false);
     return true;
@@ -176,9 +169,7 @@ export function useOtp({
   };
 }
 
-/**
- * Forgot password hook
- */
+
 interface UseForgotPasswordProps {
   onBack: () => void;
   resetPassword: (email: string, redirectUrl: string) => Promise<{ error?: Error | null }>;
@@ -216,9 +207,7 @@ export function useForgotPassword({ onBack, resetPassword }: UseForgotPasswordPr
   return { email, setEmail, loading, error, submit };
 }
 
-/**
- * Passkey login hook (for separate PasskeyScreen)
- */
+
 interface UsePasskeyLoginProps {
   authenticate: (email: string) => Promise<{ success: boolean; error?: string }>;
   onSuccess: () => void;
@@ -268,10 +257,7 @@ export function usePasskeyLogin({
   return { email, setEmail, loading, error, login };
 }
 
-/**
- * Integrated passkey login hook (for EmailScreen integration)
- * Used when email is already provided from parent form
- */
+
 interface UseIntegratedPasskeyLoginProps {
   authenticate: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
@@ -288,7 +274,7 @@ export function useIntegratedPasskeyLogin({
     setLoading(true);
 
     try {
-      // Validate email is not empty
+      
       if (!email || !email.trim()) {
         setError(t('auth.emailRequired', 'Email is required for passkey authentication'));
         setLoading(false);

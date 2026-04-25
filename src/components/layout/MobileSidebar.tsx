@@ -78,7 +78,7 @@ interface Props {
   onSignOut: () => void;
 }
 
-/** Renders the mobile navigation drawer and user shortcuts. */
+
 export function MobileSidebar({ open, onClose, onSignOut }: Props) {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();

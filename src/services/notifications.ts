@@ -1,13 +1,10 @@
-/**
- * Notifications Service - merged from multiple files
- * Combines database operations, configuration, and email notification logic
- */
+
 
 import { supabase, db } from './supabase';
 import type { Database } from '../types/database';
 import { extractError, logError, type AppError } from '../lib/errorHandler';
 
-// ─── Configuration ───────────────────────────────────────────────────────────
+
 
 export interface NotificationConfig {
   supabaseUrl: string;
@@ -16,10 +13,7 @@ export interface NotificationConfig {
   emailFunctionVersion: string;
 }
 
-/**
- * Get notification configuration from environment
- * Validates that required env variables are present
- */
+
 export function getNotificationConfig(): NotificationConfig {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -36,18 +30,12 @@ export function getNotificationConfig(): NotificationConfig {
   };
 }
 
-/**
- * Build notification endpoint URL from config
- * Abstraction for URL construction
- */
+
 export function buildNotificationEndpoint(config: NotificationConfig, endpoint: string): string {
   return `${config.supabaseUrl}/functions/${config.emailFunctionVersion}/${endpoint}`;
 }
 
-/**
- * Notification types registry
- * Extensible structure for adding new notification types
- */
+
 export const NOTIFICATION_TYPES = {
   LEAVE_APPROVED: 'leave_approved',
   LEAVE_REJECTED: 'leave_rejected',
@@ -61,7 +49,7 @@ export const NOTIFICATION_TYPES = {
 
 export type NotificationEmailType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
-// ─── Email Sending ────────────────────────────────────────────────────────────
+
 
 interface EmailNotificationData {
   to: string;
@@ -104,7 +92,7 @@ export async function sendEmailNotification(data: EmailNotificationData): Promis
   }
 }
 
-// ─── Database Notifications ───────────────────────────────────────────────────
+
 
 export type NotificationType = 'leave' | 'attendance' | 'system' | 'warning' | 'task' | 'complaint' | 'performance';
 
@@ -209,7 +197,7 @@ export async function createNotification(
       emailSent = emailResult.success;
     }
   } catch {
-    // ignore
+    
   }
 
   return { notificationSaved, emailSent };
@@ -244,7 +232,7 @@ export async function createNotifications(
       }
     }
   } catch {
-    // ignore
+    
   }
 }
 
@@ -284,7 +272,7 @@ export async function notifyHRAndAdmins(
         const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', emailRpcParams);
 
         if (!emailError && emailData) {
-          // Map internal NotificationType to email types for consistency
+          
           for (const row of emailData as unknown as { user_id: string; email: string }[]) {
             await sendEmailNotification({
               to: row.email,
@@ -295,11 +283,11 @@ export async function notifyHRAndAdmins(
           }
         }
       } catch {
-        // Email sending is best-effort — don't block on failure
+        
       }
     }
   } catch {
-    // ignore
+    
   }
 }
 
@@ -394,10 +382,7 @@ export interface NotificationSubscriptionCallbacks {
   onDelete: (oldId: string) => void;
 }
 
-/**
- * Subscribes to real-time INSERT/UPDATE/DELETE events on the notifications table
- * for the given user. Returns an unsubscribe function.
- */
+
 export function subscribeToUserNotifications(
   userId: string,
   callbacks: NotificationSubscriptionCallbacks,

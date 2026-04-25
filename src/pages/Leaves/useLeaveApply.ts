@@ -7,10 +7,7 @@ import { notifyHRAndAdmins } from '../../services/notifications';
 import { logActivity } from '../../services/activityLog';
 import type { LeaveFormData, LeaveConflict } from './types';
 
-/**
- * Hook: Staff leave application workflow
- * Owns: apply form state, conflict detection, submission, UI modals
- */
+
 export function useLeaveApply() {
   const { user } = useAuth();
   const { showNotification } = useNotification();

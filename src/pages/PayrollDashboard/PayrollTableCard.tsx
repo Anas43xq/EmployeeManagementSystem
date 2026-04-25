@@ -25,7 +25,7 @@ interface Props {
   openGenerateModal: () => void;
 }
 
-/** Renders payroll filters, bulk actions, and the payroll records table. */
+
 export function PayrollTableCard({
   payrolls, loading, approving, paying,
   selectedMonth, selectedYear, statusFilter, selectedPayrolls,

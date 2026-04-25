@@ -52,7 +52,7 @@ export default function Complaints() {
       />
 
       <Card>
-        {/* Status Filter */}
+        {}
         <div className="flex flex-wrap gap-2 mb-6">
           {statusFilters.map(status => (
             <button
@@ -69,7 +69,7 @@ export default function Complaints() {
           ))}
         </div>
 
-        {/* Complaint List */}
+        {}
         <div className="space-y-4">
           {complaints.map(complaint => (
             <ComplaintCard
@@ -91,7 +91,7 @@ export default function Complaints() {
         )}
       </Card>
 
-      {/* Submit Complaint Modal (for employees) */}
+      {}
       {isStaff && (
         <ComplaintFormModal
           show={activeModal === 'create'}
@@ -103,7 +103,7 @@ export default function Complaints() {
         />
       )}
 
-      {/* Resolve/Dismiss Complaint Modal (for HR/Admin) */}
+      {}
       <Modal
         show={activeModal === 'resolve'}
         onClose={closeModal}

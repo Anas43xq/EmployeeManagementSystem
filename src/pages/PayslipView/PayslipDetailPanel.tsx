@@ -12,7 +12,7 @@ interface Props {
   onDownload: (payroll: PayrollData) => void;
 }
 
-/** Renders the selected payslip details, line items, and download actions. */
+
 export function PayslipDetailPanel({ payroll, bonuses, deductions, detailsLoading, onRefresh, onDownload }: Props) {
   const { t } = useTranslation();
 

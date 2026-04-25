@@ -48,7 +48,7 @@ export function useComplaints() {
     loadComplaints();
   }, [loadComplaints]);
 
-  // Real-time subscription for employee_complaints table
+  
   useEffect(() => {
     if (!user) return;
 
@@ -89,7 +89,7 @@ export function useComplaints() {
         category: formData.category,
       });
 
-      // Notify HR/Admin about new complaint with email
+      
       const employeeName = (await getEmployeeNameById(user.employeeId)) || 'An employee';
 
       await notifyHRAndAdmins(

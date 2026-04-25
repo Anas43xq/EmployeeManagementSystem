@@ -1,16 +1,9 @@
-/**
- * Activity logging service
- * Uses Supabase RPC (log_activity SECURITY DEFINER function)
- * Priority 4: SOLID - Centralized error handling (no silent swallows)
- */
+
 
 import { supabase } from './supabase';
 import { logError, extractError } from '../lib/errorHandler';
 
-/**
- * Check if error is a "function not found" error (e.g., log_activity RPC doesn't exist)
- * Returns true if we should skip logging (function not available in this environment)
- */
+
 function isFunctionNotFoundError(err: unknown): boolean {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
@@ -114,7 +107,7 @@ async function logActivityInternal(
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Call SECURITY DEFINER RPC function to safely log activity
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.rpc as any)('log_activity', {
       p_user_id: userId,
@@ -125,7 +118,7 @@ async function logActivityInternal(
     });
 
     if (error) {
-      // Skip logging if RPC function doesn't exist in this environment
+      
       if (isFunctionNotFoundError(error)) {
         return;
       }
@@ -135,7 +128,7 @@ async function logActivityInternal(
       }, 'logActivity');
     }
   } catch (err) {
-    // Skip logging if RPC function doesn't exist in this environment
+    
     if (isFunctionNotFoundError(err)) {
       return;
     }
@@ -143,9 +136,7 @@ async function logActivityInternal(
   }
 }
 
-/**
- * Log single activity - PUBLIC API (backward compatible)
- */
+
 export async function logActivity(
   userId: string,
   action: ActivityAction,
@@ -184,7 +175,7 @@ async function logActivitiesInternal(
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Call log_activity RPC for each activity
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rpc = supabase.rpc as any;
     await Promise.all(
@@ -199,7 +190,7 @@ async function logActivitiesInternal(
       ),
     );
   } catch (err) {
-    // Skip logging if RPC function doesn't exist in this environment
+    
     if (isFunctionNotFoundError(err)) {
       return;
     }
@@ -207,10 +198,7 @@ async function logActivitiesInternal(
   }
 }
 
-/**
- * Log multiple activities in batch - PUBLIC API (backward compatible)
- * Uses Supabase RPC
- */
+
 export async function logActivities(
   activities: Array<{
     userId: string;
@@ -223,9 +211,7 @@ export async function logActivities(
   return logActivitiesInternal(activities);
 }
 
-/**
- * Public API versions for use throughout the app
- */
+
 export async function logActivityWithDI(
   userId: string,
   action: ActivityAction,

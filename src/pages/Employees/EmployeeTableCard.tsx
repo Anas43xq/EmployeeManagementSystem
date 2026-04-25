@@ -13,7 +13,7 @@ interface Props {
   onDeleteClick: (employee: EmployeeListItem) => void;
 }
 
-/** Renders the employees table with local search and filter controls. */
+
 export function EmployeeTableCard({ employees, onDeleteClick }: Props) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');

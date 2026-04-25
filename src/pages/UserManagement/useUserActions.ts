@@ -22,19 +22,19 @@ interface UseUserActionsOptions {
 
 type ModalType = 'grantAccess' | 'edit' | 'revokeAccess' | 'resetPassword' | 'ban' | 'unban' | null;
 
-/** Manages user-access modals and account administration actions for user management. */
+
 export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployeesWithoutAccess }: UseUserActionsOptions) {
   const { user: currentUser } = useAuth();
   const { showNotification } = useNotification();
   const { t } = useTranslation();
 
-  // --- Modal state (consolidated) ---
+  
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // --- Form state ---
+  
   const [grantAccessForm, setGrantAccessForm] = useState<GrantAccessFormData>({
     employeeId: '',
     password: '',
@@ -50,7 +50,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     reason: '',
   });
 
-  // --- Modal openers (set activeModal instead of individual booleans) ---
+  
   const openGrantAccessModal = () => {
     setActiveModal('grantAccess');
   };
@@ -87,7 +87,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     setSelectedUser(null);
   };
 
-  // --- Action handlers ---
+  
   const handleGrantAccess = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -100,7 +100,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
       return;
     }
 
-    // Validate form fields
+    
     if (!grantAccessForm.employeeId || !grantAccessForm.employeeId.trim()) {
       showNotification('error', 'Please select an employee');
       return;
@@ -361,13 +361,13 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
   };
 
   return {
-    // Modal state (consolidated)
+    
     activeModal,
     selectedUser,
     submitting,
     showPassword,
     setShowPassword,
-    // Form state
+    
     grantAccessForm,
     setGrantAccessForm,
     editForm,
@@ -375,7 +375,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     banForm,
     setBanForm,
     currentUserId: currentUser?.id,
-    // Modal openers
+    
     openGrantAccessModal,
     openEditModal,
     openRevokeAccessModal,
@@ -383,7 +383,7 @@ export function useUserActions({ employeesWithoutAccess, loadUsers, loadEmployee
     openBanModal,
     openUnbanModal,
     closeModal,
-    // Action handlers
+    
     handleGrantAccess,
     handleEditUser,
     handleRevokeAccess,

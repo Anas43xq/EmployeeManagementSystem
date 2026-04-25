@@ -45,7 +45,7 @@ export default function EmployeeOfWeekWidget({ employeeOfWeek, loading }: Employ
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Employee Photo */}
+        {}
         <div className="relative">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-orange-500 p-1">
             {employee?.photo_url ? (
@@ -67,7 +67,7 @@ export default function EmployeeOfWeekWidget({ employeeOfWeek, loading }: Employ
           </div>
         </div>
 
-        {/* Employee Info */}
+        {}
         <div className="flex-1">
           <h3 className="text-lg font-bold text-gray-900">
             {employee?.first_name} {employee?.last_name}
@@ -81,7 +81,7 @@ export default function EmployeeOfWeekWidget({ employeeOfWeek, loading }: Employ
           </div>
         </div>
 
-        {/* Score Badge */}
+        {}
         <div className="text-center">
           <div className="bg-yellow-400 text-yellow-900 rounded-full px-4 py-2">
             <span className="text-2xl font-bold">{employeeOfWeek.score}</span>
@@ -90,7 +90,7 @@ export default function EmployeeOfWeekWidget({ employeeOfWeek, loading }: Employ
         </div>
       </div>
 
-      {/* Reason */}
+      {}
       <div className="mt-4 p-3 bg-white/60 rounded-lg">
         <p className="text-sm text-gray-700">
           <span className="font-medium">{t('performance.reason')}:</span> {employeeOfWeek.reason}

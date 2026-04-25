@@ -66,7 +66,7 @@ export function useTasks() {
     loadEmployees();
   }, [loadTasks, loadEmployees]);
 
-  // Real-time subscription for employee_tasks table
+  
   useEffect(() => {
     if (!user) return;
 
@@ -158,7 +158,7 @@ export function useTasks() {
       }
       showNotification('success', t('tasks.statusUpdated'));
 
-      // Notify admin/HR when staff changes task status
+      
       if (isStaff && task) {
         const statusLabel = newStatus === 'in_progress' ? 'started' : newStatus;
         const employeeName = task.employees

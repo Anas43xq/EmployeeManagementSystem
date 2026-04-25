@@ -42,17 +42,17 @@ export function useSessionEnforcement({ userId, onForceLogout, onDeactivate }: U
         const row = await getSessionEnforcementState(userId);
         enforceSessionState(row, onForceLogout, onDeactivate);
       } catch (err) {
-        // ignore transient network errors in the fallback poll
+        
         console.debug('[useSessionEnforcement] checkStatus failed:', err);
       }
     };
 
-    // Realtime: kick this session the instant another device logs in or the user is banned.
+    
     const unsubscribe = subscribeToSessionEnforcement(userId, (row) => {
       enforceSessionState(row, onForceLogout, onDeactivate);
     });
 
-    // Fallback poll (1 min) in case the realtime channel is unavailable.
+    
     const fallbackInterval = setInterval(checkStatus, 60 * 1000);
 
     return () => {

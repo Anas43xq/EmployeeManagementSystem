@@ -15,7 +15,7 @@ export default function ActivityLogs() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Hard frontend guard — redirect non-admins immediately
+  
   useEffect(() => {
     if (user && user.role !== 'admin') {
       navigate('/dashboard', { replace: true });
@@ -33,7 +33,7 @@ export default function ActivityLogs() {
     try {
       setLogs(await getRecentActivityLogs());
     } catch {
-      // silently fail
+      
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -10,7 +10,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-/** Displays the employee termination confirmation dialog. */
+
 export function TerminateModal({ show, employee, terminating, onClose, onConfirm }: Props) {
   const { t } = useTranslation();
 
