@@ -80,26 +80,18 @@ export type EntityType =
 export interface ActivityLogRecord {
   id: string;
   action: string;
-  entity_type: string;
   created_at: string;
-  details?: Record<string, unknown> | null;
 }
 
 function mapActivityLogRecord(record: {
   id: string;
   action: string;
-  entity_type: string;
   created_at: string | null;
-  details: unknown;
 }): ActivityLogRecord {
   return {
     id: record.id,
     action: record.action,
-    entity_type: record.entity_type,
-    created_at: record.created_at ?? '',
-    details: typeof record.details === 'object' && record.details !== null
-      ? (record.details as Record<string, unknown>)
-      : null,
+    created_at: record.created_at ?? ''
   };
 }
 
@@ -167,7 +159,7 @@ export async function logActivity(
 export async function getRecentActivityLogs(limit = 200): Promise<ActivityLogRecord[]> {
   const { data, error } = await supabase
     .from('activity_logs')
-    .select('id, action, entity_type, created_at, details')
+    .select('id, action, created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 

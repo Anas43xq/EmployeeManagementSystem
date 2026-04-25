@@ -88,10 +88,6 @@ export default function ActivityLogs() {
                         {log.action.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-gray-700 capitalize">{log.entity_type}</td>
-                    <td className="px-6 py-3 text-gray-500 text-xs max-w-xs truncate">
-                      {log.details ? JSON.stringify(log.details) : '—'}
-                    </td>
                   </tr>
                 ))}
               </tbody>
