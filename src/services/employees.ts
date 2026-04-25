@@ -217,13 +217,19 @@ export async function getEmployeeProfileById(employeeId: string) {
     };
 
     const response = await queryClient
-      .from('employee_full')
-      .select('*, departments (name)')
+      .from('employees')
+      .select('*, employee_profiles(*), departments(name)')
       .eq('id', employeeId)
       .maybeSingle();
 
+    let mappedData = response.data as any;
+    if (mappedData) {
+      const { employee_profiles, ...rest } = mappedData;
+      mappedData = { ...rest, ...(employee_profiles || {}) };
+    }
+
     return {
-      data: response.data,
+      data: mappedData,
       error: response.error ? extractError(response.error) : null,
     };
   });
@@ -278,17 +284,21 @@ export async function getEmployeesWithDepartments(): Promise<EmployeeListItem[]>
     };
 
     const response = await queryClient
-      .from('employee_full')
+      .from('employees')
       .select(`
         *,
-        departments (
-          name
-        )
+        employee_profiles(phone),
+        departments(name)
       `)
       .order('created_at', { ascending: false });
 
+    const mappedData = (response.data as any[])?.map((emp) => {
+      const { employee_profiles, ...rest } = emp;
+      return { ...rest, phone: employee_profiles?.phone || '' };
+    });
+
     return {
-      data: response.data,
+      data: mappedData,
       error: response.error ? extractError(response.error) : null,
     };
   });

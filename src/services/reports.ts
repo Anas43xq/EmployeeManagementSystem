@@ -19,19 +19,19 @@ export async function getReportDepartments(): Promise<Department[]> {
 export async function getEmployeeReportData(selectedDepartment?: string): Promise<ReportEmployee[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (db as any)
-    .from('employee_full')
+    .from('employees')
     .select(`
       id,
       first_name,
       last_name,
       email,
-      phone,
       position,
       employment_type,
       status,
       hire_date,
       salary,
-      departments!department_id (name)
+      employee_profiles(phone),
+      departments(name)
     `)
     .order('last_name');
 
@@ -41,7 +41,16 @@ export async function getEmployeeReportData(selectedDepartment?: string): Promis
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data || []) as ReportEmployee[];
+  
+  const mappedData = (data as any[]).map(emp => {
+    const { employee_profiles, ...rest } = emp;
+    return {
+      ...rest,
+      phone: employee_profiles?.phone || ''
+    };
+  });
+  
+  return mappedData as ReportEmployee[];
 }
 
 export async function getLeaveReportData(dateFilter: string | null, selectedDepartment?: string): Promise<Leave[]> {
