@@ -253,12 +253,13 @@ After startup, you should see:
 
 ## Tables
 
-20 tables with proper RLS policies on everything:
+21 tables with proper RLS policies on everything:
 
 | Table | What it stores |
 |-------|---------------|
 | `departments` | Departments and their assigned heads |
-| `employees` | All employee info - personal details, salary, qualifications, status |
+| `employees` | Core employee info - name, email, department, position, status, salary |
+| `employee_profiles` | Extended employee details - phone, address, photo, qualifications, emergency contacts |
 | `users` | System accounts linked to auth.users and to an employee record |
 | `leaves` | Leave requests with type, dates, status, and who approved/rejected |
 | `leave_balances` | How many leave days each employee has left, tracked per year |
