@@ -1,5 +1,3 @@
-
-
 import { supabase, db } from './supabase';
 import type { Database } from '../types/database';
 import { extractError, logError, type AppError } from '../lib/errorHandler';
@@ -197,7 +195,7 @@ export async function createNotification(
       emailSent = emailResult.success;
     }
   } catch {
-    
+
   }
 
   return { notificationSaved, emailSent };
@@ -232,7 +230,7 @@ export async function createNotifications(
       }
     }
   } catch {
-    
+
   }
 }
 
@@ -272,7 +270,7 @@ export async function notifyHRAndAdmins(
         const { data: emailData, error: emailError } = await (supabase.rpc as any)('get_role_user_emails', emailRpcParams);
 
         if (!emailError && emailData) {
-          
+
           for (const row of emailData as unknown as { user_id: string; email: string }[]) {
             await sendEmailNotification({
               to: row.email,
@@ -283,11 +281,11 @@ export async function notifyHRAndAdmins(
           }
         }
       } catch {
-        
+
       }
     }
   } catch {
-    
+
   }
 }
 

@@ -1,7 +1,3 @@
-
-
-
-
 import { db } from '../lib/db';
 import type { ReportEmployee, ReportLeave, ReportAttendance, DepartmentReport, PayrollReport } from '../types/pages';
 import type { DepartmentBasic } from '../types';

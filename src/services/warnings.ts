@@ -1,8 +1,7 @@
-
-
-
-
 import { createNotification } from './notifications';
+import { db, supabase } from './supabase';
+import { applyFilter } from '../lib/db';
+import type { EmployeeWarning, EmployeeWarningCreate, WarningStatus } from '../types';
 
 export async function createWarningNotification(userId: string, severity: string) {
   return await createNotification(
@@ -12,13 +11,6 @@ export async function createWarningNotification(userId: string, severity: string
     'warning'
   );
 }
-
-
-
-
-import { db, supabase } from './supabase';
-import { applyFilter } from '../lib/db';
-import type { EmployeeWarning, EmployeeWarningCreate, WarningStatus } from '../types';
 
 export async function getWarnings(filters?: {
   employeeId?: string;

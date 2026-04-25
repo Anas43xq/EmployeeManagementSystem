@@ -1,7 +1,3 @@
-
-
-
-
 import { createNotification } from './notifications';
 
 
@@ -45,7 +41,7 @@ async function triggerWeeklyPerformanceCalculation(weekStart?: string): Promise<
       p_week_start: weekStart,
     });
   } catch (_err: unknown) {
-    
+
   }
 }
 
@@ -112,10 +108,10 @@ export async function getTopPerformers(weekStart?: string) {
     const latestPeriod = periodData?.[0] ?? null;
 
     if (!latestPeriod?.period_start) {
-      
+
       await triggerWeeklyPerformanceCalculation();
-      
-      
+
+
       const { data: newPeriodData } = await db
         .from('employee_performance')
         .select('period_start')
@@ -123,8 +119,8 @@ export async function getTopPerformers(weekStart?: string) {
         .limit(1);
 
       const newLatestPeriod = newPeriodData?.[0] ?? null;
-      if (!newLatestPeriod?.period_start) return []; 
-      
+      if (!newLatestPeriod?.period_start) return [];
+
       query = query.eq('period_start', newLatestPeriod.period_start);
     } else {
       query = query.eq('period_start', latestPeriod.period_start);
@@ -166,14 +162,14 @@ export async function getEmployeeOfWeek(weekStart?: string) {
   if (error) return null;
 
   if (!data?.[0]) {
-    
+
     await triggerWeeklyPerformanceCalculation();
-    
+
     try {
       await rpc.rpc('select_employee_of_week', {});
-    } catch (_err) {  }
+    } catch (_err) { }
 
-    
+
     const { data: newData } = await db
       .from('employee_of_week')
       .select(`*, employees (*)`)
@@ -266,7 +262,7 @@ export async function getWeeklyDataAvailability(weekStart: string) {
       has_sufficient_data: boolean;
     };
   } catch (_error) {
-    
+
     return {
       days_with_data: 0,
       total_days: 7,

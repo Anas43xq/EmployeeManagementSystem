@@ -1,7 +1,3 @@
-
-
-
-
 import { supabase } from './supabase';
 
 const BUCKET = 'employee-photos';
@@ -13,7 +9,7 @@ export async function deletePhotoByFilename(filename: string): Promise<void> {
     const { error } = await supabase.storage.from(BUCKET).remove([filename]);
     if (error) return;
   } catch {
-    
+
   }
 }
 

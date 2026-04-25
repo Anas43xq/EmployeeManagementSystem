@@ -1,7 +1,3 @@
-
-
-
-
 import { supabase } from './supabase';
 import { logActivity } from './activityLog';
 import { getMacProxy } from '../utils/ipMacUtils';
@@ -44,8 +40,8 @@ export function getProgressiveDelaySeconds(attemptCount: number): number {
   if (attemptCount === 2) return 5;
   if (attemptCount === 3) return 15;
   if (attemptCount === 4) return 30;
-  if (attemptCount === 5) return 0; 
-  return 30; 
+  if (attemptCount === 5) return 0;
+  return 30;
 }
 
 function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatus {
@@ -127,7 +123,7 @@ export async function recordFailedAttempt(email: string): Promise<LoginAttemptSt
 
 export async function escalateToOtp(email: string): Promise<{ error?: string }> {
   try {
-    
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: false },
@@ -137,8 +133,8 @@ export async function escalateToOtp(email: string): Promise<{ error?: string }> 
       return { error: error.message };
     }
 
-    
-    
+
+
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
@@ -151,7 +147,7 @@ export async function escalateToOtp(email: string): Promise<{ error?: string }> 
 
 export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
   try {
-    
+
     const cooldownStatus = await validateOtpRequestCooldown(email);
     if (!cooldownStatus.allowed) {
       const minutes = Math.ceil(cooldownStatus.secondsRemaining / 60) || 1;
@@ -169,8 +165,8 @@ export async function sendLoginOtp(email: string): Promise<{ error?: string }> {
       return { error: error.message };
     }
 
-    
-    
+
+
     await rpc.rpc('refresh_otp_expiry', { p_email: email });
 
     return {};
@@ -216,7 +212,7 @@ export async function resetLoginAttempts(userId: string): Promise<void> {
   });
 
   if (error) {
-    
+
   }
 }
 
@@ -225,7 +221,7 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
   try {
     const macProxy = await getMacProxy();
 
-    
+
     const isInvalid = (val: string | null | undefined) =>
       !val || val === 'unknown' || (typeof val === 'string' && val.trim() === '');
 
@@ -240,7 +236,7 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
     });
 
     if (error) {
-      
+
       console.error('[IP/MAC Rate Limit] RPC error (400 check params above):', {
         status: error?.status,
         message: error?.message,
@@ -250,7 +246,7 @@ export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus>
 
     return parseIpMacLimitResult(data);
   } catch (_err: unknown) {
-    
+
     return parseIpMacLimitResult(null);
   }
 }
@@ -265,7 +261,7 @@ export async function validateOtpRequestCooldown(
     });
 
     if (error) {
-      
+
       return { allowed: true, secondsRemaining: 0, cooldownSeconds: OTP_REQUEST_COOLDOWN_SECONDS };
     }
 
@@ -293,7 +289,7 @@ const SESSION_HEALTH_KEY = 'ems_session_health';
 const LAST_ACTIVITY_KEY = 'ems_last_activity';
 const MAX_FAILED_ATTEMPTS = 3;
 export const RECOVERY_COOLDOWN_MS = 5000;
-const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000; 
+const INACTIVITY_TIMEOUT_MS = 8 * 60 * 1000;
 
 interface SessionHealth {
   failedAttempts: number;
@@ -561,7 +557,7 @@ export async function validateSessionActivity(userId: string): Promise<boolean> 
       .single();
 
     if (error || !data || !data.last_activity_at) {
-      
+
       return true;
     }
 
@@ -569,7 +565,7 @@ export async function validateSessionActivity(userId: string): Promise<boolean> 
     const now = Date.now();
     const inactiveMinutes = (now - lastActivity) / 60000;
 
-    
+
     const isValid = inactiveMinutes <= 120;
     return isValid;
   } catch {
