@@ -1,19 +1,7 @@
-
-
-// File: faqAdmin.ts
-
-/**
- * faqAdmin.ts
- * Admin-only FAQ management - CRUD operations with bilingual support
- * Only admin users can call these functions
- */
-
 import { db } from '../lib/db';
+import type { UserRole } from './auth';
+import i18n from '../i18n';
 
-/**
- * Bilingual content structure for FAQs
- * Each language stores question and answer separately
- */
 export interface BilingualContent {
   en: {
     question: string;
@@ -279,16 +267,7 @@ export async function updateFAQVisibility(faqIds: string[], visibleTo: string[])
 }
 
 
-// File: faqQueries.ts
 
-/**
- * faqQueries.ts
- * Public FAQ queries - for all authenticated users
- * Supports bilingual content with JSONB storage (English & Arabic)
- */
-
-import type { UserRole } from './auth';
-import i18n from '../i18n';
 
 /**
  * Get language code from i18n (en or ar)
