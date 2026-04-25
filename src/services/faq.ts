@@ -212,12 +212,12 @@ export async function updateFAQ(input: UpdateFAQInput): Promise<FAQ> {
 }
 
 /**
- * Soft delete a FAQ (mark as inactive instead of removing)
+ * Delete a FAQ permanently
  */
 export async function deleteFAQ(id: string): Promise<void> {
   const { error } = await db
     .from('faqs')
-    .update({ is_active: false })
+    .delete()
     .eq('id', id);
 
   if (error) {
@@ -325,7 +325,7 @@ function extractLanguageContent(faq: Record<string, unknown>, language: 'en' | '
  */
 export async function getFAQsByRole(role: UserRole, language?: 'en' | 'ar'): Promise<FAQ[]> {
   const lang = language || getLanguageCode();
-  
+
   const { data, error } = await db
     .from('faqs')
     .select('*')
@@ -347,7 +347,7 @@ export async function getFAQsByRole(role: UserRole, language?: 'en' | 'ar'): Pro
  */
 export async function getFAQsByCategory(category: string, role: UserRole, language?: 'en' | 'ar'): Promise<FAQ[]> {
   const lang = language || getLanguageCode();
-  
+
   const { data, error } = await db
     .from('faqs')
     .select('*')

@@ -918,6 +918,7 @@
     "manageFaqsDesc": "Create, edit, and manage FAQs for all users",
     "createFaq": "Create FAQ",
     "editFaq": "Edit FAQ",
+    "updateFaq": "Update FAQ",
     "addFaq": "Add FAQ",
     "question": "Question",
     "enterQuestion": "Enter FAQ question...",
