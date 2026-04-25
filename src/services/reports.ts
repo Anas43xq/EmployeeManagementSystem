@@ -31,7 +31,7 @@ export async function getEmployeeReportData(selectedDepartment?: string): Promis
       hire_date,
       salary,
       employee_profiles(phone),
-      departments(name)
+      departments!department_id(name)
     `)
     .order('last_name');
 

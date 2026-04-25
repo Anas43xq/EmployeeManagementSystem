@@ -218,7 +218,7 @@ export async function getEmployeeProfileById(employeeId: string) {
 
     const response = await queryClient
       .from('employees')
-      .select('*, employee_profiles(*), departments(name)')
+      .select('*, employee_profiles(*), departments!department_id(name)')
       .eq('id', employeeId)
       .maybeSingle();
 
@@ -288,7 +288,7 @@ export async function getEmployeesWithDepartments(): Promise<EmployeeListItem[]>
       .select(`
         *,
         employee_profiles(phone),
-        departments(name)
+        departments!department_id(name)
       `)
       .order('created_at', { ascending: false });
 
