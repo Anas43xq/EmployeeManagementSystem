@@ -270,27 +270,27 @@ export default function EmailScreen({
 
         {}
         <div className="mt-8">
-          {recoveryMode ? (
-            <div className="border border-primary-200 rounded-3xl overflow-hidden bg-slate-50 shadow-sm shadow-slate-200">
-              <button
-                type="button"
-                onClick={onToggleRecoveryOptions}
-                disabled={form.loading}
-                className="w-full flex items-center justify-between gap-3 px-4 py-4 text-left text-gray-900 bg-primary-50 hover:bg-primary-100 transition-colors"
-              >
-                <div className="space-y-1 text-left">
-                  <span className="font-semibold text-gray-900">{t('auth.verifyWithOtherMethods', 'Verify with other methods')}</span>
-                  <p className="text-xs text-gray-500">{t('auth.recoveryPanelDescription', 'Expand to choose OTP or Passkey verification')}</p>
-                </div>
-                {showRecoveryOptions ? (
-                  <ChevronUp className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
+          <div className="border border-primary-200 rounded-3xl overflow-hidden bg-slate-50 shadow-sm shadow-slate-200">
+            <button
+              type="button"
+              onClick={onToggleRecoveryOptions}
+              disabled={form.loading}
+              className="w-full flex items-center justify-between gap-3 px-4 py-4 text-left text-gray-900 bg-primary-50 hover:bg-primary-100 transition-colors"
+            >
+              <div className="space-y-1 text-left">
+                <span className="font-semibold text-gray-900">{t('auth.verifyWithOtherMethods', 'Verify with other methods')}</span>
+                <p className="text-xs text-gray-500">{t('auth.recoveryPanelDescription', 'Expand to choose OTP or Passkey verification')}</p>
+              </div>
+              {showRecoveryOptions ? (
+                <ChevronUp className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              )}
+            </button>
 
-              {showRecoveryOptions && (
-                <div className="space-y-3 px-4 pb-4 pt-4">
+            {showRecoveryOptions && (
+              <div className="space-y-3 px-4 pb-4 pt-4">
+                {recoveryMode ? (
                   <button
                     type="button"
                     onClick={handleOtpClick}
@@ -306,52 +306,31 @@ export default function EmailScreen({
                       t('auth.verifyWithOtp', 'Verify with OTP')
                     )}
                   </button>
+                ) : null}
 
-                  {passkeySupported && (
-                    <button
-                      type="button"
-                      onClick={handlePasskeyClick}
-                      disabled={passkey.loading || form.loading}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {passkey.loading ? (
-                        <>
-                          <span className="inline-block animate-spin">⏳</span>
-                          {t('auth.authenticating', 'Authenticating...')}
-                        </>
-                      ) : (
-                        <>
-                          <Fingerprint className="w-5 h-5" />
-                          {t('auth.signInWithPasskey')}
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            passkeySupported && (
-              <button
-                type="button"
-                onClick={handlePasskeyClick}
-                disabled={passkey.loading || form.loading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {passkey.loading ? (
-                  <>
-                    <span className="inline-block animate-spin">⏳</span>
-                    {t('auth.authenticating', 'Authenticating...')}
-                  </>
-                ) : (
-                  <>
-                    <Fingerprint className="w-5 h-5" />
-                    {t('auth.signInWithPasskey')}
-                  </>
+                {passkeySupported && (
+                  <button
+                    type="button"
+                    onClick={handlePasskeyClick}
+                    disabled={passkey.loading || form.loading}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {passkey.loading ? (
+                      <>
+                        <span className="inline-block animate-spin">⏳</span>
+                        {t('auth.authenticating', 'Authenticating...')}
+                      </>
+                    ) : (
+                      <>
+                        <Fingerprint className="w-5 h-5" />
+                        {t('auth.signInWithPasskey')}
+                      </>
+                    )}
+                  </button>
                 )}
-              </button>
-            )
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
