@@ -41,7 +41,7 @@ export async function getEmployeeReportData(selectedDepartment?: string): Promis
 
   const { data, error } = await query;
   if (error) throw error;
-  
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mappedData = (data as any[]).map(emp => {
     const { employee_profiles, ...rest } = emp;
     return {

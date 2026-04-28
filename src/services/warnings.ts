@@ -17,6 +17,7 @@ export async function getWarnings(filters?: {
   status?: WarningStatus;
   issuedBy?: string;
 }) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (db as any)
     .from('employee_warnings')
     .select(`

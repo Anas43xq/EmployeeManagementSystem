@@ -5,12 +5,7 @@ import { supabase } from '../services/supabase';
 import type { DatabaseClient } from '../types/interfaces';
 import { extractError, type AppError } from './errorHandler';
 
-
-
-
 export const db = supabase;
-
-
 
 interface QueryResult<TData = unknown> {
   data: TData;

@@ -10,6 +10,10 @@ interface EmailScreenProps {
   form: ReturnType<typeof useLoginForm>;
   delayCountdown: number;
   passkeySupported: boolean;
+  recoveryMode: boolean;
+  showRecoveryOptions: boolean;
+  onShowRecoveryOptions: () => void;
+  onRequestOtp: (email: string) => Promise<boolean>;
   isRTL: boolean;
   languageLabel: string;
   successMessage?: string;
@@ -24,6 +28,10 @@ export default function EmailScreen({
   form,
   delayCountdown,
   passkeySupported,
+  recoveryMode,
+  showRecoveryOptions,
+  onShowRecoveryOptions,
+  onRequestOtp,
   isRTL,
   languageLabel,
   successMessage,
@@ -90,10 +98,8 @@ export default function EmailScreen({
   };
 
   const handleForgotPassword = () => {
-    
     passkey.clearError();
-    
-    
+
     if (!form.email || !form.email.trim()) {
       form.setError(t('auth.emailRequired', 'Email is required'));
       return;
@@ -102,8 +108,23 @@ export default function EmailScreen({
       form.setError(t('auth.emailInvalid'));
       return;
     }
-    
+
     onForgotPassword();
+  };
+
+  const handleOtpClick = async () => {
+    form.clearErrors?.();
+
+    if (!form.email || !form.email.trim()) {
+      form.setError(t('auth.emailRequired', 'Email is required'));
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      form.setError(t('auth.emailInvalid'));
+      return;
+    }
+
+    await onRequestOtp(form.email);
   };
 
   return (
@@ -247,25 +268,76 @@ export default function EmailScreen({
 
         {}
         <div className="mt-8 space-y-3">
-          {passkeySupported && (
-            <button
-              type="button"
-              onClick={handlePasskeyClick}
-              disabled={passkey.loading || form.loading || delayCountdown > 0}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {passkey.loading ? (
-                <>
-                  <span className="inline-block animate-spin">⏳</span>
-                  {t('auth.authenticating', 'Authenticating...')}
-                </>
-              ) : (
-                <>
-                  <Fingerprint className="w-5 h-5" />
-                  {t('auth.signInWithPasskey')}
-                </>
-              )}
-            </button>
+          {recoveryMode ? (
+            showRecoveryOptions ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleOtpClick}
+                  disabled={form.loading || delayCountdown > 0}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {form.loading ? (
+                    <>
+                      <span className="inline-block animate-spin">⏳</span>
+                      {t('auth.sendingOtp', 'Sending OTP...')}
+                    </>
+                  ) : (
+                    t('auth.verifyWithOtp', 'Verify with OTP')
+                  )}
+                </button>
+                {passkeySupported && (
+                  <button
+                    type="button"
+                    onClick={handlePasskeyClick}
+                    disabled={passkey.loading || form.loading || delayCountdown > 0}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {passkey.loading ? (
+                      <>
+                        <span className="inline-block animate-spin">⏳</span>
+                        {t('auth.authenticating', 'Authenticating...')}
+                      </>
+                    ) : (
+                      <>
+                        <Fingerprint className="w-5 h-5" />
+                        {t('auth.signInWithPasskey')}
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onShowRecoveryOptions}
+                disabled={form.loading || delayCountdown > 0}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t('auth.verifyWithOtherMethods', 'Verify with other methods')}
+              </button>
+            )
+          ) : (
+            passkeySupported && (
+              <button
+                type="button"
+                onClick={handlePasskeyClick}
+                disabled={passkey.loading || form.loading || delayCountdown > 0}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {passkey.loading ? (
+                  <>
+                    <span className="inline-block animate-spin">⏳</span>
+                    {t('auth.authenticating', 'Authenticating...')}
+                  </>
+                ) : (
+                  <>
+                    <Fingerprint className="w-5 h-5" />
+                    {t('auth.signInWithPasskey')}
+                  </>
+                )}
+              </button>
+            )
           )}
         </div>
       </div>

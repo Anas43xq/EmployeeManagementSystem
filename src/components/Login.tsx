@@ -52,11 +52,18 @@ export default function Login() {
   const location = useLocation();
   const { t } = useTranslation();
 
-  
   const [screen, setScreen] = useState<Screen>('login');
   const [passkeySupported] = useState(isWebAuthnSupported);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [showRecoveryOptions, setShowRecoveryOptions] = useState(false);
 
-  
+  const setRecoveryVisible = (visible: boolean) => {
+    setRecoveryMode(visible);
+    if (!visible) {
+      setShowRecoveryOptions(false);
+    }
+  };
+
   const successMessage = getSuccessMessage(location.state as LoginLocationState);
 
   
@@ -116,6 +123,7 @@ export default function Login() {
         otp,
         email: form.email,
         setScreen: (screenValue: string) => setScreen(screenValue as Screen),
+        setRecoveryVisible,
         navigate,
         getCooldown: getOtpRequestCooldownRemaining,
       });
@@ -124,7 +132,46 @@ export default function Login() {
     }
   };
 
-  
+  const handleRequestOtp = async (email: string): Promise<boolean> => {
+    form.clearErrors();
+    if (!email || !email.trim()) {
+      form.setError(t('auth.emailRequired', 'Email is required'));
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      form.setError(t('auth.emailInvalid'));
+      return false;
+    }
+
+    form.setLoading(true);
+    try {
+      const { error } = await sendLoginOtp(email);
+      if (error) {
+        const lower = error.toLowerCase();
+        if (lower.includes('please wait')) {
+          otp.setOtpEmail(email);
+          setScreen('otp');
+          if (form.setWarnMessage) {
+            form.setWarnMessage(error);
+          }
+          return true;
+        }
+        form.setError(error);
+        return false;
+      }
+
+      otp.setOtpEmail(email);
+      setScreen('otp');
+      return true;
+    } catch (sendError) {
+      form.setError(getErrorMessage(sendError));
+      return false;
+    } finally {
+      form.setLoading(false);
+    }
+  };
+
   if (screen === 'otp-lockout') {
     return (
       <OtpLockoutScreen
@@ -186,6 +233,10 @@ if (screen === 'forgot') {
       form={form}
       delayCountdown={delayCountdown}
       passkeySupported={passkeySupported}
+      recoveryMode={recoveryMode}
+      showRecoveryOptions={showRecoveryOptions}
+      onShowRecoveryOptions={() => setShowRecoveryOptions(true)}
+      onRequestOtp={handleRequestOtp}
       isRTL={isRTL}
       languageLabel={languageLabel}
       successMessage={successMessage}

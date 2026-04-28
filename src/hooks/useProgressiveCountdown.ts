@@ -24,7 +24,7 @@ export function useProgressiveCountdown(): CountdownState {
           }
           return prev - 1;
         });
-      }, 1000);
+      }, 2000);
     }
 
     return () => {

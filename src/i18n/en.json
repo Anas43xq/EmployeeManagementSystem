@@ -118,6 +118,10 @@
     "otpRequestCooldown": "Please wait {{seconds}} seconds before requesting a new code",
     "otpTooManyVerifyAttempts": "Too many verification attempts. Request a new code to continue.",
     "otpRequestNewCodeRequired": "Request a new verification code to retry",
+    "verifyWithOtherMethods": "Verify with other methods",
+    "verifyWithOtp": "Verify with OTP",
+    "sendingOtp": "Sending OTP...",
+    "selectRecoveryMethod": "Please choose a recovery method before continuing.",
     "otpBackWarning": "Your verification code is still active. Returning to login won't cancel it — you'll need to verify or wait for it to expire.",
     "backWarningTitle": "Are you sure?",
     "cancel": "Cancel"

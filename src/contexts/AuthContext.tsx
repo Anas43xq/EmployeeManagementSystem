@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase, db } from '../services/supabase';
 import { logActivity } from '../services/activityLog';
-import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp, getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts, escalateToOtp } from '../services/session';
+import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServerActivityTimestamp, getLoginAttemptStatus, recordFailedAttempt, resetLoginAttempts } from '../services/session';
 import { clearAllCache } from '../lib/cache';
 import { isRefreshTokenError, isAuthTransientError } from '../services/auth';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
@@ -226,12 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       
       if (updated.failedAttempts >= 5) {
-        const { error: otpError } = await escalateToOtp(email);
-        if (otpError) {
-          throw new Error(`OTP_ESCALATION_FAILED: ${otpError}`);
-        }
-        
-        throw new Error('REQUIRES_OTP_GENERIC');
+        throw new Error('REQUIRES_RECOVERY_METHODS');
       }
       
       if (updated.attemptsRemaining > 0 && updated.attemptsRemaining < 5) {

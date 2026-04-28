@@ -1,7 +1,4 @@
-
-
-
-
+import { AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
 
@@ -41,7 +38,7 @@ export async function sendPasswordResetEmail(email: string, redirectTo: string) 
 
 
 
-import { AuthError } from '@supabase/supabase-js';
+
 
 export type UserRole = 'admin' | 'hr' | 'staff';
 

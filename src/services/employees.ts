@@ -1,10 +1,10 @@
-
-
-
-
-import { db } from '../lib/db';
+import { db,dbClient } from '../lib/db';
 import type { EmployeeFormData } from '../types/pages';
 import { extractCore, extractProfile } from '../utils/employeeMappers';
+import { extractError } from '../lib/errorHandler';
+import type { DatabaseClient } from '../types/interfaces';
+import type { EmployeeBasic, EmployeeListItem, EmployeeWithNumber } from '../types';
+import { supabase } from './supabase';
 
 type EmployeeWritePayload = Omit<EmployeeFormData, 'employee_number' | 'date_of_birth' | 'salary'> & {
   date_of_birth: string | null;
@@ -139,11 +139,7 @@ export async function updateEmployeeProfile(
 
 
 
-import { extractError } from '../lib/errorHandler';
-import type { DatabaseClient } from '../types/interfaces';
-import type { EmployeeBasic, EmployeeListItem, EmployeeWithNumber } from '../types';
-import { dbClient } from '../lib/db';
-import { supabase } from './supabase';
+
 
 /**
  * Fetch active employees
@@ -154,6 +150,7 @@ export async function fetchActiveEmployees(
   _dbClient: DatabaseClient,
   includeNumber?: boolean,
 ): Promise<EmployeeBasic[] | EmployeeWithNumber[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('employee_full')
     .select('*')
@@ -221,8 +218,7 @@ export async function getEmployeeProfileById(employeeId: string) {
       .select('*, employee_profiles(*), departments!department_id(name)')
       .eq('id', employeeId)
       .maybeSingle();
-
-    let mappedData = response.data as any;
+    let mappedData = response.data as Record<string, unknown>;
     if (mappedData) {
       const { employee_profiles, ...rest } = mappedData;
       mappedData = { ...rest, ...(employee_profiles || {}) };
@@ -291,10 +287,10 @@ export async function getEmployeesWithDepartments(): Promise<EmployeeListItem[]>
         departments!department_id(name)
       `)
       .order('created_at', { ascending: false });
-
-    const mappedData = (response.data as any[])?.map((emp) => {
+    const mappedData = (response.data as Array<Record<string, unknown>>)?.map((emp: Record<string, unknown>) => {
       const { employee_profiles, ...rest } = emp;
-      return { ...rest, phone: employee_profiles?.phone || '' };
+      const phone = (employee_profiles as Record<string, unknown> | undefined)?.phone || '';
+      return { ...rest, phone };
     });
 
     return {

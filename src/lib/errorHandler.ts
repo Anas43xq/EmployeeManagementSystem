@@ -24,6 +24,7 @@ export interface ErrorContext {
   };
   email?: string;
   setScreen?: (screen: string) => void;
+  setRecoveryVisible?: (visible: boolean) => void;
   navigate?: (path: string, options?: Record<string, unknown>) => void;
   getCooldown?: (email: string) => Promise<number>;
 }
@@ -227,14 +228,35 @@ export async function handleError(
     return;
   }
 
-  
-  
-  
-  
-  
+  if (msg === 'REQUIRES_RECOVERY_METHODS') {
+    if (context.setRecoveryVisible) {
+      context.setRecoveryVisible(true);
+    }
+    if (context.otp?.setOtpEmail) {
+      context.otp.setOtpEmail(context.email || '');
+    }
+    if (context.form?.setWarnMessage) {
+      context.form.setWarnMessage(
+        context.t?.('auth.selectRecoveryMethod') || 'Please verify with another method below.'
+      );
+    }
+    return;
+  }
+
   if (msg === 'REQUIRES_OTP_GENERIC') {
-    
-    
+    if (context.setRecoveryVisible) {
+      if (context.otp?.setOtpEmail) {
+        context.otp.setOtpEmail(context.email || '');
+      }
+      context.setRecoveryVisible(true);
+      if (context.form?.setWarnMessage) {
+        context.form.setWarnMessage(
+          context.t?.('auth.selectRecoveryMethod') || 'Please verify with another method below.'
+        );
+      }
+      return;
+    }
+
     if (context.form?.setWarnMessage && context.email) {
       const cooldownSeconds = context.getCooldown 
         ? await context.getCooldown(context.email) 
@@ -250,7 +272,6 @@ export async function handleError(
       }
     }
     
-    
     if (context.otp?.setOtpEmail && context.setScreen) {
       context.otp.setOtpEmail(context.email || '');
       context.setScreen('otp');
@@ -258,9 +279,19 @@ export async function handleError(
     return;
   }
 
-  
-  
   if (msg === 'REQUIRES_OTP_ACTIVE') {
+    if (context.setRecoveryVisible) {
+      if (context.otp?.setOtpEmail) {
+        context.otp.setOtpEmail(context.email || '');
+      }
+      context.setRecoveryVisible(true);
+      if (context.form?.setWarnMessage) {
+        context.form.setWarnMessage(
+          context.t?.('auth.selectRecoveryMethod') || 'Please verify with another method below.'
+        );
+      }
+      return;
+    }
     if (!context.otp?.setOtpEmail || !context.setScreen) {
       return;
     }
