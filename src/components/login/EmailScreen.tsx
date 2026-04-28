@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Clock } from 'lucide-react';
+import { Briefcase, Globe, Fingerprint, CheckCircle, Eye, EyeOff, AlertTriangle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import type { useLoginForm } from '../../hooks/useLoginForm';
 import { useIntegratedPasskeyLogin } from '../../hooks/useAuthHooks';
 import { authenticateWithPasskey } from '../../services/passkeys';
@@ -12,7 +12,7 @@ interface EmailScreenProps {
   passkeySupported: boolean;
   recoveryMode: boolean;
   showRecoveryOptions: boolean;
-  onShowRecoveryOptions: () => void;
+  onToggleRecoveryOptions: () => void;
   onRequestOtp: (email: string) => Promise<boolean>;
   isRTL: boolean;
   languageLabel: string;
@@ -30,7 +30,7 @@ export default function EmailScreen({
   passkeySupported,
   recoveryMode,
   showRecoveryOptions,
-  onShowRecoveryOptions,
+  onToggleRecoveryOptions,
   onRequestOtp,
   isRTL,
   languageLabel,
@@ -126,6 +126,8 @@ export default function EmailScreen({
 
     await onRequestOtp(form.email);
   };
+
+  const isOtpEnabled = Boolean(form.email && isValidEmail(form.email) && delayCountdown === 0 && !form.loading);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -267,62 +269,73 @@ export default function EmailScreen({
         </form>
 
         {}
-        <div className="mt-8 space-y-3">
+        <div className="mt-8">
           {recoveryMode ? (
-            showRecoveryOptions ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleOtpClick}
-                  disabled={form.loading || delayCountdown > 0}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {form.loading ? (
-                    <>
-                      <span className="inline-block animate-spin">⏳</span>
-                      {t('auth.sendingOtp', 'Sending OTP...')}
-                    </>
-                  ) : (
-                    t('auth.verifyWithOtp', 'Verify with OTP')
-                  )}
-                </button>
-                {passkeySupported && (
-                  <button
-                    type="button"
-                    onClick={handlePasskeyClick}
-                    disabled={passkey.loading || form.loading || delayCountdown > 0}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {passkey.loading ? (
-                      <>
-                        <span className="inline-block animate-spin">⏳</span>
-                        {t('auth.authenticating', 'Authenticating...')}
-                      </>
-                    ) : (
-                      <>
-                        <Fingerprint className="w-5 h-5" />
-                        {t('auth.signInWithPasskey')}
-                      </>
-                    )}
-                  </button>
-                )}
-              </>
-            ) : (
+            <div className="border border-primary-200 rounded-3xl overflow-hidden bg-slate-50 shadow-sm shadow-slate-200">
               <button
                 type="button"
-                onClick={onShowRecoveryOptions}
-                disabled={form.loading || delayCountdown > 0}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={onToggleRecoveryOptions}
+                disabled={form.loading}
+                className="w-full flex items-center justify-between gap-3 px-4 py-4 text-left text-gray-900 bg-primary-50 hover:bg-primary-100 transition-colors"
               >
-                {t('auth.verifyWithOtherMethods', 'Verify with other methods')}
+                <div className="space-y-1 text-left">
+                  <span className="font-semibold text-gray-900">{t('auth.verifyWithOtherMethods', 'Verify with other methods')}</span>
+                  <p className="text-xs text-gray-500">{t('auth.recoveryPanelDescription', 'Expand to choose OTP or Passkey verification')}</p>
+                </div>
+                {showRecoveryOptions ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
               </button>
-            )
+
+              {showRecoveryOptions && (
+                <div className="space-y-3 px-4 pb-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={handleOtpClick}
+                    disabled={!isOtpEnabled}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {form.loading ? (
+                      <>
+                        <span className="inline-block animate-spin">⏳</span>
+                        {t('auth.sendingOtp', 'Sending OTP...')}
+                      </>
+                    ) : (
+                      t('auth.verifyWithOtp', 'Verify with OTP')
+                    )}
+                  </button>
+
+                  {passkeySupported && (
+                    <button
+                      type="button"
+                      onClick={handlePasskeyClick}
+                      disabled={passkey.loading || form.loading}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {passkey.loading ? (
+                        <>
+                          <span className="inline-block animate-spin">⏳</span>
+                          {t('auth.authenticating', 'Authenticating...')}
+                        </>
+                      ) : (
+                        <>
+                          <Fingerprint className="w-5 h-5" />
+                          {t('auth.signInWithPasskey')}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
             passkeySupported && (
               <button
                 type="button"
                 onClick={handlePasskeyClick}
-                disabled={passkey.loading || form.loading || delayCountdown > 0}
+                disabled={passkey.loading || form.loading}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary-900 text-primary-900 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {passkey.loading ? (

@@ -122,6 +122,7 @@
     "verifyWithOtp": "Verify with OTP",
     "sendingOtp": "Sending OTP...",
     "selectRecoveryMethod": "Please choose a recovery method before continuing.",
+    "recoveryPanelDescription": "Expand to choose OTP or Passkey verification",
     "otpBackWarning": "Your verification code is still active. Returning to login won't cancel it — you'll need to verify or wait for it to expire.",
     "backWarningTitle": "Are you sure?",
     "cancel": "Cancel"

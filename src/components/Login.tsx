@@ -235,7 +235,7 @@ if (screen === 'forgot') {
       passkeySupported={passkeySupported}
       recoveryMode={recoveryMode}
       showRecoveryOptions={showRecoveryOptions}
-      onShowRecoveryOptions={() => setShowRecoveryOptions(true)}
+      onToggleRecoveryOptions={() => setShowRecoveryOptions((prev) => !prev)}
       onRequestOtp={handleRequestOtp}
       isRTL={isRTL}
       languageLabel={languageLabel}
