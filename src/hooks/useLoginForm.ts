@@ -9,7 +9,7 @@ export interface LoginFormState {
   loading: boolean;
   showPassword: boolean;
   warnMessage: string;
-  ipMacLimitMessage: string;
+  deviceLimitMessage: string;
 }
 
 export interface LoginFormActions {
@@ -19,7 +19,7 @@ export interface LoginFormActions {
   setLoading: (loading: boolean) => void;
   toggleShowPassword: () => void;
   setWarnMessage: (msg: string) => void;
-  setIpMacLimitMessage: (msg: string) => void;
+  setDeviceLimitMessage: (msg: string) => void;
   clearErrors: () => void;
   reset: () => void;
 }
@@ -31,7 +31,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [warnMessage, setWarnMessage] = useState('');
-  const [ipMacLimitMessage, setIpMacLimitMessage] = useState('');
+  const [deviceLimitMessage, setDeviceLimitMessage] = useState('');
 
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
@@ -40,7 +40,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
   const clearErrors = () => {
     setError('');
     setWarnMessage('');
-    setIpMacLimitMessage('');
+    setDeviceLimitMessage('');
   };
 
   const reset = () => {
@@ -50,7 +50,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
     setLoading(false);
     setShowPassword(false);
     setWarnMessage('');
-    setIpMacLimitMessage('');
+    setDeviceLimitMessage('');
   };
 
   return {
@@ -61,7 +61,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
     loading,
     showPassword,
     warnMessage,
-    ipMacLimitMessage,
+    deviceLimitMessage,
     
     setEmail,
     setPassword,
@@ -69,7 +69,7 @@ export function useLoginForm(): LoginFormState & LoginFormActions {
     setLoading,
     toggleShowPassword,
     setWarnMessage,
-    setIpMacLimitMessage,
+    setDeviceLimitMessage,
     clearErrors,
     reset,
   };

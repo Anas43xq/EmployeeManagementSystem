@@ -1,5 +1,3 @@
-
-
 // eslint-disable-next-line no-restricted-imports
 import { supabase } from '../services/supabase';
 import type { DatabaseClient } from '../types/interfaces';

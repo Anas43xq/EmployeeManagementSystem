@@ -112,7 +112,7 @@
     "otpVerificationFailed": "Invalid verification code. Please try again.",
     "progressiveDelayActive": "Please wait {{seconds}} seconds before retrying. This helps protect your account from unauthorized access.",
     "retryIn": "Retry in {{seconds}}s",
-    "ipMacLimitExceeded": "Too many login attempts from this device. Please try again in {{minutes}} minute(s).",
+    "deviceLimitExceeded": "Too many login attempts from this device. Please try again in {{minutes}} minute(s).",
     "otpRateLimitExceeded": "Too many OTP verification attempts. Please try again later.",
     "otpNoDelayInfo": "OTP verification attempts do not have timed delays. You can retry as often as needed within the rate limits.",
     "otpRequestCooldown": "Please wait {{seconds}} seconds before requesting a new code",

@@ -192,10 +192,10 @@ export default function EmailScreen({
         )}
 
         {}
-        {form.ipMacLimitMessage && (
+        {form.deviceLimitMessage && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
             <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">{form.ipMacLimitMessage}</span>
+            <span className="text-sm">{form.deviceLimitMessage}</span>
           </div>
         )}
 

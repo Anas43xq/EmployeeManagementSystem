@@ -1364,7 +1364,7 @@ export type Database = {
         Args: { p_end_date: string; p_start_date: string }
         Returns: number
       }
-      check_ip_mac_limits: {
+      check_device_limits: {
         Args: { p_email?: string; p_ip_address: string; p_user_agent: string }
         Returns: Json
       }

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { extractError, getErrorMessage, logError, handleError } from '../lib/errorHandler';
-import { checkIpMacLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session';
+import { checkDeviceLimits, getLoginAttemptStatus, sendLoginOtp, getOtpRequestCooldownRemaining, verifyLoginOtp } from '../services/session';
 import { isWebAuthnSupported } from '../services/passkeys';
 import { sendPasswordResetEmail } from '../services/auth';
 
@@ -81,11 +81,11 @@ export default function Login() {
 
     try {
       
-      const ipMacStatus = await checkIpMacLimits(form.email);
-      if (!ipMacStatus.allowed) {
-        const minutes = Math.ceil(ipMacStatus.secondsUntilReset / 60);
-        form.setIpMacLimitMessage(
-          t('auth.ipMacLimitExceeded', {
+      const deviceStatus = await checkDeviceLimits(form.email);
+      if (!deviceStatus.allowed) {
+        const minutes = Math.ceil(deviceStatus.secondsUntilReset / 60);
+        form.setDeviceLimitMessage(
+          t('auth.deviceLimitExceeded', {
             minutes,
             defaultValue: `Too many login attempts from this device. Please try again in ${minutes} minute(s).`,
           })

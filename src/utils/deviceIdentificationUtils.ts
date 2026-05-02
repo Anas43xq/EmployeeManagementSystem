@@ -1,5 +1,4 @@
 
-
 interface NavigatorFingerprintData {
   deviceMemory?: number;
 }
@@ -139,11 +138,10 @@ export async function getDeviceIdentifier(): Promise<string> {
 }
 
 
-export async function getMacProxy(): Promise<{ ipAddress: string; userAgent: string }> {
+export async function getDeviceProxy(): Promise<{ ipAddress: string; userAgent: string }> {
   return {
     ipAddress: await getUserIpAddress(),
     userAgent: getUserAgent(),
   };
 }
-
 

@@ -243,7 +243,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.check_ip_mac_limits(
+CREATE OR REPLACE FUNCTION public.check_device_limits(
   p_ip_address TEXT,
   p_user_agent TEXT,
   p_email TEXT DEFAULT NULL
@@ -291,7 +291,7 @@ BEGIN
   IF NOT v_allowed AND p_email IS NOT NULL THEN
     BEGIN
       INSERT INTO public.activity_logs (user_id, action, entity_type, entity_id, details)
-      SELECT u.id, 'ip_mac_limit_exceeded', 'user', u.id,
+      SELECT u.id, 'device_limit_exceeded', 'user', u.id,
         jsonb_build_object(
           'ip_address', p_ip_address,
           'failed_attempts', v_failed,
@@ -372,7 +372,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.check_ip_mac_limits(TEXT, TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_device_limits(TEXT, TEXT, TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_progressive_delay_seconds(INT) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.get_seconds_until_retry(TIMESTAMPTZ) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.pre_auth_login_check(TEXT) TO anon, authenticated;

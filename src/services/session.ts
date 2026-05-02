@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { logActivity } from './activityLog';
-import { getMacProxy } from '../utils/ipMacUtils';
+import { getDeviceProxy } from '../utils/deviceIdentificationUtils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = supabase as any;
@@ -22,7 +22,7 @@ export interface LoginAttemptStatus {
   secondsUntilRetry: number;
 }
 
-export interface IpMacLimitStatus {
+export interface DeviceLimitStatus {
   allowed: boolean;
   failedAttempts: number;
   attemptsRemaining: number;
@@ -69,7 +69,7 @@ function parseRpcResult(data: Record<string, unknown> | null): LoginAttemptStatu
   };
 }
 
-function parseIpMacLimitResult(data: Record<string, unknown> | null): IpMacLimitStatus {
+function parseDeviceLimitResult(data: Record<string, unknown> | null): DeviceLimitStatus {
   if (!data) {
     return {
       allowed: true,
@@ -217,37 +217,37 @@ export async function resetLoginAttempts(userId: string): Promise<void> {
 }
 
 
-export async function checkIpMacLimits(email: string): Promise<IpMacLimitStatus> {
+export async function checkDeviceLimits(email: string): Promise<DeviceLimitStatus> {
   try {
-    const macProxy = await getMacProxy();
+    const deviceProxy = await getDeviceProxy();
 
 
     const isInvalid = (val: string | null | undefined) =>
       !val || val === 'unknown' || (typeof val === 'string' && val.trim() === '');
 
-    if (isInvalid(macProxy.ipAddress) || isInvalid(macProxy.userAgent)) {
-      return parseIpMacLimitResult(null);
+    if (isInvalid(deviceProxy.ipAddress) || isInvalid(deviceProxy.userAgent)) {
+      return parseDeviceLimitResult(null);
     }
 
-    const { data, error } = await rpc.rpc('check_ip_mac_limits', {
-      p_ip_address: macProxy.ipAddress,
-      p_user_agent: macProxy.userAgent,
+    const { data, error } = await rpc.rpc('check_device_limits', {
+      p_ip_address: deviceProxy.ipAddress,
+      p_user_agent: deviceProxy.userAgent,
       p_email: email,
     });
 
     if (error) {
 
-      console.error('[IP/MAC Rate Limit] RPC error (400 check params above):', {
+      console.error('[Device Rate Limit] RPC error (400 check params above):', {
         status: error?.status,
         message: error?.message,
       });
-      return parseIpMacLimitResult(null);
+      return parseDeviceLimitResult(null);
     }
 
-    return parseIpMacLimitResult(data);
+    return parseDeviceLimitResult(data);
   } catch (_err: unknown) {
 
-    return parseIpMacLimitResult(null);
+    return parseDeviceLimitResult(null);
   }
 }
 
