@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEmployeeName } from '../../hooks';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 
 
 export function UserMenu({ onSignOut, isRTL }: { onSignOut: () => void; isRTL: boolean }) {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { name } = useEmployeeName(user?.employeeId ?? null);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,11 +31,11 @@ export function UserMenu({ onSignOut, isRTL }: { onSignOut: () => void; isRTL: b
       >
         <div className="w-7 h-7 bg-primary-700 rounded-full flex items-center justify-center">
           <span className="text-xs font-bold text-white">
-            {user?.email.charAt(0).toUpperCase()}
+            {name.firstName.charAt(0).toUpperCase()}
           </span>
         </div>
         <div className="text-left hidden xl:block">
-          <p className="text-xs font-medium text-gray-800 leading-none">{user?.email}</p>
+          <p className="text-xs font-medium text-gray-800 leading-none">{name.firstName} {name.lastName}</p>
           <p className="text-[10px] text-gray-500 capitalize mt-0.5">{user?.role}</p>
         </div>
         <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />

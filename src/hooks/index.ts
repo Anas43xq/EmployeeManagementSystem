@@ -1,6 +1,7 @@
 export * from './useAsync';
 export * from './useAuthHooks';
 export * from './useDeleteConfirmation';
+export * from './useEmployeeName';
 export * from './useEmployeeProfile';
 export * from './useInactivityLogout';
 export * from './useLanguageSwitcher';
