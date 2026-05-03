@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEmployeeName } from '../../hooks';
 import {
   Briefcase, LogOut, X,
   LayoutDashboard, Users, Building2, Clock, Calendar,
@@ -81,6 +82,7 @@ interface Props {
 
 export function MobileSidebar({ open, onClose, onSignOut }: Props) {
   const { user } = useAuth();
+  const { name } = useEmployeeName(user?.employeeId ?? null);
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const isRTL = i18n.language === 'ar';
@@ -162,10 +164,10 @@ export function MobileSidebar({ open, onClose, onSignOut }: Props) {
           <div className="p-4 border-t border-primary-800">
             <div className={`flex items-center gap-3 px-3 py-2 mb-1 text-primary-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="w-7 h-7 bg-primary-800 rounded-full flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold">{user?.email.charAt(0).toUpperCase()}</span>
+                <span className="text-xs font-bold">{name.firstName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.email}</p>
+                <p className="text-sm font-medium text-white truncate">{name.firstName} {name.lastName}</p>
                 <p className="text-xs text-primary-300 capitalize">{role}</p>
               </div>
             </div>
