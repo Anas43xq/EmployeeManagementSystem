@@ -419,6 +419,11 @@ export async function getSessionEnforcementState(userId: string): Promise<Sessio
     .single();
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      console.debug('[SessionEnforcement] User data not found (expected for new accounts)', userId);
+      return null;
+    }
+    console.warn('[SessionEnforcement] Error fetching enforcement state:', error.code, error.message);
     return null;
   }
 
@@ -567,6 +572,15 @@ export async function updateServerActivityTimestamp(userId: string): Promise<boo
 
 
 function isTransientError(error: unknown): boolean {
+  // Exclude Supabase database errors (these are expected and handled)
+  const errorObj = error as Record<string, unknown>;
+  if (errorObj && typeof errorObj === 'object' && 'code' in errorObj) {
+    const code = String(errorObj.code);
+    if (code.startsWith('PGRST') || code.startsWith('42') || code === 'SCHEMA_MISMATCH') {
+      return false; // Database/SQL errors are not transient
+    }
+  }
+
   const errorStr = String(error).toLowerCase();
   const timeoutError = error instanceof Error ? error.message.toLowerCase() : '';
   
