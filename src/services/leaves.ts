@@ -187,18 +187,35 @@ export async function getUserIdForEmployee(employeeId: string): Promise<string |
   return data?.id || null;
 }
 
-export function subscribeToLeavesChanges(onChange: () => void): () => void {
+export function subscribeToLeavesChanges(onChange: () => void, onError?: (error: Error) => void): () => void {
   const channel = supabase
     .channel(`leaves-realtime:${Date.now()}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'leaves' }, onChange)
-    .subscribe();
+    .on('system', { event: 'join' }, () => {
+      console.debug('[Leaves] WebSocket subscription connected');
+    })
+    .on('system', { event: 'leave' }, () => {
+      console.debug('[Leaves] WebSocket subscription disconnected');
+    })
+    .on('system', { event: 'error' }, (error) => {
+      console.warn('[Leaves] WebSocket subscription error:', error);
+      onError?.(new Error(`Leaves subscription failed: ${error}`));
+    })
+    .subscribe((status, error) => {
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.warn('[Leaves] Subscription status:', status, error);
+        onError?.(new Error(`Leaves subscription ${status}`));
+      } else if (status === 'SUBSCRIBED') {
+        console.debug('[Leaves] Successfully subscribed to changes');
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);
   };
 }
 
-export function subscribeToLeaveBalanceChanges(employeeId: string, onChange: () => void): () => void {
+export function subscribeToLeaveBalanceChanges(employeeId: string, onChange: () => void, onError?: (error: Error) => void): () => void {
   const channel = supabase
     .channel(`leave-balances-${employeeId}-${Date.now()}`)
     .on(
@@ -211,7 +228,24 @@ export function subscribeToLeaveBalanceChanges(employeeId: string, onChange: () 
       },
       onChange
     )
-    .subscribe();
+    .on('system', { event: 'join' }, () => {
+      console.debug('[LeaveBalance] WebSocket subscription connected');
+    })
+    .on('system', { event: 'leave' }, () => {
+      console.debug('[LeaveBalance] WebSocket subscription disconnected');
+    })
+    .on('system', { event: 'error' }, (error) => {
+      console.warn('[LeaveBalance] WebSocket subscription error:', error);
+      onError?.(new Error(`LeaveBalance subscription failed: ${error}`));
+    })
+    .subscribe((status, error) => {
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.warn('[LeaveBalance] Subscription status:', status, error);
+        onError?.(new Error(`LeaveBalance subscription ${status}`));
+      } else if (status === 'SUBSCRIBED') {
+        console.debug('[LeaveBalance] Successfully subscribed to changes');
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);

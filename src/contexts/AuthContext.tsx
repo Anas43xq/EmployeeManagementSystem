@@ -5,6 +5,7 @@ import { clearAuthState, resetSessionHealth, validateSessionActivity, updateServ
 import { clearAllCache } from '../lib/cache';
 import { isRefreshTokenError, isAuthTransientError } from '../services/auth';
 import { useSessionEnforcement } from '../hooks/useSessionEnforcement';
+import { useNotification } from './NotificationContext';
 
 export type { AuthUser } from '../services/auth';
 import type { AuthUser, UserRole } from '../services/auth';
@@ -35,10 +36,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncingNotificationId, setSyncingNotificationId] = useState<string | null>(null);
   const initRef = useRef(false);
   const loadingUserRef = useRef<string | null>(null);
   const visibilityCheckRef = useRef(false);
   const lastVisibilityCheckRef = useRef(0);
+  const { showNotification, removeNotification } = useNotification();
 
   
   const loadUserData = useCallback(async (authUser: User): Promise<AuthUser | null> => {
@@ -187,7 +190,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleDeactivate = useCallback(() => {
     setUser(prev => prev ? { ...prev, isActive: false } : prev);
   }, []);
-  useSessionEnforcement({ userId: user?.id, onForceLogout: handleForceLogout, onDeactivate: handleDeactivate });
+  const handleSyncStatusChange = useCallback((isSyncing: boolean, errorCode?: string) => {
+    if (isSyncing) {
+      const id = `sync-${Date.now()}`;
+      setSyncingNotificationId(id);
+      showNotification('info', '🔄 Syncing...', 0);
+    } else if (syncingNotificationId) {
+      removeNotification(syncingNotificationId);
+      setSyncingNotificationId(null);
+      if (errorCode === 'reconnecting') {
+        console.debug('[AuthContext] Attempting to reconnect to sync service');
+      } else if (errorCode === 'sync_error') {
+        console.warn('[AuthContext] Sync service error, will retry');
+      }
+    }
+  }, [syncingNotificationId, showNotification, removeNotification]);
+  useSessionEnforcement({ 
+    userId: user?.id, 
+    onForceLogout: handleForceLogout, 
+    onDeactivate: handleDeactivate,
+    onSyncStatusChange: handleSyncStatusChange,
+  });
 
   
   const resetSession = useCallback(async () => {

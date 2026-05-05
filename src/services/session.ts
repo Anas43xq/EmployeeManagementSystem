@@ -428,6 +428,7 @@ export async function getSessionEnforcementState(userId: string): Promise<Sessio
 export function subscribeToSessionEnforcement(
   userId: string,
   onUpdate: (state: SessionEnforcementState) => void,
+  onError?: (error: Error) => void,
 ): () => void {
   const channel = supabase
     .channel(`user-session:${userId}:${Date.now()}`)
@@ -438,7 +439,24 @@ export function subscribeToSessionEnforcement(
         onUpdate(toSessionEnforcementState(payload.new));
       }
     )
-    .subscribe();
+    .on('system', { event: 'join' }, () => {
+      console.debug('[SessionEnforcement] WebSocket subscription connected');
+    })
+    .on('system', { event: 'leave' }, () => {
+      console.debug('[SessionEnforcement] WebSocket subscription disconnected');
+    })
+    .on('system', { event: 'error' }, (error) => {
+      console.warn('[SessionEnforcement] WebSocket subscription error:', error);
+      onError?.(new Error(`Session subscription failed: ${error}`));
+    })
+    .subscribe((status, error) => {
+      if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.warn('[SessionEnforcement] Subscription status:', status, error);
+        onError?.(new Error(`Session subscription ${status}`));
+      } else if (status === 'SUBSCRIBED') {
+        console.debug('[SessionEnforcement] Successfully subscribed to changes');
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);
@@ -548,28 +566,103 @@ export async function updateServerActivityTimestamp(userId: string): Promise<boo
 }
 
 
-export async function validateSessionActivity(userId: string): Promise<boolean> {
+function isTransientError(error: unknown): boolean {
+  const errorStr = String(error).toLowerCase();
+  const timeoutError = error instanceof Error ? error.message.toLowerCase() : '';
+  
+  const timeoutCheck = timeoutError.length > 0 && (timeoutError.includes('abort') || timeoutError.includes('timeout'));
+  
+  return (
+    errorStr.includes('failed to fetch') ||
+    errorStr.includes('network') ||
+    errorStr.includes('timeout') ||
+    errorStr.includes('econnrefused') ||
+    errorStr.includes('econnreset') ||
+    errorStr.includes('socket hang up') ||
+    timeoutCheck
+  );
+}
+
+const MAX_VALIDATION_RETRIES = 3;
+const RETRY_DELAYS = [1000, 2000, 4000];
+
+async function validateSessionActivityWithRetry(
+  userId: string,
+  attempt: number = 0
+): Promise<boolean> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const { data, error } = await supabase
       .from('users')
       .select('last_activity_at')
       .eq('id', userId)
       .single();
 
-    if (error || !data || !data.last_activity_at) {
+    clearTimeout(timeoutId);
 
+    if (error) {
+      if (isTransientError(error)) {
+        if (attempt < MAX_VALIDATION_RETRIES) {
+          const delay = RETRY_DELAYS[attempt];
+          console.debug(
+            `[Session] Validation transient error, retrying in ${delay}ms:`,
+            error
+          );
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return validateSessionActivityWithRetry(userId, attempt + 1);
+        } else {
+          console.debug(
+            `[Session] Validation transient error after ${MAX_VALIDATION_RETRIES} retries, treating as valid session`,
+            error
+          );
+          return true;
+        }
+      } else {
+        console.debug('[Session] Validation auth error, treating session as invalid:', error);
+        return true;
+      }
+    }
+
+    if (!data || !data.last_activity_at) {
       return true;
     }
 
     const lastActivity = new Date(data.last_activity_at).getTime();
     const now = Date.now();
     const inactiveMinutes = (now - lastActivity) / 60000;
-
-
     const isValid = inactiveMinutes <= 120;
+
+    console.debug(
+      `[Session] User inactive for ${inactiveMinutes.toFixed(1)} minutes, valid: ${isValid}`
+    );
     return isValid;
-  } catch {
-    return false;
+  } catch (error) {
+    if (isTransientError(error)) {
+      if (attempt < MAX_VALIDATION_RETRIES) {
+        const delay = RETRY_DELAYS[attempt];
+        console.debug(
+          `[Session] Validation exception (transient), retrying in ${delay}ms:`,
+          error
+        );
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return validateSessionActivityWithRetry(userId, attempt + 1);
+      } else {
+        console.debug(
+          `[Session] Validation exception after ${MAX_VALIDATION_RETRIES} retries, treating as valid session`,
+          error
+        );
+        return true;
+      }
+    } else {
+      console.error('[Session] Validation caught unexpected error:', error);
+      return false;
+    }
   }
+}
+
+export async function validateSessionActivity(userId: string): Promise<boolean> {
+  return validateSessionActivityWithRetry(userId, 0);
 }
 
