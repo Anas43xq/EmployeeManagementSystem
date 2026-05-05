@@ -173,9 +173,9 @@ export const FAQManagement = () => {
             <table className="w-full">
               <thead className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.question') || 'Question'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">🇬🇧 {t('faq.english') || 'English'}</th>
+                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">🇸🇦 {t('faq.arabic') || 'Arabic'}</th>
                   <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.category') || 'Category'}</th>
-                  <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.languages') || 'Languages'}</th>
                   <th className="text-start px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('faq.visibleTo') || 'Visible To'}</th>
                   <th className="text-end px-6 py-4 font-semibold text-gray-900 dark:text-white">{t('common.actions') || 'Actions'}</th>
                 </tr>
@@ -191,27 +191,24 @@ export const FAQManagement = () => {
                       key={faq.id}
                       className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
-                      <td className="px-6 py-4 max-w-xs">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">{faq.question}</p>
+                      <td className="px-6 py-4 max-w-sm">
+                        {hasEnglish ? (
+                          <p className="text-gray-900 dark:text-white break-words">{faq.content?.en?.question}</p>
+                        ) : (
+                          <p className="text-gray-400 dark:text-gray-500 italic">{t('faq.notProvided') || 'Not provided'}</p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 max-w-sm">
+                        {hasArabic ? (
+                          <p className="text-gray-900 dark:text-white break-words">{faq.content?.ar?.question}</p>
+                        ) : (
+                          <p className="text-gray-400 dark:text-gray-500 italic">{t('faq.notProvided') || 'Not provided'}</p>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600">
                           {faq.category}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {hasEnglish && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                              🇬🇧 EN
-                            </span>
-                          )}
-                          {hasArabic && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                              🇸🇦 AR
-                            </span>
-                          )}
-                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">

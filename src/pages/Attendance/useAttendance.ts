@@ -134,7 +134,7 @@ export function useAttendance() {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      // Use the provided employeeId (for admin/hr checking out others), otherwise use current user's id
+
       const targetEmployeeId = employeeId || user?.employeeId;
       if (!targetEmployeeId) return;
 
