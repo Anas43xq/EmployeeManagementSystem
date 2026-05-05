@@ -122,20 +122,31 @@ export function useAttendance() {
     }
   };
 
-  const handleCheckOut = async (recordId: string) => {
-    if (!user?.employeeId) return;
-
+  const handleCheckOut = async (recordId: string, employeeId?: string, existingCheckOut?: string | null) => {
     const today = new Date().toISOString().split('T')[0];
     try {
+      // Prevent checking out twice on the same day
+      if (existingCheckOut) {
+        showNotification('error', t('attendance.alreadyCheckedOut'));
+        return;
+      }
+
       const now = new Date();
       const time = now.toTimeString().split(' ')[0].substring(0, 5);
 
-      await updateCheckOut(recordId, user.employeeId, time);
+      // Use the provided employeeId (for admin/hr checking out others), otherwise use current user's id
+      const targetEmployeeId = employeeId || user?.employeeId;
+      if (!targetEmployeeId) return;
+
+      await updateCheckOut(recordId, targetEmployeeId, time);
       showNotification('success', t('attendance.checkOutSuccess'));
+      if(user != null)
+      {
       logActivity(user.id, 'attendance_checked_out', 'attendance', recordId, {
         date: today,
         check_out: time,
       });
+    }
 
       loadAttendance();
     } catch (_error) {

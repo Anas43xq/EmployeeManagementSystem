@@ -7,7 +7,7 @@ interface AttendanceRecordCardProps {
   record: AttendanceRecord;
   userRole: string | undefined;
   isToday: boolean;
-  onCheckOut: (id: string) => void;
+  onCheckOut: (id: string, employeeId?: string, checkOut?: string | null) => void;
   calculateHoursWorked: (checkIn: string | null, checkOut: string | null) => string | null;
 }
 
@@ -58,7 +58,7 @@ export default function AttendanceRecordCard({
         <div className="flex items-center gap-2 shrink-0">
           {record.check_in && !record.check_out && isToday && (
             <button
-              onClick={() => onCheckOut(record.id)}
+              onClick={() => onCheckOut(record.id, record.employee_id, record.check_out)}
               className="flex items-center gap-1 px-2 py-1 text-xs sm:text-sm font-medium rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
             >
               <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
